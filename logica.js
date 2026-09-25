@@ -94,3 +94,87 @@ function verificarColisao(jogador, jogadores, obstaculos, colunas, linhas) {
 
     return bateuNoProprioCorpo || bateuEmObstaculo || bateuNoOutroJogador;
 }
+
+// ==========================================
+// Modo rato (funções pura - testadas em teste.js)
+// ==========================================
+const DIRECOES = [
+    { x: 0, y: -1 },
+    { x: 0, y: 1 },
+    { x: -1, y: 0 },
+    { x: 1, y: 0 },
+];
+const CHANCE_RATO_PASSEAR = 0.4;
+
+function distanciaManhattan(a, b) {
+    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+}
+
+function distanciaAteMaisProxima(posicao, cabecas) {
+    return Math.min(...cabecas.map((cabeca) => distanciaManhattan(posicao, cabeca)));
+}
+
+///devolve a próxima casa do rato (ou a mesma, se ele ficar parado)
+//casaLivre(posicao) diz se o rato pode ir pra lá; sorteio() funciona como Math.random
+function escolherPassoRato(rato, cabecas, casaLivre, distanciaAlerta, sorteio) {
+    const parado = { x: rato.x, y: rato.y };
+    const vizinhas = DIRECOES
+        .map((direcao) => ({ x: rato.x + direcao.x, y: rato.y + direcao.y }))
+        .filter(casaLivre);
+    
+    if (vizinhas.length === 0) {
+        return parado; // encurralado
+    }
+
+    const distanciaAtual = distanciaAteMaisProxima(rato, cabecas);
+
+    if (distanciaAtual <= distanciaAlerta) {
+        // foge: vai pra casa mais longe da cabeça mais próxima
+        let melhor = parado;
+        let melhorDistancia = distanciaAtual;
+
+        for (const vizinha of vizinhas) {
+            const distancia = distanciaAteMaisProxima(vizinha, cabecas);
+            if (distancia > melhorDistancia) {
+                melhor = vizinha;
+                melhorDistancia = distancia;
+            }
+        }
+
+        return melhor;
+    }
+
+    // longe da cobra: às vezes dá um passeio
+    if (sorteio() < CHANCE_RATO_PASSEAR) {
+        return vizinhas[Math.floor(sorteio() * vizinhas.length)];
+    }
+
+    return parado;
+}
+
+// ==========================================
+// Recordes (funções puras - testadas em testes.js)
+// ==========================================
+const TAMANHO_TOP_RECORDES = 5;
+
+// tira registros inválidos (dado corrompido, bot, zero pontos)
+function limparRecordes(lista) {
+    if (!Array.isArray(lista)) {
+        return [];
+    }
+
+    return lista.filter((registro) =>
+        registro &&
+        typeof registro.nome === "string" &&
+        registro.nome !== "Bot" &&
+        Number(registro.pontuacao) > 0
+    );
+}
+
+// junta os registros novos, ordena do maior pro menor e fica só com o top 5
+function juntarRecordes(lista, novosRegistros) {
+    return lista
+        .concat(novosRegistros)
+        .sort((a, b) => b.pontuacao - a.pontuacao)
+        .slice(0, TAMANHO_TOP_RECORDES);
+}

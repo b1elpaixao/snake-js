@@ -123,6 +123,7 @@
                             <select id="seletorModo">
                                 <option value="normal" selected>Normal</option>
                                 <option value="clássico">clássico (sem pedras)</option>
+                                <option value="rato">Rato (caçada)</option>
                             </select>
                         </div>
                         <div class="menu-dificuldade">
@@ -157,7 +158,7 @@
 
         <aside class="painel">
             <div class="cartao recordes">
-                <p class="rotulo">Top 5 recordes</p>
+                <p class="rotulo">Top 5 recordes · <span id="modoRecordes"></span></p>
                 <ol id="listaRecordes"></ol>
             </div>
 
@@ -169,6 +170,8 @@
                     <li><span class="item-icone" style="--cor: #e879f9"></span><div><b>Pontos x2</b><span>Pontuação dobrada por 5 s</span></div></li>
                     <li><span class="item-icone" style="--cor: #f1f5f9"></span><div><b>Encolher</b><span>Perde 3 segmentos</span></div></li>
                     <li><span class="item-icone item-redondo" style="--cor: #f5c451"></span><div><b>Maçã dourada</b><span>+5 pontos, some em 4 s</span></div></li>
+                    <li><span class="item-icone item-redondo" style="--cor: #b0b5bb"></span> <div><b>Rato cinza</b><span>Modo Rato: parado, 1 ponto</span></div></li>
+                    <li><span class="item-icone item-redondo" style="--cor: #8d6e63"></span> <div><b>Rato marrom</b><span>Modo rato: foge de você, 3 pontos</span></div></li>
                 </ul>
             </div>
         </aside>

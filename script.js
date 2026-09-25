@@ -48,6 +48,15 @@ const DURACAO_VELOCIDADE_EXTRA_MS = 5000;
 const DURACAO_PONTOS_DOBRADOS_MS = 5000;
 const MULTIPLICADOR_VELOCIDADE_EXTRA = 0.5;
 const QUANTIDADE_ENCOLHER = 3;
+
+// modo rato
+const TIPOS_RATO = {
+    parado: { pontos: 1, cor: "#b0b5bb", anda: false },
+    fujao: { pontos: 3, cor: "#8d6e63", anda: true },
+};
+const DISTANCIA_ALERTA_RATO = 3;      // a partir dessa distância o rato fujão foge
+const DISTANCIA_MINIMA_NASCER_RATO = 5; // rato novo não nasce colado na cobra
+const TICKS_POR_PASSO_RATO = 2;         // o rato anda na metade da velocidade da cobra
 const CORES_POWERUP = {
     invencibilidade: "gold",
     velocidade: "deepskyblue",
@@ -81,6 +90,7 @@ const botaoJogar2 = document.getElementById("botaoJogar2");
 const placarJogador2 = document.getElementById("placarJogador2");
 
 const elementoListaRecordes = document.getElementById("listaRecordes");
+const elementoModoRecordes = document.getElementById("modoRecordes");
 
 const botaoPausa = document.getElementById("botaoPausa");
 const botaoMudo = document.getElementById("botaoMudo");
@@ -154,6 +164,8 @@ let obstaculos = gerarObstaculos();
 let comida = gerarComida();
 let powerUp = null; // { x, y } quando existe um na tela, ou null
 let comidaDourada = null; // { x, y } quando existe, ou null
+let ratos = []; // só tem ratos no modo rato
+let contadorTicksRatos = 0;
 // ==========================================
 // Armazenamento (localStorage) - nunca deixa o jogo quebrar
 // ==========================================
@@ -173,32 +185,38 @@ function salvarNoArmazenamento(chave, valor) {
     }
 }
 
+const MODOS_DE_JOGO = ["normal", "clássico", "rato"];
+const NOMES_MODOS = { normal: "Normal", "clássico": "Clássico", rato: "Rato" };
+
 function lerRecordesSalvos() {
+    const porModo = { normal: [], "clássico": [], rato: [] };
+
     try {
-        const salvos = JSON.parse(lerDoArmazenamento("snakeRecordes"));
+        const salvos = JSON.parse(lerDoArmazenamento("snakeRecordesPorModo"));
 
-        if (!Array.isArray(salvos)) {
-            return [];
+        if (salvos && typeof salvos === "object") {
+            for (const modo of MODOS_DE_JOGO) {
+                porModo[modo] = limparRecordes(salvos[modo]);
+            }
+        } else {
+            // primeira vez com recordes por modo: os recordes antigos vão pro Normal
+            porModo.normal = limparRecordes(JSON.parse(lerDoArmazenamento("snakeRecordes")));
         }
-
-        return salvos.filter((registro) =>
-            registro &&
-            typeof registro.nome === "string" &&
-            registro.nome !== "Bot" &&
-            Number(registro.pontuacao) > 0
-        );
     } catch {
-        return []; // dado corrompido: começa com a lista vazia
+        // dado corrompido: começa com as listas vazias
     }
+
+    return porModo;
 }
-let melhorPontuacao = Number(lerDoArmazenamento("snakeMelhorPontuacao")) || 0;
 let jogoAtivo = true;
 let pausado = false;
 let noMenu = true;
 let quantidadeJogadoresAtual = 2;
 let modoComBotAtivo = false;
 let modoAtual = "normal";
-let recordes = lerRecordesSalvos();
+let recordesPorModo = lerRecordesSalvos();
+let modoExibidoRecordes = "normal";
+let melhorPontuacao = 0;
 let ultimoTickEm = performance.now();
 let velocidadeAtual = VELOCIDADE_INICIAL_MS;
 let nomesJogadoresAtuais = ["Jogador 1", "Jogador 2"];
@@ -231,7 +249,8 @@ function gerarPosicaoLivre() {
         };
     } while (
         posicaoOcupada(candidato, obstaculos, jogadores) ||
-        mesmaPosicao(comida, candidato)
+        mesmaPosicao(comida, candidato) ||
+        ratos.some((rato) => mesmaPosicao(rato, candidato))
     );
 
     return candidato;
@@ -306,6 +325,68 @@ DURACAO_COMIDA_DOURADA_MS };
 }
 
 // ==========================================
+// Ratos (modo rato)
+// ==========================================
+function gerarRato(tipo) {
+    let posicao;
+    let tentativas = 0;
+
+    // tenta nascer longe das cobras; se o tabuleiro estiver cheio, aceita qualquer casa livre
+    do {
+        posicao = gerarPosicaoLivre();
+        tentativas++;
+    } while (
+        tentativas < 100 &&
+        jogadores.some((jogador) => distanciaManhattan(jogador.cobra[0], posicao) < DISTANCIA_MINIMA_NASCER_RATO)
+    );
+
+    return {
+        x: posicao.x,
+        y: posicao.y,
+        anterior: { x: posicao.x, y: posicao.y },
+        direcao: { x: 1, y: 0},
+        tipo,
+    };
+}
+
+function criarRatosIniciais() {
+    ratos = [];
+    contadorTicksRatos = 0;
+
+    if (modoAtual === "rato") {
+        ratos.push(gerarRato("parado"));
+        ratos.push(gerarRato("fujao"));
+    }
+}
+
+function moverRatos() {
+    contadorTicksRatos++;
+    const cabecas = jogadores.map((jogador) => jogador.cobra[0]);
+    const vezDeAndar = contadorTicksRatos % TICKS_POR_PASSO_RATO === 0;
+
+    for (const rato of ratos) {
+        rato.anterior = { x: rato.x, y: rato.y };
+
+        if (!TIPOS_RATO[rato.tipo].anda || !vezDeAndar) {
+            continue;
+        }
+
+        const casaLivre = (posicao) =>
+            !foraDoTabuleiro(posicao, COLUNAS, LINHAS) &&
+            !posicaoOcupada(posicao, obstaculos, jogadores) &&
+            !ratos.some((outro) => outro !== rato && mesmaPosicao(outro, posicao));
+
+        const destino = escolherPassoRato(rato, cabecas, casaLivre, DISTANCIA_ALERTA_RATO, Math.random);
+
+        if (!mesmaPosicao(destino, rato)) {
+            rato.direcao = { x: destino.x - rato.x, y: destino.y - rato.y };
+            rato.x = destino.x;
+            rato.y = destino.y;
+        }
+    }
+}
+
+// ==========================================
 // Desenho
 // ==========================================
 function desenharCelula(x, y, cor) {
@@ -326,7 +407,17 @@ function desenhar() {
         desenharObstaculo(obstaculo.x, obstaculo.y);
     }
 
-    desenharMaca(comida.x, comida.y);
+    const progresso = jogoAtivo && !pausado
+        ? Math.min((performance.now() - ultimoTickEm) / velocidadeAtual, 1)
+        : 1;
+
+    if (modoAtual !== "rato") {
+        desenharMaca(comida.x, comida.y);
+    }
+
+    for (const rato of ratos) {
+        desenharRato(rato, progresso);
+    }
 
     if (comidaDourada) {
         desenharCelula(comidaDourada.x, comidaDourada.y, "goldenrod");
@@ -335,10 +426,6 @@ function desenhar() {
     if (powerUp) {
         desenharCelula(powerUp.x, powerUp.y, CORES_POWERUP[powerUp.tipo]);
     }
-
-    const progresso = jogoAtivo && !pausado
-        ? Math.min((performance.now() - ultimoTickEm) / velocidadeAtual, 1)
-        : 1;
 
     for (const jogador of jogadores) {
         desenharCobra(jogador, progresso);
@@ -380,6 +467,58 @@ function desenharMaca(x, y) {
     ctx.beginPath();
     ctx.ellipse(centroX + 4, centroY - raio - 1, 3.5, 2, -0.5, 0, Math.PI * 2);
     ctx.fill();
+}
+
+function desenharRato(rato, progresso) {
+    const centroX = (interpolarEixo(rato.anterior.x, rato.x, progresso) + 0.5) * TAMANHO_CELULA;
+    const centroY = (interpolarEixo(rato.anterior.y, rato.y, progresso) + 0.5) * TAMANHO_CELULA;
+    const angulo = Math.atan2(rato.direcao.y, rato.direcao.x);
+    const escala = TAMANHO_CELULA / 20; // desenho feito pra uma casa de 20px
+
+    ctx.save();
+    ctx.translate(centroX, centroY);
+    ctx.rotate(angulo);
+    ctx.scale(escala, escala);
+
+    // rabo
+    ctx.strokeStyle = "#e8a3a3";
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-6, 0);
+    ctx.quadraticCurveTo(-10, -4, -13, 1);
+    ctx.stroke();
+
+    // corpo e cabeça
+    ctx.fillStyle = TIPOS_RATO[rato.tipo].cor;
+    ctx.beginPath();
+    ctx.ellipse(-1, 0, 6.5, 4.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(5, 0, 3.6, 3.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // orelhas
+    ctx.fillStyle = "#f4b6c2";
+    for (const lado of [-1, 1]) {
+        ctx.beginPath();
+        ctx.arc(3.5, lado * 3.6, 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // olhos e focinho
+    ctx.fillStyle= "#1f1f1f";
+    for (const lado of [-1, 1]) {
+        ctx.beginPath();
+        ctx.arc(6.6, lado * 1.3, 0.8, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.fillStyle = "#e57373";
+    ctx.beginPath();
+    ctx.arc(8.6, 0, 0.9, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
 }
 
 function desenharObstaculo(x, y) {
@@ -706,9 +845,10 @@ function atualizarBotaoMudo() {
     botaoMudo.textContent = mudo ? "🔇 Som" : "🔊 Som";
 }
 
-elementoRecorde.textContent = melhorPontuacao;
-desenharListaRecordes();
+mostrarRecordesDoModo(seletorModo.value);
 atualizarBotaoMudo();
+
+seletorModo.addEventListener("change", () => mostrarRecordesDoModo(seletorModo.value));
 
 botaoMudo.addEventListener("click", () => {
     mudo = !mudo;
@@ -726,28 +866,24 @@ function moverJogador(jogador) {
     
     jogador.cobra.unshift(novaCabeca);
 
-    const comeuComida = novaCabeca.x === comida.x && novaCabeca.y === comida.y;
+    const comeuComida = modoAtual !== "rato" && mesmaPosicao(novaCabeca, comida);
     const comeuComidaDourada = comidaDourada && novaCabeca.x === comidaDourada.x && novaCabeca.y === comidaDourada.y;
-    
+
+    const indiceRato = ratos.findIndex((rato) => mesmaPosicao(rato, novaCabeca));
+    const comeuRato= indiceRato !== -1;
+
     if (comeuComida) {
-        const agora = agoraDoJogo();
-        const dentroDoCombo = jogador.ultimoComerEm !== null && (agora - jogador.ultimoComerEm) <= JANELA_COMBO_MS;
-
-        jogador.comboAtual = dentroDoCombo ? jogador.comboAtual + 1 : 1;
-        jogador.ultimoComerEm = agora;
-
-        const pontosGanhos = jogador.comboAtual * (jogador.pontosDobradosAtivo ? 2 : 1);
-
         comida = gerarComida();
-        jogador.pontuacao += pontosGanhos;
-        jogador.elementoPontuacao.textContent = jogador.comboAtual > 1
-           ? `${jogador.pontuacao} (x${jogador.comboAtual})`
-           : jogador.pontuacao;
-    
-        atualizarRecordeSeNecessario(jogador.pontuacao);
-        adicionarObstaculosSeNecessario();
-        tocarSomComer();
-    } 
+        comerAlimento(jogador, 1);
+    }
+
+    if (comeuRato) {
+        const ratoComido = ratos[indiceRato];
+
+        ratos.splice(indiceRato, 1);
+        comerAlimento(jogador, TIPOS_RATO[ratoComido.tipo].pontos);
+        ratos.push(gerarRato(ratoComido.tipo)); // nasce outro do mesmo tipo
+    }
 
     if (comeuComidaDourada) {
         const pontosGanhos = PONTOS_COMIDA_DOURADA * (jogador.pontosDobradosAtivo ? 2 : 1);
@@ -763,7 +899,7 @@ function moverJogador(jogador) {
         comidaDourada = null;
     }
 
-    if (!comeuComida && !comeuComidaDourada) {
+    if (!comeuComida && !comeuComidaDourada && !comeuRato) {
         jogador.cobra.pop();
     }
     
@@ -784,19 +920,52 @@ function moverJogador(jogador) {
     }
 }
 
+// maçã ou rato: contra o combo, soma os pontos e atualiza o placar
+function comerAlimento(jogador, pontosBase) {
+    const agora = agoraDoJogo();
+    const dentroDoCombo = jogador.ultimoComerEm !== null && (agora - jogador.ultimoComerEm) <= JANELA_COMBO_MS;
+
+    jogador.comboAtual = dentroDoCombo ? jogador.comboAtual + 1 : 1;
+    jogador.ultimoComerEm = agora;
+
+    const pontosGanhos = pontosBase * jogador.comboAtual * (jogador.pontosDobradosAtivo ? 2 : 1);
+
+    jogador.pontuacao += pontosGanhos;
+    jogador.elementoPontuacao.textContent = jogador.comboAtual > 1
+       ? `${jogador.pontuacao} (x${jogador.comboAtual})`
+       : jogador.pontuacao;
+
+    atualizarRecordeSeNecessario(jogador.pontuacao);
+    adicionarObstaculosSeNecessario();
+    tocarSomComer();
+}
+
 function atualizarRecordeSeNecessario(pontuacaoAtual) {
     if (pontuacaoAtual > melhorPontuacao) {
         melhorPontuacao = pontuacaoAtual;
         elementoRecorde.textContent = melhorPontuacao;
-        desenharListaRecordes();
-        salvarNoArmazenamento("snakeMelhorPontuacao", melhorPontuacao);
     }
+}
+
+function recordesDoModo(modo) {
+    return recordesDoModo[modo] || [];
+}
+
+// mostra o Top 5 e o troféu do modo escolhido
+function mostrarRecordesDoModo(modo) {
+    const lista = recordesDoModo(modo);
+
+    modoExibidoRecordes = modo;
+    melhorPontuacao = lista.length > 0 ? lista[0].pontuacao : 0;
+    elementoRecorde.textContent = melhorPontuacao;
+    elementoModoRecordes.textContent = NOMES_MODOS[modo] || modo;
+    desenharListaRecordes();
 }
 
 function desenharListaRecordes() {
     elementoListaRecordes.innerHTML = "";
 
-    recordes.forEach((registro) => {
+    recordesDoModo(modoExibidoRecordes).forEach((registro) => {
         const item = document.createElement("li");
         item.textContent = `${registro.nome}: ${registro.pontuacao}`;
         elementoListaRecordes.appendChild(item);
@@ -804,12 +973,10 @@ function desenharListaRecordes() {
 }
 
 function atualizarListaRecordes(novosRegistros) {
-    recordes = recordes.concat(novosRegistros);
-    recordes.sort((a, b) => b.pontuacao - a.pontuacao);
-    recordes = recordes.slice(0, 5);
+    recordesDoModo[modoAtual] = juntarRecordes(recordesDoModo(modoAtual), novosRegistros);
 
-    salvarNoArmazenamento("snakeRecordes", JSON.stringify(recordes));
-    desenharListaRecordes();
+    salvarNoArmazenamento("snakeRecordesPorModo", JSON.stringify(recordesPorModo));
+    mostrarRecordesDoModo(modoAtual);
 }
 
 function ativarInvencibilidade(jogador) {
@@ -879,6 +1046,17 @@ function jogadorPodeIrPara(jogador, x, y) {
     return !bateuEmObstaculo && !bateuEmCobra;
 }
 
+// no modo rato o bot persegue o rato mais perto; nos outros, a maçã
+function escolherAlvoBot(cabeca) {
+    if (modoAtual !== "rato" || ratos.length === 0) {
+        return comida;
+    }
+
+    return ratos.reduce((maisPerto, rato) =>
+        distanciaManhattan(cabeca, rato) < distanciaManhattan(cabeca, maisPerto) ? rato : maisPerto
+    );
+}
+
 function decidirDirecaoBot(jogador) {
     const direcoesPossiveis = [
         { x: 0, y: -1 },
@@ -898,9 +1076,11 @@ function decidirDirecaoBot(jogador) {
 
     const candidatas = opcoesSeguras.length > 0 ? opcoesSeguras : direcoesPossiveis;
 
+    const alvo = escolherAlvoBot(cabeca);
+
     candidatas.sort((a, b) => {
-        const distanciaA = Math.abs(cabeca.x + a.x - comida.x) + Math.abs(cabeca.y + a.y - comida.y);
-        const distanciaB = Math.abs(cabeca.x + b.x - comida.x) + Math.abs(cabeca.y + b.y - comida.y);
+        const distanciaA = Math.abs(cabeca.x + a.x - alvo.x) + Math.abs(cabeca.y + a.y - alvo.y);
+        const distanciaB = Math.abs(cabeca.x + b.x - alvo.x) + Math.abs(cabeca.y + b.y - alvo.y);
         return distanciaA - distanciaB;
     });
 
@@ -1075,6 +1255,10 @@ function loop() {
         mostrarTelaGameOver(jogadoresVivos);
         return;
     }
+
+    if (modoAtual === "rato") {
+        moverRatos();
+    }
     
     if (!powerUp && Math.random() < CHANCE_POWERUP_POR_TICK) {
         const posicao = gerarPosicaoLivre();
@@ -1112,6 +1296,7 @@ function reiniciar() {
     });
     obstaculos = gerarObstaculos();
     comida = gerarComida();
+    criarRatosIniciais();
     powerUp = null;
     comidaDourada = null;
     pausado = false;
@@ -1132,6 +1317,7 @@ function aplicarDificuldade() {
 function comecarJogo(quantidade, comBot = false) {
     obterContextoAudio();
     modoAtual = seletorModo.value;
+    mostrarRecordesDoModo(modoAtual);
     aplicarDificuldade();
     quantidadeJogadoresAtual = comBot ? 2 : quantidade;
     modoComBotAtivo = comBot;

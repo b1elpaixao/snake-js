@@ -73,12 +73,12 @@ verificar("calcularNovaCabeca sem paredes: cima volta por baixo",
 // posicaoOcupada
 const obstaculosTeste = [{ x: 2, y: 2 }];
 const jogadoresTeste = [{ cobra: [{ x: 5, y: 5 }, { x: 4, y: 5 }] }];
-verificar("posicaoOcupada: casa com pedra", posicaoOcupada({ x: 2, y: 2, }, obstaculosTeste, jogadorTeste), true);
-verificar("posicaoOcupada: casa com corpo de cobra", posicaoOcupada({ x: 4, y: 5 }, obstaculosTeste, jogadorTeste), true);
+verificar("posicaoOcupada: casa com pedra", posicaoOcupada({ x: 2, y: 2, }, obstaculosTeste, jogadoresTeste), true);
+verificar("posicaoOcupada: casa com corpo de cobra", posicaoOcupada({ x: 4, y: 5 }, obstaculosTeste, jogadoresTeste), true);
 verificar("posicaoOcupada: casa livre", posicaoOcupada({ x: 10, y: 10 }, obstaculosTeste, jogadoresTeste), false);
 
 //verificarColisao
-function criarCobraTeste(segmento, invencivel = false) {
+function criarCobraTeste(segmentos, invencivel = false) {
     return{ cobra: segmentos, invencivel };
 }
 
@@ -104,6 +104,46 @@ verificar("verificarColisao: invencivel atravessa pedra", verificarColisao(inven
 const invencivelNaParede = criarCobraTeste([{ x: -1, y: 5 }, { x: 0, y: 5 }], true);
 verificar("verificarColisao: invencivel ainda morre na parede",
 verificarColisao(invencivelNaParede, [invencivelNaParede], [], 20, 20), true);
+
+// modo rato
+verificar("distanciaManhattan soma as distâncias em x e y", distanciaManhattan({ x: 0, y: 0}, { x: 3, y: 4 }), 7);
+
+const tudoLivre = () => true;
+const nadaLivre = () => false;
+const sempre= (valor) => () => valor;
+
+const ratoLonge = { x: 10, y: 10 };
+verificar("rato longe da cobra e sem sorte de passear fica parado",
+    JSON.stringify(escolherPassoRato(ratoLonge, [{ x: 0, y: 0 }], tudoLivre, 3, sempre(0.9))), JSON.stringify({ x: 10, y: 10 }));
+verificar("rato longe da cobra passeia uma casa",
+    distanciaManhattan(escolherPassoRato(ratoLonge, [{ x: 0, y: 0 }], tudoLivre, 3, sempre(0.1)), ratoLonge), 1);
+
+const ratoPerto = { x: 5, y: 5};
+const cabecaPerto = { x: 3, y: 5};
+const destinoFuga = escolherPassoRato(ratoPerto, [cabecaPerto], tudoLivre, 3, sempre(0.9));
+verificar("rato perto da cobra foge (fica mais longe da cabeça)",
+    distanciaManhattan(destinoFuga, cabecaPerto) > distanciaManhattan(ratoPerto, cabecaPerto), true);
+
+verificar("rato encurralado fica parado",
+    JSON.stringify(escolherPassoRato(ratoPerto, [cabecaPerto], nadaLivre, 3, sempre(0.1))), JSON.stringify({ x: 5, y: 5 }));
+
+const soPraCobra = (posicao) => posicao.x === 4 && posicao.y === 5;
+verificar("rato não foge em direção à cobra (prefere ficar parado)",
+    JSON.stringify(escolherPassoRato(ratoPerto, [cabecaPerto], soPraCobra, 3, sempre(0.9))), JSON.stringify({ x: 5, y: 5 }));
+
+// recordes
+verificar("limparRecordes tira o bot, os zerados e o lixo",
+    JSON.stringify(limparRecordes([{ nome: "Ana", pontuacao: 10 }, { nome: "Bot", pontuacao: 30 }, { nome: "Leo", pontuacao: 0 }, null, "lixo"])),
+    JSON.stringify([{ nome: "Ana", pontuacao: 10 }]));
+verificar("limparRecordes com dado que não é lista devolve lista vazia",
+JSON.stringify(limparRecordes({ nome: "Ana" })), "[]");
+
+const listaCheia = [50, 40, 30, 20, 10].map((pontos, i) => ({ nome: "J" + i, pontuacao: pontos }));
+const listaNova = juntarRecordes(listaCheia, [{ nome: "Novo", pontuacao: 35 }]);
+verificar("juntarRecordes mantém só 5", listaNova.length, 5);
+verificar("juntarRecordes coloca o novo na posição certa", listaNova[2].nome, "Novo");
+verificar("juntarRecordes tira o pior da lista", listaNova.some((r) => r.pontuacao === 10), false);
+verificar("juntarRecordes não altera a lista original", listaCheia.length, 5);
 
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
