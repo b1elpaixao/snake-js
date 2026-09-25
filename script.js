@@ -68,6 +68,7 @@ const CORES_TABULEIRO = { claro: "#aad751", escuro: "#a2d149" };
 
 const telaInicial = document.getElementById("telaInicial");
 const seletorDificuldade = document.getElementById("seletorDificuldade");
+const seletorModo = document.getElementById("seletorModo");
 
 const CONFIGURACAO_DIFICULDADE = {
     facil: { velocidadeInicial: 300, obstaculos: 5 },
@@ -196,6 +197,7 @@ let pausado = false;
 let noMenu = true;
 let quantidadeJogadoresAtual = 2;
 let modoComBotAtivo = false;
+let modoAtual = "normal";
 let recordes = lerRecordesSalvos();
 let ultimoTickEm = performance.now();
 let velocidadeAtual = VELOCIDADE_INICIAL_MS;
@@ -268,6 +270,8 @@ function gerarObstaculos() {
 }
 
 function adicionarObstaculosSeNecessario() {
+    if (modoAtual === "clássico") return;
+
     const maiorPontuacao = Math.max(...jogadores.map((j) => j.pontuacao));
     const quantidadeAlvo = QUANTIDADE_OBSTACULOS + Math.floor(maiorPontuacao / PONTOS_POR_NOVO_OBSTACULO);
 
@@ -1122,11 +1126,12 @@ function aplicarDificuldade() {
     const configuracao = CONFIGURACAO_DIFICULDADE[seletorDificuldade.value];
 
     VELOCIDADE_INICIAL_MS = configuracao.velocidadeInicial;
-    QUANTIDADE_OBSTACULOS = configuracao.obstaculos;
+    QUANTIDADE_OBSTACULOS = modoAtual === "clássico" ? 0 : configuracao.obstaculos;
 }
 
 function comecarJogo(quantidade, comBot = false) {
     obterContextoAudio();
+    modoAtual = seletorModo.value;
     aplicarDificuldade();
     quantidadeJogadoresAtual = comBot ? 2 : quantidade;
     modoComBotAtivo = comBot;
