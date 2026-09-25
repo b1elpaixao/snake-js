@@ -44,3 +44,53 @@ function misturarCores(corA, corB, proporcao) {
 
     return `rgb(${canais[0]}, ${canais[1]}, ${canais[2]})`;
 }
+
+// ==========================================
+// Posições e colisão (função pura - testadas em teste.js)
+//  ==========================================
+function mesmaPosicao(a, b) {
+    return a.x === b.x && a.y === b.y;
+}
+
+function foraDoTabuleiro(posicao, colunas, linhas) {
+    return posicao.x < 0 || posicao.x >= colunas || posicao.y < 0 || posicao.y >= linhas;
+}
+
+function calcularNovaCabeca(cabeca, direcao, semParedes, colunas, linhas) {
+    let x = cabeca.x + direcao.x;
+    let y = cabeca.y + direcao.y;
+
+    if (semParedes) {
+        x = (x + colunas) % colunas;
+        y = (y + linhas) % linhas;
+    }
+
+    return { x, y };
+}
+
+function posicaoOcupada(posicao, obstaculos, jogadores) {
+    return (
+        obstaculos.some((obstaculo) => mesmaPosicao(obstaculo, posicao)) ||
+        jogadores.some((jogador) => jogador.cobra.some((segmento) => mesmaPosicao(segmento, posicao)))
+    );
+}
+
+function verificarColisao(jogador, jogadores, obstaculos, colunas, linhas) {
+    const cabeca = jogador.cobra[0];
+
+    if (foraDoTabuleiro(cabeca, colunas, linhas)) {
+        return true;
+    }
+
+    if (jogador.invencivel) {
+        return false;
+    }
+
+    const bateuNoProprioCorpo = jogador.cobra.slice(1).some((segmento) => mesmaPosicao(segmento, cabeca));
+    const bateuEmObstaculo = obstaculos.some((obstaculo) => mesmaPosicao(obstaculo, cabeca));
+    const bateuNoOutroJogador = jogadores.some(
+        (outro) => outro !== jogador && outro.cobra.some((segmento) => mesmaPosicao(segmento, cabeca))
+    );
+
+    return bateuNoProprioCorpo || bateuEmObstaculo || bateuNoOutroJogador;
+}

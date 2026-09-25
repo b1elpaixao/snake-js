@@ -47,6 +47,64 @@ aplicarProximaDirecao(jogadorTeste3);
 verificar("duas teclas rápidas: segundo passo vai pra esquerda (sem meia-volta)",
 JSON.stringify(jogadorTeste3.direcao), JSON.stringify({ x: -1, y: 0 }));
 
+// misturarCores
+verificar("misturarCores com proporção 0 devolve a primeira cor", misturarCores("#000000", "#ffffff", 0), "rgb(0, 0, 0)");
+verificar("misturarCores com proporção 1 devolve a segunda cor", misturarCores("#000000", "#ffffff", 1), "rgb(255, 255, 255)");
+verificar("misturarCores no meio do caminho", misturarCores("#000000", "#ffffff", 0.5), "rgb(128, 128, 128)");
+
+// mesmaPosicao e foraDoTabuleiro
+verificar("mesmaPosicao reconhece a mesma casa", mesmaPosicao({ x: 3, y: 4 }, { x: 3, y: 4 }), true);
+verificar("mesmaPosicao diferencia casas diferentes", mesmaPosicao({ x: 3, y: 4}, { x: 4, y: 3 }), false);
+verificar("foraDoTabuleiro: x negativo está fora", foraDoTabuleiro({ x: -1, y: 5}, 20, 20), true);
+verificar("foraDoTabuleiro: canto (19, 19) está dentro", foraDoTabuleiro({ x: 19, y: 19 }, 20, 20), false);
+
+// calcularNovaCabeca
+verificar("calcularNovaCabeca anda uma casa pra direita",
+    JSON.stringify(calcularNovaCabeca({ x: 5, y: 5 }, { x: 1, y: 0 }, false, 20, 20)), JSON.stringify({ x: 6, y: 5 }));
+verificar("calcularNovaCabeca com paredes: sai do tabuleiro",
+    JSON.stringify(calcularNovaCabeca({ x: 19, y: 5}, { x: 1, y: 0}, false, 20, 20)), JSON.stringify({ x: 20, y: 5 }));
+verificar("calcularNovaCabeca sem paredes: direita volta pela esquerda",
+    JSON.stringify(calcularNovaCabeca({ x: 19, y: 5 }, { x: 1, y: 0}, true, 20, 20)), JSON.stringify({ x: 0, y: 5 }));
+verificar("calcularNovaCabeca sem paredes: esquerda volta pela direita",
+    JSON.stringify(calcularNovaCabeca({ x: 0, y: 5 }, { x: -1, y: 0}, true, 20, 20)), JSON.stringify({ x: 19, y: 5 }));
+verificar("calcularNovaCabeca sem paredes: cima volta por baixo",
+    JSON.stringify(calcularNovaCabeca({ x: 5, y: 0 }, { x: 0, y: -1}, true, 20, 20)), JSON.stringify({ x: 5, y: 19 }));
+
+// posicaoOcupada
+const obstaculosTeste = [{ x: 2, y: 2 }];
+const jogadoresTeste = [{ cobra: [{ x: 5, y: 5 }, { x: 4, y: 5 }] }];
+verificar("posicaoOcupada: casa com pedra", posicaoOcupada({ x: 2, y: 2, }, obstaculosTeste, jogadorTeste), true);
+verificar("posicaoOcupada: casa com corpo de cobra", posicaoOcupada({ x: 4, y: 5 }, obstaculosTeste, jogadorTeste), true);
+verificar("posicaoOcupada: casa livre", posicaoOcupada({ x: 10, y: 10 }, obstaculosTeste, jogadoresTeste), false);
+
+//verificarColisao
+function criarCobraTeste(segmento, invencivel = false) {
+    return{ cobra: segmentos, invencivel };
+}
+
+const naParede = criarCobraTeste([{ x: 20, y: 5 }, { x: 19, y: 5 }]);
+verificar("verificarColisao: bater na parede mata", verificarColisao(naParede, [naParede], [], 20, 20), true);
+
+const noCorpo = criarCobraTeste([{ x: 5, y: 5 }, { x: 5, y: 6 }, { x: 4, y: 6 }, { x: 4, y: 5 }, { x: 5, y: 5 }]);
+verificar("verificarColisao: bater no próprio corpo mata", verificarColisao(noCorpo, [noCorpo], [], 20, 20), true);
+
+const naPedra = criarCobraTeste([{ x: 2, y: 2 }, { x: 1, y: 2 }]);
+verificar("verificarColisao: bater numa pedra mata", verificarColisao(naPedra, [naPedra], [{ x: 2, y: 2 }], 20, 20), true);
+
+const atacante = criarCobraTeste([{ x: 8, y: 8 }, { x: 7, y: 8 }]);
+const vitima = criarCobraTeste([{ x: 8, y: 9 }, { x: 8, y: 8 }]);
+verificar("verificarColisao: bater no corpo do outro jogador mata", verificarColisao(atacante, [atacante, vitima], [], 20, 20), true);
+
+const livre = criarCobraTeste([{ x: 10, y: 10 }, { x: 9, y: 10 }]);
+verificar("verificarColisao: casa livre não mata", verificarColisao(livre, [livre], [{ x: 2, y: 2 }], 20, 20), false);
+
+const invencivelNaPedra = criarCobraTeste([{ x: 2, y: 2 }, { x: 1, y: 2 }], true);
+verificar("verificarColisao: invencivel atravessa pedra", verificarColisao(invencivelNaPedra, [invencivelNaPedra], [{ x: 2, y: 2 }], 20, 20), false);
+
+const invencivelNaParede = criarCobraTeste([{ x: -1, y: 5 }, { x: 0, y: 5 }], true);
+verificar("verificarColisao: invencivel ainda morre na parede",
+verificarColisao(invencivelNaParede, [invencivelNaParede], [], 20, 20), true);
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

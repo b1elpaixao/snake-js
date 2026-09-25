@@ -228,11 +228,8 @@ function gerarPosicaoLivre() {
             y: Math.floor(Math.random() * LINHAS),
         };
     } while (
-        obstaculos.some((o) => o.x === candidato.x && o.y === candidato.y) ||
-        (comida.x === candidato.x && comida.y === candidato.y) ||
-        jogadores.some((jogador) =>
-            jogador.cobra.some((s) => s.x === candidato.x && s.y === candidato.y)
-        )
+        posicaoOcupada(candidato, obstaculos, jogadores) ||
+        mesmaPosicao(comida, candidato)
     );
 
     return candidato;
@@ -291,10 +288,7 @@ function gerarComida() {
             y: Math.floor(Math.random() * LINHAS),
         };
     } while (
-        obstaculos.some((o) => o.x === candidato.x && o.y === candidato.y) ||
-        jogadores.some((jogador) =>
-            jogador.cobra.some((s) => s.x === candidato.x && s.y === candidato.y)
-        )
+        posicaoOcupada(candidato, obstaculos, jogadores)
     );
     
     return candidato;
@@ -722,16 +716,9 @@ botaoMudo.addEventListener("click", () => {
 // Movimento e colisão
 // ==========================================
 function moverJogador(jogador) {
-    const cabecaAtual = jogador.cobra[0];
-    let novaX = cabecaAtual.x + jogador.direcao.x;
-    let novaY = cabecaAtual.y + jogador.direcao.y;
-
-    if (inputModoSemParedes.checked) {
-        novaX = (novaX + COLUNAS) % COLUNAS;
-        novaY = (novaY + LINHAS) % LINHAS;
-    }
-
-    const novaCabeca = { x: novaX, y: novaY };
+    const novaCabeca = calcularNovaCabeca(
+        jogador.cobra[0], jogador.direcao, inputModoSemParedes.checked, COLUNAS, LINHAS
+    );
     
     jogador.cobra.unshift(novaCabeca);
 
@@ -863,36 +850,7 @@ function ativarEncolher(jogador) {
 }
 
 function colidiuJogador(jogador) {
-    const cabeca = jogador.cobra[0];
-
-    const bateuNaParede =
-      cabeca.x < 0 || cabeca.x >= COLUNAS || cabeca.y < 0 || cabeca.y >= LINHAS;
-
-    if (bateuNaParede) {
-        return true;
-    }
-
-    if (jogador.invencivel) {
-        return false;
-    }
-
-    const bateuNoProprioCorpo = jogador.cobra
-       .slice(1)
-       .some((segmento) => segmento.x === cabeca.x && segmento.y === cabeca.y);
-
-    const bateuEmObstaculo = obstaculos.some(
-        (obstaculo) => obstaculo.x === cabeca.x && obstaculo.y === cabeca.y
-    );
-
-    const bateuNoOutroJogador = jogadores.some((outro) => {
-        if (outro === jogador) {
-            return false;
-        }
-
-        return outro.cobra.some((segmento) => segmento.x === cabeca.x && segmento.y === cabeca.y);
-    });
-
-    return bateuNoProprioCorpo || bateuEmObstaculo || bateuNoOutroJogador;
+    return verificarColisao(jogador, jogadores, obstaculos, COLUNAS, LINHAS);
 }
 
 //  ==========================================
