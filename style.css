@@ -1,0 +1,733 @@
+/* ==========================================
+   Cores e fontes
+   ========================================== */
+:root {
+    --fundo: #0e1712;
+    --painel: #16241b;
+    --painel-claro: #1e3025;
+    --borda: #22342a;
+    --borda-forte: #2b3d31;
+    --texto: #eef3e6;
+    --texto-suave: #9fb3a3;
+    --texto-apagado: #7f9585;
+    --destaque: #c6f36b;
+    --ouro: #f5c451;
+    --jogador1: #6fa0ff;
+    --jogador2: #ff9a6b;
+
+    --fonte: "Bricolage Grotesque", system-ui, sans-serif;
+    --fonte-numeros: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 28px 24px;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: var(--fonte);
+}
+
+button,
+input,
+select {
+    font-family: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.rotulo { 
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+}
+
+.ponto {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.ponto-1 { background: var(--jogador1); }
+.ponto-2 { background: var(--jogador2); }
+
+/* ==========================================
+   Topo
+   ========================================== */
+.topo {
+    max-width: 1168px;
+    margin: 0 auto 28px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.marca {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--destaque);
+    color: var(--fundo);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.marca-nome {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.barra-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.botao-contorno,
+.botao-destaque {
+    height: 44px;
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.botao-contorno {
+    border: 1px solid var(--borda-forte);
+    background: var(--painel);
+    color: var(--texto);
+    cursor: pointer;
+}
+
+.botao-contorno:hover {
+    background: var(--painel-claro);
+}
+
+.botao-contorno input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--destaque);
+}
+
+.botao-destaque {
+    border: none;
+    background: var(--destaque);
+    color: var(--fundo);
+    font-weight: 700;
+}
+
+.botao-destaque:hover {
+    transform: translateY(-1px);
+}
+
+/* ==========================================
+   Layout em 3 colunas
+   ========================================== */
+.layout {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 32px;
+}
+
+.painel {
+    width: 260px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.cartao {
+    padding: 20px;
+    background: var(--painel);
+    border: 1px solid var(--borda);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* ==========================================
+   Controles (painel de esquerda)
+   ========================================== */
+.controle {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.controle-nome {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.teclas {
+    display: flex;
+    gap: 6px;
+}
+
+kbd {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content:  center;
+    border-radius: 8px;
+    background: var(--fundo);
+    border: 1px solid var(--borda-forte);
+    border-bottom-width: 3px;
+    color: var(--texto);
+    font-family: var(--fonte-numeros);
+    font-size: 14px;
+}
+
+.tecla-larga {
+    height: 32px;
+    font-size: 12px;
+}
+
+.controle-pausa {
+    padding-top: 14px;
+    border-top: 1px solid var(--borda);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--texto-suave);
+}
+
+/* ==========================================
+   Tabuleiro
+   ========================================== */
+.jogo {
+    width: 520px;
+    max-width: 100%;
+    background: var(--painel);
+    border: 1px solid var(--borda);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.barra-placar {
+    min-height: 60px;
+    padding: 10px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+}
+
+.placares {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 20px;
+}
+
+.placar-jogador {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.placar-jogador strong {
+    font-family: var(--fonte-numeros);
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.barra-recordes {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ouro);
+    font-family: var(--fonte-numeros);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.canvas-wrapper {
+    position: relative;
+    margin: 0 20px 20px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+}
+
+/* ==========================================
+   Telas por cima do tabuleiro
+   ========================================== */
+.overlay {
+    position: absolute;
+    inset: 0;
+    padding: 28px 32px;
+    background: rgba(14, 23, 19, 0.88);
+    backdrop-filter: blur(2px);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.overlay-menu {
+    gap: 20px;
+}
+
+.menu-cabecalho h2 {
+    margin: 4px 0 0;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.menu-nomes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--texto-suave);
+}
+
+.campo input,
+.menu-dificuldade select {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid var(--borda-forte);
+    background: var(--fundo);
+    color: var(--texto);
+    font-size: 15px;
+}
+
+.campo-1 input { box-shadow: inset 0 -3px 0 var(--jogador1); }
+.campo-2 input { box-shadow: inset 0 -3px 0 var(--jogador2); }
+
+.campo input::placeholder {
+    color: var(--texto-apagado);
+}
+
+.campo input:focus,
+.menu-dificuldade select:focus {
+    outline: 2px solid var(--destaque);
+    outline-offset: 1px;
+}
+
+.menu-dificuldade {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--texto-suave);
+}
+
+.menu-dificuldade select {
+    cursor: pointer;
+}
+
+.menu-botoes {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.botoes-secundarios {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.botao-principal {
+    height: 52px;
+    padding: 0 28px;
+    border: none;
+    border-radius: 14px;
+    background: var(--destaque);
+    color: var(--fundo);
+    font-size: 17px;
+    font-weight: 800;
+    transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.botao-principal:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+}
+
+.botao-secundario {
+    height: 48px;
+    border: 1px solid #3a5242;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--texto);
+    font-size: 15px;
+    font-weight: 600;
+    transition: background 0.15s ease;
+}
+
+.botao-secundario:hover {
+    background: var(--painel-claro);
+}
+ 
+.overlay-game-over {
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    text-align: center;
+}
+
+.overlay-game-over p {
+    margin: 0;
+}
+
+.resultado {
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.05;
+}
+
+.pontuacao-final {
+    padding: 10px 18px;
+    border-radius: 12px;
+    background: var(--painel);
+    border: 1px solid var(--borda-forte);
+    font-family: var(--fonte-numeros);
+    font-size: 16px;
+}
+
+.dica {
+    font-size: 13px;
+    color: var(--texto-suave);
+}
+
+/* ==========================================
+   Recordes e itens (painel da direita)
+   ========================================== */
+.recordes ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: posicao;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.recordes li {
+    counter-increment: posicao;
+    height: 36px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 8px;
+    font-family: var(--fonte-numeros);
+    font-size: 14px;
+}
+
+.recordes li::before {
+    content: counter(posicao);
+    width: 16px;
+    color: var(--texto-suave);
+}
+
+.recordes li:first-child {
+    background: var(--painel-claro);
+    font-weight: 600;
+}
+
+.recordes li:first-child::before {
+    color: var(--ouro);
+}
+
+.recordes ol:empty::after {
+    content: "Nenhum recorde ainda";
+    font-size: 14px;
+    color: var(--texto-apagado);
+}
+
+.itens {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.itens-li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 14px;
+    line-height: 1.35;
+}
+
+.itens li div {
+    display: flex;
+    flex-direction: column;
+}
+
+.itens li span:not(.item-icone) {
+    color: var(--texto-suave);
+}
+
+.item-icone {
+    width: 14px;
+    height: 14px;
+    margin-top: 3px;
+    flex-shrink: 0;
+    border-radius: 3px;
+    transform: rotate(45deg);
+    background: var(--cor);
+}
+
+.item-redondo {
+    border-radius: 50%;
+    transform: none;
+    box-shadow: inset 0 0 2px #b8860b;
+}
+
+/* ==========================================
+   Controles de toque (só aparecem no celular)
+   ========================================== */
+.controles-toque {
+    display: none;
+    grid-template-columns: repeat(3, 64px);
+    grid-template-areas: 
+       ".         cima      ."
+       "esquerda  .         direita"
+       ".         baixo     .";
+    gap: 8px;
+    justify-content: center;
+    margin: 20px auto 0;
+}
+
+.botao-direcao {
+    width: 64px;
+    height: 64px;
+    border: 1px solid var(--borda-forte);
+    border-bottom-width: 3px;
+    border-radius: 16px;
+    background: var(--painel);
+    color: var(--texto);
+    font-size: 22px;
+    touch-action: manipulation;
+}
+
+.botao-direcao:active {
+    background: var(--destaque);
+    color: var(--fundo);
+}
+
+.seta-cima { grid-area: cima; }
+.seta-baixo { grid-area: baixo; }
+.seta-esquerda { grid-area: esquerda; }
+.seta-direita { grid-area: direita; }
+
+@media (pointer: coarse) {
+    .controles-toque {
+        display: grid;
+    }
+}
+
+/* ==========================================
+   Telas menores
+   ========================================== */
+@media (max-width: 1140px) {
+    .layout {
+        flex-wrap: wrap;
+    }
+
+    .jogo {
+        order: -1;
+    }
+
+    .painel-controles {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 16px;
+    }
+
+    .topo {
+        margin-bottom: 16px;
+    }
+
+    .marca-nome {
+        font-size: 22px;
+    }
+
+    .barra-placar {
+        padding: 10px 14px;
+    }
+
+    .canvas-wrapper {
+        margin: 0 10px 10px;
+    }
+
+    .overlay {
+        padding: 16px;
+    }
+
+    .overlay-menu {
+        gap: 12px;
+    }
+
+    .menu-cabecalho h2 {
+        font-size: 22px;
+    }
+
+    .menu-nomes {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .campo input,
+    .menu-dificuldade select {
+        height: 40px;
+    }
+
+    .botao-principal {
+        height: 46px;
+    }
+
+    .botao-secundario {
+        height: 42px;
+    }
+
+    .resultado {
+        font-size: 28px;
+    }
+
+    .painel {
+        width: 100%;
+    }
+}
+
+.overlay-game-over button {
+    width: 220px;
+}
+
+/* ==========================================
+   Power-ups ativos no placar
+   ========================================== */
+.efeitos {
+    display: flex;
+    gap: 6px;
+}
+
+.efeito {
+    min-width: 64px;
+    padding: 4px 8px;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    border-radius: 8px;
+    background: var(--fundo);
+    border: 1px solid var(--borda-forte);
+    color: var(--cor-efeito);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.efeito-trilho {
+    height: 4px;
+    border-radius: 999px;
+    background: var(--painel-claro);
+    overflow: hidden;
+}
+
+.efeito-barra {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--cor-efeito);
+}
+
+.efeito[data-efeito="invencivel"] { --cor-efeito: #f5c451; }
+.efeito[data-efeito="velocidadeExtraAtiva"] {--cor-efeito: #38bdf8; }
+.efeito[data-efeito="pontosDobradosAtivo"] {--cor-efeito: #e879f9; }
+
+.efeito.acabando {
+    animation: piscar 0.4s steps(2) infinite;
+}
+
+@keyframes piscar {
+    50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .efeito.acabando {
+        animation: none;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
