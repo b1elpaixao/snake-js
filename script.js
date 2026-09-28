@@ -7,6 +7,7 @@ const elementoRecorde = document.getElementById("highscore");
 const telaGameOver = document.getElementById("telaGameOver");
 const elementoResultadoFinal = document.getElementById("resultadoFinal");
 const elementoPontuacaoFinal = document.getElementById("pontuacaoFinal");
+const elementoAvisoRecorde = document.getElementById("avisoRecorde");
 const botaoJogarDeNovo = document.getElementById("botaoJogarDeNovo");
 const botaoVoltarMenu = document.getElementById("botaoVoltarMenu");
 const inputModoSemParedes = document.getElementById("modoSemParedes");
@@ -46,7 +47,7 @@ const DURACAO_COMIDA_DOURADA_MS = 4000;
 const DURACAO_INVENCIBILIDADE_MS = 5000;
 const DURACAO_VELOCIDADE_EXTRA_MS = 5000;
 const DURACAO_PONTOS_DOBRADOS_MS = 5000;
-const MULTIPLICADOR_VELOCIDADE_EXTRA = 0.5;
+const MEIOS_PASSOS_POR_PASSO = 2; // com Turbo a cobra anda em todo meio passo (2x mais rápida)
 const QUANTIDADE_ENCOLHER = 3;
 
 // modo rato
@@ -58,10 +59,10 @@ const DISTANCIA_ALERTA_RATO = 3;      // a partir dessa distância o rato fujão
 const DISTANCIA_MINIMA_NASCER_RATO = 5; // rato novo não nasce colado na cobra
 const TICKS_POR_PASSO_RATO = 2;         // o rato anda na metade da velocidade da cobra
 const CORES_POWERUP = {
-    invencibilidade: "gold",
-    velocidade: "deepskyblue",
-    pontosDobrados: "magenta",
-    encolher: "white",
+    invencibilidade: "#f5c451",
+    velocidade: "#38bdf8",
+    pontosDobrados: "#e879f9",
+    encolher: "#f1f5f9",
 };
 const EFEITOS_COM_DURACAO = [
     { ativo: "invencivel", ate: "invencivelAte", duracao: DURACAO_INVENCIBILIDADE_MS },
@@ -121,6 +122,8 @@ function criarJogador(config) {
         bot: false,
         invencivel: false,
         velocidadeExtraAtiva: false,
+        ultimoPassoEm: 0,
+        duracaoPasso: VELOCIDADE_INICIAL_MS,
         pontosDobradosAtivo: false,
         invencivelAte: 0,
         velocidadeExtraAte: 0,
@@ -166,6 +169,9 @@ let powerUp = null; // { x, y } quando existe um na tela, ou null
 let comidaDourada = null; // { x, y } quando existe, ou null
 let ratos = []; // só tem ratos no modo rato
 let contadorTicksRatos = 0;
+let contadorMeiosPassos = 0;
+let textosFlutuantes = []; // os "=3" que sobem ao comer
+const DURACAO_TEXTO_FLUTUANTE_MS = 800;
 // ==========================================
 // Armazenamento (localStorage) - nunca deixa o jogo quebrar
 // ==========================================
@@ -288,6 +294,22 @@ function gerarObstaculos() {
     return novosObstaculos;
 }
 
+// posição livre que não fique colada nem na frente de nenhuma cobra
+function gerarPosicaoParaPedra() {
+    let posicao;
+    let tentativas = 0;
+
+    do {
+        posicao = gerarPosicaoLivre();
+        tentativas++;
+    } while (
+        tentativas < 100 &&
+        jogadores.some((jogador) => pedraAtrapalhaJogador(posicao, jogador.cobra[0], jogador.direcao))
+    );
+
+    return posicao;
+}
+
 function adicionarObstaculosSeNecessario() {
     if (modoAtual === "clássico") return;
 
@@ -295,7 +317,7 @@ function adicionarObstaculosSeNecessario() {
     const quantidadeAlvo = QUANTIDADE_OBSTACULOS + Math.floor(maiorPontuacao / PONTOS_POR_NOVO_OBSTACULO);
 
     while (obstaculos.length < quantidadeAlvo) {
-        obstaculos.push(gerarPosicaoLivre());
+        obstaculos.push(gerarPosicaoParaPedra());
     }
 }
 
@@ -420,15 +442,57 @@ function desenhar() {
     }
 
     if (comidaDourada) {
-        desenharCelula(comidaDourada.x, comidaDourada.y, "goldenrod");
+        desenharMacaDourada(comidaDourada);
     }
 
     if (powerUp) {
-        desenharCelula(powerUp.x, powerUp.y, CORES_POWERUP[powerUp.tipo]);
+        desenharPowerUp(powerUp);
     }
 
     for (const jogador of jogadores) {
-        desenharCobra(jogador, progresso);
+        desenharCobra(jogador, progressoDoJogador(jogador));
+    }
+
+    desenharTextosFlutuantes();
+}
+
+// cada cobra tem o próprio ritmo (com Turbo o passo dura metade)
+function progressoDoJogador(jogador) {
+    if (!jogoAtivo || pausado) {
+        return 1;
+    }
+
+    return Math.min((performance.now() - jogador.ultimoPassoEm) / jogador.duracaoPasso, 1);
+}
+
+// "+3" que sobe de cabeça da cobra e some
+function adicionarTextoFlutuante(posicao, texto, cor) {
+    textosFlutuantes.push({ x: posicao.x, y: posicao.y, texto, cor, criadoEm: agoraDoJogo() });
+}
+
+function desenharTextosFlutuantes() {
+    const agora = agoraDoJogo();
+
+    // tira os que já terminaram de subir
+    textosFlutuantes = textosFlutuantes.filter((item) => agora - item.criadoEm < DURACAO_TEXTO_FLUTUANTE_MS);
+
+    for (const item of textosFlutuantes) {
+        const progresso = (agora - item.criadoEm) / DURACAO_TEXTO_FLUTUANTE_MS;
+        // não deixa o texto sair pelos lados do tabuleiro
+        const x = Math.min(Math.max((item.x + 0.5) * TAMANHO_CELULA, 16), LARGURA_TABULEIRO - 16);
+        const y = (item.y + 0.5) * TAMANHO_CELULA - 10 - progresso * 22;
+
+        ctx.save();
+        ctx.globalAlpha = 1 - progresso * progresso; // some mais rápido no final
+        ctx.font = "800 15px 'Bricolage Grotesque', sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "rgba(14, 23, 18, 0.85)";
+        ctx.strokeText(item.texto, x, y);
+        ctx.fillStyle = item.cor;
+        ctx.fillText(item.texto, x, y);
+        ctx.restore();
     }
 }
 
@@ -441,12 +505,12 @@ function desenharTabuleiro() {
     }
 }
 
-function desenharMaca(x, y) {
+function desenharMaca(x, y, cor = "#e7471d") {
     const centroX = x * TAMANHO_CELULA + TAMANHO_CELULA / 2;
     const centroY = y * TAMANHO_CELULA + TAMANHO_CELULA / 2 + 1;
     const raio = TAMANHO_CELULA * 0.38;
 
-    ctx.fillStyle = "#e7471d";
+    ctx.fillStyle = cor;
     ctx.beginPath();
     ctx.arc(centroX, centroY, raio, 0, Math.PI * 2);
     ctx.fill();
@@ -518,6 +582,71 @@ function desenharRato(rato, progresso) {
     ctx.arc(8.6, 0, 0.9, 0, Math.PI * 2);
     ctx.fill();
 
+    ctx.restore();
+}
+
+function desenharPowerUp(item) {
+    const centroX= item.x * TAMANHO_CELULA+ TAMANHO_CELULA / 2;
+    const centroY = item.y * TAMANHO_CELULA + TAMANHO_CELULA / 2;
+    const cor = CORES_POWERUP[item.tipo];
+    const pulso = (Math.sin(agoraDoJogo() / 200) + 1) / 2; // vai de 0 a 1 e volta
+    const metade= TAMANHO_CELULA * (0.3+ 0.04 * pulso);
+
+    ctx.save();
+
+    // brilho em volta, pulsando
+    ctx.globalAlpha = 0.2 + 0.2 * pulso;
+    ctx.fillStyle = cor;
+    ctx.beginPath();
+    ctx.arc(centroX, centroY, TAMANHO_CELULA * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // losango (um quadrado girado 45°)
+    ctx.translate(centroX, centroY);
+    ctx.rotate(Math.PI/ 4);
+    ctx.fillStyle = cor;
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.35)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(-metade, -metade, metade * 2, metade * 2, 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // reflexo
+    ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+    ctx.beginPath();
+    ctx.roundRect(-metade * 0.7, -metade * 0.7, metade * 0.7, metade * 0.7, 1);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function desenharMacaDourada(item) {
+    const centroX= item.x * TAMANHO_CELULA + TAMANHO_CELULA / 2;
+    const centroY = item.y * TAMANHO_CELULA + TAMANHO_CELULA / 2;
+    const pulso = (Math.sin(agoraDoJogo() / 150) + 1) / 2;
+    const tempoRestante = Math.max(0, (item.expiraEm - agoraDoJogo()) / DURACAO_COMIDA_DOURADA_MS);
+
+    // brilho em volta, pulsando
+    ctx.save();
+    ctx.globalAlpha = 0.25 + 0.25 * pulso;
+    ctx.fillStyle = "#f5c451";
+    ctx.beginPath();
+    ctx.arc(centroX, centroY, TAMANHO_CELULA * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    desenharMaca(item.x, item.y, "#f5c451");
+
+    // anel que vai sumindo: mostra quando tempo falta pra maçã dourada ir embora
+    ctx.save();
+    ctx.strokeStyle = "#b8860b";
+    ctx.lineWidth = 2;
+    ctx.lineCap= "round";
+    ctx.beginPath();
+    ctx.arc(centroX, centroY, TAMANHO_CELULA * 0.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * tempoRestante);
+    ctx.stroke();
     ctx.restore();
 }
 
@@ -650,12 +779,37 @@ function mostrarTelaGameOver(jogadoresVivos) {
 
     elementoResultadoFinal.textContent = resultado;
     elementoPontuacaoFinal.textContent = textoPontuacao;
+
+     // compara com o Top 5 de antes, por isso vem antes de atualizarListaRecordes
+    const pontuacoesHumanas = jogadores.filter((jogador) => !jogador.bot).map((jogador) => jogador.pontuacao);
+    mostrarConquista(tipoDeConquista(pontuacoesHumanas, recordesDoModo(modoAtual)));
+
     atualizarListaRecordes(
         jogadores
             .filter((jogador) => !jogador.bot && jogador.pontuacao > 0)
             .map((jogador) => ({nome: jogador.nome, pontuacao: jogador.pontuacao }))
     );
     telaGameOver.hidden = false;
+}
+
+function mostrarConquista(conquista) {
+    elementoAvisoRecorde.hidden = conquista === null;
+
+    if (conquista === "recorde") {
+        elementoAvisoRecorde.textContent = "Novo recorde!";
+        tocarFanfarra();
+    } else if (conquista === "top") {
+        elementoAvisoRecorde.textContent = "Entrou no Top 5!";
+    }
+}
+
+function tocarFanfarra() {
+    const notas = [523, 659, 784, 1047]; // dó, mi, sol, dó (uma oitava acima)
+
+    notas.forEach((frequencia, indice) => {
+        // espera o som da batida terminar antes de começar
+        setTimeout(() => tocarSom(frequencia, 0.15, "triangle"), 350 + indice * 120);
+    });
 }
 
 function desenharPausa() {
@@ -893,6 +1047,7 @@ function moverJogador(jogador) {
            ? `${jogador.pontuacao} (x${jogador.comboAtual})`
            : jogador.pontuacao;
 
+        adicionarTextoFlutuante(novaCabeca, `+${pontosGanhos}`, "#f5c451");
         atualizarRecordeSeNecessario(jogador.pontuacao);
         tocarSomComidaDourada();
 
@@ -935,6 +1090,10 @@ function comerAlimento(jogador, pontosBase) {
        ? `${jogador.pontuacao} (x${jogador.comboAtual})`
        : jogador.pontuacao;
 
+    // branco normal; dourado quando tem combo ou pontos x2
+    const corTexto = pontosGanhos > pontosBase ? "#f5c451" : "#ffffff";
+    adicionarTextoFlutuante(jogador.cobra[0], `+${pontosGanhos}`, corTexto);   
+
     atualizarRecordeSeNecessario(jogador.pontuacao);
     adicionarObstaculosSeNecessario();
     tocarSomComer();
@@ -948,7 +1107,7 @@ function atualizarRecordeSeNecessario(pontuacaoAtual) {
 }
 
 function recordesDoModo(modo) {
-    return recordesDoModo[modo] || [];
+    return recordesPorModo[modo] || [];
 }
 
 // mostra o Top 5 e o troféu do modo escolhido
@@ -973,7 +1132,7 @@ function desenharListaRecordes() {
 }
 
 function atualizarListaRecordes(novosRegistros) {
-    recordesDoModo[modoAtual] = juntarRecordes(recordesDoModo(modoAtual), novosRegistros);
+    recordesPorModo[modoAtual] = juntarRecordes(recordesDoModo(modoAtual), novosRegistros);
 
     salvarNoArmazenamento("snakeRecordesPorModo", JSON.stringify(recordesPorModo));
     mostrarRecordesDoModo(modoAtual);
@@ -1150,6 +1309,19 @@ botaoPausa.addEventListener("click", () => {
     alternarPausa();
 });
 
+// pausa sozinho se o jogador sair da aba/janela (e não despausa sozinho ao voltar)
+function pausarAutomaticamente() {
+    if (noMenu || !jogoAtivo || pausado) return;
+    alternarPausa();
+}
+
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        pausarAutomaticamente();
+    }
+});
+window.addEventListener("blur", pausarAutomaticamente);
+
 document.addEventListener("keydown", mudarDirecao);
 botaoJogarDeNovo.addEventListener("click", reiniciar);
 botaoVoltarMenu.addEventListener("click", voltarAoMenu);
@@ -1225,38 +1397,54 @@ function loop() {
         setTimeout(loop, 100);
         return;
     }
+    // o loop roda em meios passos: quem está com Turbo anda em todos,
+    // os outros só nos passos completos (um sim, um não)
+    contadorMeiosPassos++;
+    const passoCompleto = contadorMeiosPassos % MEIOS_PASSOS_POR_PASSO === 0;
+    const agoraReal = performance.now();
 
     for (const jogador of jogadores) {
-        if (jogador.bot) {
-            definirDirecaoJogador(jogador, decidirDirecaoBot(jogador));
-        }
-
         atualizarEfeitos(jogador);
 
         if (jogador.comboAtual > 0 && agoraDoJogo() - jogador.ultimoComerEm > JANELA_COMBO_MS) {
             jogador.comboAtual = 0;
         }
+    }
+
+    const jogadoresQueAndam = jogadores.filter((jogador) => passoCompleto || jogador.velocidadeExtraAtiva);
+
+    for (const jogador of jogadoresQueAndam) {
+        if (jogador.bot) {
+            definirDirecaoJogador(jogador, decidirDirecaoBot(jogador));
+        }
         
         jogador.cobraAnterior = jogador.cobra.map((segmento) => ({ ...segmento }));
         aplicarProximaDirecao(jogador);
         moverJogador(jogador);
+
+        jogador.ultimoPassoEm = agoraReal;
+        jogador.duracaoPasso = jogador.velocidadeExtraAtiva
+            ? velocidadeAtual / MEIOS_PASSOS_POR_PASSO
+            : velocidadeAtual;
     }
 
     if (comidaDourada && agoraDoJogo() >= comidaDourada.expiraEm) {
         comidaDourada = null;
     }
+    
+    // só quem andou pode ter batido
+    const jogadoresQueBateram = jogadoresQueAndam.filter((jogador) => colidiuJogador(jogador));
 
-    const jogadoresVivos = jogadores.filter((jogador) => !colidiuJogador(jogador));
-
-    if (jogadoresVivos.length < jogadores.length) {
+    if (jogadoresQueBateram.length > 0) {
         jogoAtivo = false;
         pararMusicaFundo();
         tocarSomColisao();
-        mostrarTelaGameOver(jogadoresVivos);
+        mostrarTelaGameOver(jogadores.filter((jogador) => !jogadoresQueBateram.includes(jogador)));
         return;
     }
 
-    if (modoAtual === "rato") {
+    if (passoCompleto) {
+        if (modoAtual === "rato") {
         moverRatos();
     }
     
@@ -1269,18 +1457,15 @@ function loop() {
         gerarComidaDourada();
     }
 
-    ultimoTickEm = performance.now();
+    ultimoTickEm = agoraReal;
 
     velocidadeAtual = Math.max(
         VELOCIDADE_MINIMA_MS,
         VELOCIDADE_INICIAL_MS - Math.max(...jogadores.map((j) => j.pontuacao)) * REDUCAO_VELOCIDADE_POR_PONTO
     );
-    
-    if (jogadores.some((jogador) => jogador.velocidadeExtraAtiva)) {
-        velocidadeAtual *= MULTIPLICADOR_VELOCIDADE_EXTRA;
     }
 
-    setTimeout(loop, velocidadeAtual);
+    setTimeout(loop, velocidadeAtual / MEIOS_PASSOS_POR_PASSO);
 }
 
 function reiniciar() {
@@ -1297,6 +1482,8 @@ function reiniciar() {
     obstaculos = gerarObstaculos();
     comida = gerarComida();
     criarRatosIniciais();
+    contadorMeiosPassos = 0;
+    textosFlutuantes = [];
     powerUp = null;
     comidaDourada = null;
     pausado = false;

@@ -178,3 +178,51 @@ function juntarRecordes(lista, novosRegistros) {
         .sort((a, b) => b.pontuacao - a.pontuacao)
         .slice(0, TAMANHO_TOP_RECORDES);
 }
+
+// ==========================================
+// Pedras Novas (funções puras - testadas em testes.js)
+// ==========================================
+const RAIO_SEGURO_PEDRA = 2;         // nenhuma pedra nova a 2 casas ou menos de cabeça
+const ALCANCE_CAMINHO_PEDRA = 5;     // nem nas 5 casas bem na frente da cobra
+
+function pedraAtrapalhaJogador(posicao, cabeca, direcao) {
+    if (distanciaManhattan(posicao, cabeca) <= RAIO_SEGURO_PEDRA) {
+        return true;
+    }
+
+    for (let passo =  1; passo <= ALCANCE_CAMINHO_PEDRA; passo++) {
+        const casaNaFrente = { x: cabeca.x + direcao.x * passo, y: cabeca.y + direcao.y * passo };
+        
+        if (mesmaPosicao(posicao, casaNaFrente)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// ==========================================
+// Conquista no fim da partida (função para  - testada em testes.js)
+// ==========================================
+// devolve "recorde" (bateu o 1° lugar), "top" (entrou no Top 5) ou null
+function tipoDeConquista(pontuacoes, listaAntes) {
+    const pontuacoesValidas = pontuacoes.filter((pontos) => pontos > 0);
+
+    if (pontuacoesValidas.length === 0) {
+        return null;
+    }
+
+    const recordeAnterior = listaAntes.length > 0 ? listaAntes[0].pontuacao : 0;
+
+    if (pontuacoesValidas.some((pontos) => pontos > recordeAnterior)) {
+        return "recorde";
+    }
+
+    const menorDoTop = listaAntes.length < TAMANHO_TOP_RECORDES ? 0 : listaAntes[listaAntes.length - 1].pontuacao;
+
+    if (pontuacoesValidas.some((pontos) => pontos > menorDoTop)) {
+        return "top";
+    }
+
+    return null;
+}

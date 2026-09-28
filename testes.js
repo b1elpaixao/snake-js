@@ -145,6 +145,25 @@ verificar("juntarRecordes coloca o novo na posição certa", listaNova[2].nome, 
 verificar("juntarRecordes tira o pior da lista", listaNova.some((r) => r.pontuacao === 10), false);
 verificar("juntarRecordes não altera a lista original", listaCheia.length, 5);
 
+// pedras novas
+const cabecaPedra = { x: 10, y: 10 };
+const indoPraDireita = { x: 1, y: 0};
+verificar("pedra colada na cabeça atrapalha", pedraAtrapalhaJogador({ x: 10, y: 11 }, cabecaPedra, indoPraDireita), true);
+verificar("pedra 5 casas na frente atrapalha", pedraAtrapalhaJogador({ x: 15, y: 10 }, cabecaPedra, indoPraDireita), true);
+verificar("pedra 6 casas na frente atrapalha", pedraAtrapalhaJogador({ x: 16, y: 10 }, cabecaPedra, indoPraDireita), false);
+verificar("pedra atrás da cobra, longe, não atrapalha", pedraAtrapalhaJogador({ x: 5, y: 10 }, cabecaPedra, indoPraDireita), false);
+verificar("pedra longe do ladop não atrapalha", pedraAtrapalhaJogador({ x: 10, y: 15 }, cabecaPedra, indoPraDireita), false);
+
+// conquista no fim da partida
+const topTeste = [50, 40, 30, 20, 10].map((pontos) => ({ nome: "J", pontuacao: pontos }));
+verificar("conquista: passou do 1° lugar é novo recorde", tipoDeConquista([51], topTeste), "recorde");
+verificar("conquista: empatar com o 1° não é recorde (mas entra no top)", tipoDeConquista([50], topTeste), "top");
+verificar("conquista: passou do 5° lugar entra no top", tipoDeConquista([11], topTeste), "top");
+verificar("conquista: abaixo do 5° lugar não ganha nada", tipoDeConquista([10], topTeste), null);
+verificar("conquista: zero pontos não ganha nada", tipoDeConquista([0], []), null);
+verificar("conquista: primeira partida com pontos é recorde", tipoDeConquista([3], []), "recorde");
+verificar("conquista: lista com menos de 5 sempre tem vaga", tipoDeConquista([1], [{ nome: "J", pontuacao: 9 }]), "top");
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

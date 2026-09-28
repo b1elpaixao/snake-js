@@ -727,6 +727,36 @@ canvas {
     gap: 12px;
 }
 
+/* ==========================================
+   Selo de recorde no fim de jogo
+   ========================================== */
+.aviso-recorde {
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: var(--ouro);
+    color: var(--fundo);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    animation: aparecer-recorde 0.5s ease-out;
+}
+
+@keyframes aparecer-recorde {
+    from {
+        transform: scale(0.6);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .aviso-recorde {
+        animation: none;
+    }
+}
 
 
 
