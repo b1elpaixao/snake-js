@@ -705,6 +705,7 @@ canvas {
 
 .efeito[data-efeito="invencivel"] { --cor-efeito: #f5c451; }
 .efeito[data-efeito="velocidadeExtraAtiva"] {--cor-efeito: #38bdf8; }
+.efeito[data-efeito="imaAtivo"] { --cor-efeito: #fb923c; }
 .efeito[data-efeito="pontosDobradosAtivo"] {--cor-efeito: #e879f9; }
 
 .efeito.acabando {
@@ -756,6 +757,84 @@ canvas {
     .aviso-recorde {
         animation: none;
     }
+}
+
+/* ==========================================
+   Tela "Como jogar"
+   ========================================== */
+.menu-cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.botao-link {
+    min-height: 32px;
+    padding: 4px 0;
+    border: none;
+    background: none;
+    color: var(--destaque);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    white-space: nowrap;
+}
+
+.botao-link:hover {
+    color: #e2ffa8;
+}
+
+.overlay-como-jogar {
+    gap: 18px;
+    background: rgba(14, 23, 18, 0.97);
+}
+
+.como-jogar-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.como-jogar-topo h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.como-jogar-topo .botao-secundario {
+    height: 40px;
+    padding: 0 18px;
+}
+
+.overlay-como-jogar h3 {
+    margin: 0 0 6px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+}
+
+.overlay-como-jogar p,
+.overlay-como-jogar ul {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.overlay-como-jogar ul {
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.causa-morte {
+    font-size: 15px;
+    color: var(--texto-suave);
 }
 
 

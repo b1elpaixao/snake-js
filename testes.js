@@ -164,6 +164,68 @@ verificar("conquista: zero pontos não ganha nada", tipoDeConquista([0], []), nu
 verificar("conquista: primeira partida com pontos é recorde", tipoDeConquista([3], []), "recorde");
 verificar("conquista: lista com menos de 5 sempre tem vaga", tipoDeConquista([1], [{ nome: "J", pontuacao: 9 }]), "top");
 
+// bot
+// tabuleiro de teste 10x10 com paredes; "bloqueadas" são casas ocupadas
+function criarMapaTeste(bloqueadas) {
+    const chaves = new Set(bloqueadas.map((posicao) => `${posicao.x},${posicao.y}`));
+    return {
+        andar: (posicao, direcao) => ({ x: posicao.x + direcao.x, y: posicao.y + direcao.y }),
+        casaLivre: (posicao) =>
+            posicao.x >= 0 && posicao.x < 10 && posicao.y >= 0 && posicao.y < 10 &&
+            !chaves.has(`${posicao.x},${posicao.y}`),
+    };
+}
+
+// um "beco" à direita: só as casas (3,2) e (4,2) estão abertas lá dentro
+// (2,2) é a cabeça da cobra, então também está ocupada
+const mapaBeco = criarMapaTeste([{ x: 2, y: 2 }, { x: 3, y: 1}, { x: 4, y: 1}, { x: 3, y: 3}, { x: 4, y: 3}, { x: 5, y: 2 }]);
+verificar("contarEspacoLivre conta só as casas do beco", contarEspacoLivre({ x: 3, y: 2 }, mapaBeco.andar, mapaBeco.casaLivre, 50), 2);
+verificar("contarEspacoLivre para de contar no limite", contarEspacoLivre({ x: 0, y: 0 }, mapaBeco.andar, mapaBeco.casaLivre, 7), 7);
+
+const direcaoNoBeco = escolherDirecaoBot({ x: 2, y: 2}, { x: 1, y: 0}, { x: 4, y: 2}, mapaBeco.andar, mapaBeco.casaLivre, 5);
+verificar("bot não entra no beco mesmo com a comida lá dentro", direcaoNoBeco.x === 1 && direcaoNoBeco.y === 0, false);
+
+const mapaAberto = criarMapaTeste([]);
+verificar("bot vai em direção da comida quando a caminho é seguro",
+    JSON.stringify(escolherDirecaoBot({ x: 2, y: 2 }, { x: 1, y: 0}, { x: 8, y: 2}, mapaAberto.andar, mapaAberto.casaLivre, 5)),
+    JSON.stringify({ x: 1, y: 0 }));
+
+const mapaFechado = criarMapaTeste([{ x: 3, y: 2}, { x: 2, y: 1}, { x: 2, y: 3 }]);
+verificar("bot sem saída segue em frente",
+    JSON.stringify(escolherDirecaoBot({ x: 2, y: 2}, { x: 1, y: 0}, { x: 8, y: 2}, mapaFechado.andar, mapaFechado.casaLivre, 5 )),
+    JSON.stringify({ x: 1, y: 0 }));
+
+// causa da morte
+verificar("motivo: parede", motivoDaColisao(naParede, [naParede], [], 20, 20), "parede");
+verificar("motivo: próprio corpo", motivoDaColisao(noCorpo, [noCorpo], [], 20, 20), "proprioCorpo");
+verificar("motivo: pedra", motivoDaColisao(naPedra, [naPedra], [{ x: 2, y: 2 }], 20, 20), "pedra");
+verificar("motivo: outro jogador", motivoDaColisao(atacante, [atacante, vitima], [], 20, 20), "outroJogador");
+verificar("motivo: casa livre não tem motivo", motivoDaColisao(livre, [livre], [], 20, 20), null);
+verificar("motivo: invencível na parede ainda é parede", motivoDaColisao(invencivelNaParede, [invencivelNaParede], [], 20, 20), "parede");
+verificar("descreverBatida monta a frase", descreverBatida("Ana", "pedra", ""), "Ana bateu numa pedra");
+verificar("descreverBatida cita o outro jogador", descreverBatida("Ana", "outroJogador", "Bot"), "Ana bateu em Bot");
+
+// imã
+verificar("imã: anda no eixo mais longe primeiro",
+    JSON.stringify(passoEmDirecaoA({ x: 0, y: 0 }, { x: 5, y: 2 }, () => true)), JSON.stringify({ x: 1, y: 0 }));
+verificar("imã se o eixo mais longe está ocupado, tenta o outro",
+    JSON.stringify(passoEmDirecaoA({ x: 0, y: 0 }, { x: 5, y: 2 }, (casa) => casa.x === 0)),
+JSON.stringify({ x: 0, y: 1 }));
+verificar("ímã: tudo ocupado, fica parado",
+    JSON.stringify(passoEmDirecaoA({ x: 3, y: 3 }, { x: 5, y: 5}, () => false)),
+JSON.stringify({ x: 3, y: 3 }));
+verificar("ímã: já ta na mesma linha, anda só em x",
+    JSON.stringify(passoEmDirecaoA({ x: 9, y: 4 }, { x: 2, y: 4 }, () => true)), JSON.stringify({ x: 8, y: 4 }));
+
+// pedras que andam
+const pedraTeste = { x: 5, y: 5, direcao: { x: 1, y: 0 } };
+verificar("pedra anda pra frente quando está livre",
+    JSON.stringify(proximoPassoPedra(pedraTeste, () => true)), JSON.stringify({ x: 6, y: 5, direcao: { x: 1, y: 0 } }));
+verificar("pedra bloqueada na frente volta pra trás",
+    JSON.stringify(proximoPassoPedra(pedraTeste, (casa) => casa.x !== 6)), JSON.stringify({ x: 4, y: 5, direcao: { x: -1, y: 0 } }));
+verificar("pedra presa fica parada e vira",
+    JSON.stringify(proximoPassoPedra(pedraTeste, () => false)), JSON.stringify({ x: 5, y: 5, direcao: { x: -1, y: 0 } }));
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

@@ -75,24 +75,47 @@ function posicaoOcupada(posicao, obstaculos, jogadores) {
     );
 }
 
-function verificarColisao(jogador, jogadores, obstaculos, colunas, linhas) {
+// devolve por que a cobra bateu ("parede", "proprioCorpo", "pedra", "outroJogador") ou nulll se não bateu
+function motivoDaColisao(jogador, jogadores, obstaculos, colunas, linhas) {
     const cabeca = jogador.cobra[0];
 
     if (foraDoTabuleiro(cabeca, colunas, linhas)) {
-        return true;
+        return "parede";// nem invencível escapa da parede
     }
 
     if (jogador.invencivel) {
-        return false;
+        return null;
     }
 
-    const bateuNoProprioCorpo = jogador.cobra.slice(1).some((segmento) => mesmaPosicao(segmento, cabeca));
-    const bateuEmObstaculo = obstaculos.some((obstaculo) => mesmaPosicao(obstaculo, cabeca));
+    if (jogador.cobra.slice(1).some((segmento) => mesmaPosicao(segmento, cabeca))) {
+        return "proprioCorpo";
+    }
+
+    if (obstaculos.some((obstaculo) => mesmaPosicao(obstaculo, cabeca))) {
+        return "pedra";
+    }
+
     const bateuNoOutroJogador = jogadores.some(
         (outro) => outro !== jogador && outro.cobra.some((segmento) => mesmaPosicao(segmento, cabeca))
     );
+    
+    return bateuNoOutroJogador ? "outroJogador" : null;
+}
 
-    return bateuNoProprioCorpo || bateuEmObstaculo || bateuNoOutroJogador;
+function verificarColisao(jogador, jogadores, obstaculos, colunas, linhas) {
+    return motivoDaColisao(jogador, jogadores, obstaculos, colunas, linhas) !== null;
+}
+
+// frase pra tela de fim de jogo, ex.: "Ana bateu numa pedra"
+function descreverBatida(nome, motivo, nomeDoOutro) {
+    const frases = {
+        parede: "bateu na parede",
+        proprioCorpo: "bateu no próprio corpo",
+        pedra: "bateu numa pedra",
+        outroJogador: `bateu em ${nomeDoOutro}`,
+    };
+
+    return `${nome} ${frases[motivo]}`;
 }
 
 // ==========================================
@@ -225,4 +248,108 @@ function tipoDeConquista(pontuacoes, listaAntes) {
     }
 
     return null;
+}
+
+// ==========================================
+// Bot (função puras - testadas em testes.js)
+// ==========================================
+function chavePosicao(posicao) {
+    return `${posicao.x},${posicao.y}`;
+}
+
+// quantas casas livres dá pra alcançar a partir de "inicio" (para de contar ao chegar no limite)
+// andar(posicao, direcao) devolve a casa vizinha; casaLivre(posicao) diz se dá pra entrar nela
+function contarEspacoLivre(inicio, andar, casaLivre, limite) {
+    const vistas = new Set([chavePosicao(inicio)]);
+    const fila = [inicio];
+    let total = 0;
+
+    while (fila.length > 0 && total < limite) {
+        const atual = fila.shift();
+        total++;
+
+        for (const direcao of DIRECOES) {
+            const vizinha = andar(atual, direcao);
+            const chave = chavePosicao(vizinha);
+
+            if (!vistas.has(chave) && casaLivre(vizinha)) {
+                vistas.add(chave);
+                fila.push(vizinha);
+            }
+        }
+    }
+
+    return total;
+}
+
+// vai atrás do alvo, mas só por caminhos com espaço suficiente para caber a cobra
+function escolherDirecaoBot(cabeca, direcaoAtual, alvo, andar, casaLivre, espacoNecessario) {
+    const opcoes = DIRECOES
+        .filter((direcao) => !(direcao.x === -direcaoAtual.x && direcao.y === -direcaoAtual.y))
+        .map((direcao) => ({ direcao, destino: andar(cabeca, direcao) }))
+        .filter((opcao) => casaLivre(opcao.destino))
+        .map((opcao) => ({
+            ...opcao,
+            espaco: contarEspacoLivre(opcao.destino, andar, casaLivre, espacoNecessario),
+            distancia: distanciaManhattan(opcao.destino, alvo),
+        }));
+    
+    if (opcoes.length === 0) {
+        return direcaoAtual; // sem saída: segue em frente
+    }
+    
+    const seguras = opcoes.filter((opcao) => opcao.espaco >= espacoNecessario);
+
+    if (seguras.length > 0) {
+        seguras.sort((a, b) => a.distancia - b.distancia);
+        return seguras[0].direcao;
+    }
+
+    // nenhuma é segura: vai pra que tiver mais espaço
+    opcoes.sort((a, b) => b.espaco - a.espaco || a.distancia - b.distancia);
+    return opcoes[0].direcao;
+}
+
+// ==========================================
+// Imã (função pura - testada em testes.js)
+// ==========================================
+// um passo de "origem" em direção a "destino"; tenta primeiro o eixo mais longe.
+// se as duas casas estiverem ocupadas, fica onde está
+function passoEmDirecaoA(origem, destino, casaLivre) {
+    const passoX = { x: Math.sign(destino.x - origem.x), y: 0 };
+    const passoY = { x: 0, y: Math.sign(destino.y - origem.y) };
+    const maisLongeEmX = Math.abs(destino.x - origem.x) >= Math.abs(destino.y - origem.y);
+    const tentativas = maisLongeEmX ? [passoX, passoY] : [passoY, passoX];
+
+    for (const passo of tentativas) {
+        if (passo.x === 0 && passo.y === 0) continue;
+
+        const casa = { x: origem.x + passo.x, y: origem.y + passo.y };
+        if (casaLivre(casa)) {
+            return casa;
+        }
+    }
+
+    return { x: origem.x, y: origem.y };
+}
+
+// ==========================================
+// Pedras que andam (função pura - testada em testes.js)
+// ==========================================
+// a pedra vai e volta: anda pra frente; se não der, vira e tenta pra trás; se nem isso, fica e vira
+function proximoPassoPedra(pedra, casaLivre) {
+    const frente = { x: pedra.x + pedra.direcao.x, y: pedra.y + pedra.direcao.y };
+
+    if (casaLivre(frente)) {
+        return { x: frente.x, y: frente.y, direcao: pedra.direcao };
+    }
+
+    const direcaoContraria = { x: -pedra.direcao.x, y: -pedra.direcao.y };
+    const atras = { x: pedra.x + direcaoContraria.x, y: pedra.y + direcaoContraria.y };
+
+    if (casaLivre(atras)) {
+        return { x: atras.x, y: atras.y, direcao: direcaoContraria };
+    }
+
+    return { x: pedra.x, y: pedra.y, direcao: direcaoContraria };   
 }

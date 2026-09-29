@@ -6,6 +6,7 @@ const ctx = canvas.getContext("2d");
 const elementoRecorde = document.getElementById("highscore");
 const telaGameOver = document.getElementById("telaGameOver");
 const elementoResultadoFinal = document.getElementById("resultadoFinal");
+const elementoCausaMorte = document.getElementById("causaMorte");
 const elementoPontuacaoFinal = document.getElementById("pontuacaoFinal");
 const elementoAvisoRecorde = document.getElementById("avisoRecorde");
 const botaoJogarDeNovo = document.getElementById("botaoJogarDeNovo");
@@ -37,6 +38,8 @@ const REDUCAO_VELOCIDADE_POR_PONTO = 5;
 const DISTANCIA_MINIMA_SWIPE = 20;
 
 let QUANTIDADE_OBSTACULOS = 8;
+let QUANTIDADE_PEDRAS_MOVEIS = 0;
+const TICKS_POR_PASSO_PEDRA = 3; // a pedra anda 1 casa a cada 3 passos de cobra
 const PONTOS_POR_NOVO_OBSTACULO = 3;
 const JANELA_COMBO_MS = 3000; // tempo máximo entre uma comida e outra pra manter o combo
 
@@ -47,6 +50,7 @@ const DURACAO_COMIDA_DOURADA_MS = 4000;
 const DURACAO_INVENCIBILIDADE_MS = 5000;
 const DURACAO_VELOCIDADE_EXTRA_MS = 5000;
 const DURACAO_PONTOS_DOBRADOS_MS = 5000;
+const DURACAO_IMA_MS = 5000;
 const MEIOS_PASSOS_POR_PASSO = 2; // com Turbo a cobra anda em todo meio passo (2x mais rápida)
 const QUANTIDADE_ENCOLHER = 3;
 
@@ -63,11 +67,13 @@ const CORES_POWERUP = {
     velocidade: "#38bdf8",
     pontosDobrados: "#e879f9",
     encolher: "#f1f5f9",
+    ima: "#fb923c",
 };
 const EFEITOS_COM_DURACAO = [
     { ativo: "invencivel", ate: "invencivelAte", duracao: DURACAO_INVENCIBILIDADE_MS },
     { ativo: "velocidadeExtraAtiva", ate: "velocidadeExtraAte", duracao: DURACAO_VELOCIDADE_EXTRA_MS },
     { ativo: "pontosDobradosAtivo", ate: "pontosDobradosAte", duracao: DURACAO_PONTOS_DOBRADOS_MS },
+    { ativo: "imaAtivo", ate: "imaAte", duracao: DURACAO_IMA_MS },
 ];
 const TEMPO_AVISO_FIM_EFEITO_MS = 1500;
 const containersEfeitos = [
@@ -77,13 +83,16 @@ const containersEfeitos = [
 const CORES_TABULEIRO = { claro: "#aad751", escuro: "#a2d149" };
 
 const telaInicial = document.getElementById("telaInicial");
+const telaComoJogar = document.getElementById("telaComoJogar");
+const botaoComoJogar = document.getElementById("botaoComoJogar");
+const botaoFecharComoJogar = document.getElementById("botaoFecharComoJogar");
 const seletorDificuldade = document.getElementById("seletorDificuldade");
 const seletorModo = document.getElementById("seletorModo");
 
 const CONFIGURACAO_DIFICULDADE = {
-    facil: { velocidadeInicial: 300, obstaculos: 5 },
-    normal: { velocidadeInicial: 250, obstaculos: 8 },
-    dificil: { velocidadeInicial: 180, obstaculos: 12 },
+    facil: { velocidadeInicial: 300, obstaculos: 5, pedrasMoveis: 0 },
+    normal: { velocidadeInicial: 250, obstaculos: 8, pedrasMoveis: 0 },
+    dificil: { velocidadeInicial: 180, obstaculos: 12, pedrasMoveis: 3 },
 };
 const botaoJogarBot = document.getElementById("botaoJogarBot");
 const botaoJogar1 = document.getElementById("botaoJogar1");
@@ -125,9 +134,11 @@ function criarJogador(config) {
         ultimoPassoEm: 0,
         duracaoPasso: VELOCIDADE_INICIAL_MS,
         pontosDobradosAtivo: false,
+        imaAtivo: false,
         invencivelAte: 0,
         velocidadeExtraAte: 0,
         pontosDobradosAte: 0,
+        imaAte: 0,
         teclas: config.teclas,
         corCabeca: config.corCabeca,
         corCorpo: config.corCorpo,
@@ -170,6 +181,7 @@ let comidaDourada = null; // { x, y } quando existe, ou null
 let ratos = []; // só tem ratos no modo rato
 let contadorTicksRatos = 0;
 let contadorMeiosPassos = 0;
+let contadorPassosPedras = 0;
 let textosFlutuantes = []; // os "=3" que sobem ao comer
 const DURACAO_TEXTO_FLUTUANTE_MS = 800;
 // ==========================================
@@ -263,7 +275,7 @@ function gerarPosicaoLivre() {
 }
 
 function gerarTipoPowerUp() {
-    const tipos = ["invencibilidade", "velocidade", "pontosDobrados", "encolher"];
+    const tipos = ["invencibilidade", "velocidade", "pontosDobrados", "encolher", "ima"];
     const indice = Math.floor(Math.random() * tipos.length);
     return tipos[indice];
 }
@@ -308,6 +320,44 @@ function gerarPosicaoParaPedra() {
     );
 
     return posicao;
+}
+
+// no Díficil, as primeiras pedras do mapa passam a andar (metade na horizontal, metade na vertical)
+function tornarPedrasMoveis() {
+    obstaculos.slice(0, QUANTIDADE_PEDRAS_MOVEIS).forEach((pedra, indice) => {
+        pedra.movel = true;
+        pedra.direcao = indice % 2 === 0 ? { x: 1, y: 0 } : { x: 0, y: 1 };
+        pedra.anterior = { x: pedra.x, y: pedra.y };
+    });
+}
+
+function moverPedras() {
+    contadorPassosPedras++;
+    const vezDeAndar = contadorPassosPedras % TICKS_POR_PASSO_PEDRA === 0;
+    const cabecas = jogadores.map((jogador) => jogador.cobra[0]);
+
+    for (const pedra of obstaculos) {
+        if (!pedra.movel) continue;
+
+        pedra.anterior = { x: pedra.x, y: pedra.y };
+
+        if (!vezDeAndar) continue;
+
+        // a pedra não entra em nada, e nunca chega colada na cabeça de uma cobra
+        const casaLivre = (posicao) =>
+            !foraDoTabuleiro(posicao, COLUNAS, LINHAS) &&
+            !posicaoOcupada(posicao, obstaculos, jogadores) &&
+            cabecas.every((cabeca) => distanciaManhattan(cabeca, posicao) > 1) &&
+            !mesmaPosicao(comida, posicao) &&
+            !(comidaDourada && mesmaPosicao(comidaDourada, posicao)) &&
+            !(powerUp && mesmaPosicao(powerUp, posicao)) &&
+            !ratos.some((rato) => mesmaPosicao(rato, posicao));
+
+        const passo = proximoPassoPedra(pedra, casaLivre);
+        pedra.x = passo.x;
+        pedra.y = passo.y;
+        pedra.direcao = passo.direcao;
+    }
 }
 
 function adicionarObstaculosSeNecessario() {
@@ -425,13 +475,21 @@ function desenhar() {
     ctx.clearRect(0, 0, LARGURA_TABULEIRO, ALTURA_TABULEIRO);
     desenharTabuleiro();
 
-    for (const obstaculo of obstaculos) {
-        desenharObstaculo(obstaculo.x, obstaculo.y);
-    }
-
     const progresso = jogoAtivo && !pausado
         ? Math.min((performance.now() - ultimoTickEm) / velocidadeAtual, 1)
         : 1;
+
+    for (const obstaculo of obstaculos) {
+        if (obstaculo.movel) {
+            desenharObstaculo(
+                interpolarEixo(obstaculo.anterior.x, obstaculo.x, progresso),
+                interpolarEixo(obstaculo.anterior.y, obstaculo.y, progresso),
+                true
+            );
+        } else {
+            desenharObstaculo(obstaculo.x, obstaculo.y);
+        }
+    }
 
     if (modoAtual !== "rato") {
         desenharMaca(comida.x, comida.y);
@@ -650,11 +708,11 @@ function desenharMacaDourada(item) {
     ctx.restore();
 }
 
-function desenharObstaculo(x, y) {
+function desenharObstaculo(x, y, movel = false) {
     const margem = 2;
     const lado = TAMANHO_CELULA - margem * 2;
 
-    ctx.fillStyle = "#6d6d6d";
+    ctx.fillStyle = movel ? "#4f5d75" : "#6d6d6d"; // as que andam são azuladas
     ctx.beginPath();
     ctx.roundRect(x * TAMANHO_CELULA + margem, y * TAMANHO_CELULA + margem, lado, lado, 5);
     ctx.fill();
@@ -752,7 +810,7 @@ function desenharCobra(jogador, progresso) {
 function loopRenderizacao() {
     desenhar();
 
-    if (pausado) {
+    if (pausado && !contagemAtiva) {
         desenharPausa();
     }
 
@@ -762,7 +820,7 @@ function loopRenderizacao() {
     requestAnimationFrame(loopRenderizacao);
 }
 
-function mostrarTelaGameOver(jogadoresVivos) {
+function mostrarTelaGameOver(jogadoresVivos, batidas) {
     let resultado;
 
     if (jogadores.length === 1) {
@@ -778,6 +836,13 @@ function mostrarTelaGameOver(jogadoresVivos) {
           .join(" | ");
 
     elementoResultadoFinal.textContent = resultado;
+    elementoCausaMorte.textContent = batidas
+        .map(({ jogador, motivo }) => {
+            const nome = jogadores.length === 1 ? "Você" : jogador.nome;
+            const outro = jogadores.find((outroJogador) => outroJogador !== jogador);
+            return descreverBatida(nome, motivo, outro ? outro.nome : "");
+        })
+        .join(" · ");
     elementoPontuacaoFinal.textContent = textoPontuacao;
 
      // compara com o Top 5 de antes, por isso vem antes de atualizarListaRecordes
@@ -873,7 +938,8 @@ function atualizarBarrasEfeitos() {
     });
 }
 
-function iniciarContagem() {
+// aoTerminar: o que fazer depois do "Vai!" (começar o loop, ou sair da pausa)
+function iniciarContagem(aoTerminar = loop) {
     const passos = ["3", "2", "1", "Vai!"];
     let indice = 0;
 
@@ -889,7 +955,7 @@ function iniciarContagem() {
 
         if (ultimoPasso) {
             contagemAtiva = false;
-            loop();
+            aoTerminar();
             return;
         }
 
@@ -898,6 +964,12 @@ function iniciarContagem() {
     }
 
     proximoPasso();
+}
+
+function cancelarContagem() {
+    clearTimeout(temporizadorContagem);
+    contagemAtiva = false;
+    textoContagem = "";
 }
 
 // ==========================================
@@ -1069,6 +1141,8 @@ function moverJogador(jogador) {
             ativarPontosDobrados(jogador);
         } else if (powerUp.tipo === "encolher") {
             ativarEncolher(jogador);
+        } else if (powerUp.tipo === "ima") {
+            ativarIma(jogador);
         }
 
         powerUp = null;
@@ -1156,6 +1230,12 @@ function ativarPontosDobrados(jogador) {
     jogador.pontosDobradosAte = agoraDoJogo() + DURACAO_PONTOS_DOBRADOS_MS;
 }
 
+function ativarIma(jogador) {
+    jogador.imaAtivo = true;
+
+    jogador.imaAte = agoraDoJogo() + DURACAO_IMA_MS; 
+}
+
 function atualizarEfeitos(jogador) {
     const agora = agoraDoJogo();
 
@@ -1168,6 +1248,50 @@ function atualizarEfeitos(jogador) {
     if (jogador.pontosDobradosAtivo && agora >= jogador.pontosDobradosAte) {
         jogador.pontosDobradosAtivo = false;
     }
+    if (jogador.imaAtivo && agora >= jogador.imaAte) {
+        jogador.imaAtivo = false;
+    }
+}
+
+// com Imã ligado, maçã dourada e ratos andam uma casa em direção à cabeça mais perto (de quem tem imã)
+function puxarAlimento() {
+    const cabecasComIma = jogadores.filter((jogador) => jogador.imaAtivo).map((jogador) => jogador.cobra[0]);
+
+    const casaLivre = (posicao) =>
+        !foraDoTabuleiro(posicao, COLUNAS, LINHAS) &&
+        !posicaoOcupada(posicao, obstaculos, jogadores) &&
+        !ratos.some((rato) => mesmaPosicao(rato, posicao)) &&
+        !(powerUp && mesmaPosicao(powerUp, posicao)) &&
+        !mesmaPosicao(comida, posicao) &&
+        !(comidaDourada && mesmaPosicao(comidaDourada, posicao));
+
+    const proximaCasa = (item) => {
+        const alvo = cabecasComIma.reduce((maisPerto, cabeca) =>
+            distanciaManhattan(item, cabeca) < distanciaManhattan(item, maisPerto) ? cabeca : maisPerto
+        );
+        return passoEmDirecaoA(item, alvo, casaLivre);
+    };
+
+    if (modoAtual !== "rato") {
+        comida = proximaCasa(comida);
+    }
+
+    if (comidaDourada) {
+        const destino = proximaCasa(comidaDourada);
+        comidaDourada.x = destino.x;
+        comidaDourada.y = destino.y;
+    }
+
+    for (const rato of ratos) {
+        rato.anterior = { x: rato.x, y: rato.y };
+        const destino = proximaCasa(rato);
+
+        if (!mesmaPosicao(destino, rato)) {
+            rato.direcao = { x: destino.x - rato.x, y: destino.y - rato.y };
+            rato.x = destino.x;
+            rato.y = destino.y;
+        }
+    }
 }
 
 function ativarEncolher(jogador) {
@@ -1179,31 +1303,13 @@ function ativarEncolher(jogador) {
     }
 }
 
-function colidiuJogador(jogador) {
-    return verificarColisao(jogador, jogadores, obstaculos, COLUNAS, LINHAS);
+function motivoDaBatida(jogador) {
+    return motivoDaColisao(jogador, jogadores, obstaculos, COLUNAS, LINHAS);
 }
 
 //  ==========================================
 // Direção (regra compartilhada entre teclado e toque)
 //  ==========================================
-function jogadorPodeIrPara(jogador, x, y) {
-    let xFinal = x;
-    let yFinal = y;
-
-    if (inputModoSemParedes.checked) {
-        xFinal = (x + COLUNAS) % COLUNAS;
-        yFinal = (y + LINHAS) % LINHAS;
-    } else if (x < 0 || x >= COLUNAS || y < 0 || y >= LINHAS) {
-        return false;
-    }
-
-    const bateuEmObstaculo = obstaculos.some((o) => o.x === xFinal && o.y === yFinal);
-    const bateuEmCobra = jogadores.some((outro) =>
-        outro.cobra.some((segmento) => segmento.x === xFinal && segmento.y === yFinal)
-    );
-
-    return !bateuEmObstaculo && !bateuEmCobra;
-}
 
 // no modo rato o bot persegue o rato mais perto; nos outros, a maçã
 function escolherAlvoBot(cabeca) {
@@ -1217,47 +1323,38 @@ function escolherAlvoBot(cabeca) {
 }
 
 function decidirDirecaoBot(jogador) {
-    const direcoesPossiveis = [
-        { x: 0, y: -1 },
-        { x: 0, y: 1 },
-        { x: -1, y: 0 },
-        { x: 1, y: 0 },
-    ];
-
+    const semParedes = inputModoSemParedes.checked;
+    const andar = (posicao, direcao) => calcularNovaCabeca(posicao, direcao, semParedes, COLUNAS, LINHAS);
+    const casaLivre = (posicao) =>
+        !foraDoTabuleiro(posicao, COLUNAS, LINHAS) && !posicaoOcupada(posicao, obstaculos, jogadores);
     const cabeca = jogador.cobra[0];
 
-    const opcoesSeguras = direcoesPossiveis.filter((direcao) => {
-        const invertida = direcao.x === -jogador.direcao.x && direcao.y === -jogador.direcao.y;
-        if (invertida) return false;
+    // precisa de espaço pra caber o corpo inteiro (+2 de folga), senão é beco
+    const espaçoNecessario = jogador.cobra.length + 2;
 
-        return jogadorPodeIrPara(jogador, cabeca.x + direcao.x, cabeca.y + direcao.y);
-    });
-
-    const candidatas = opcoesSeguras.length > 0 ? opcoesSeguras : direcoesPossiveis;
-
-    const alvo = escolherAlvoBot(cabeca);
-
-    candidatas.sort((a, b) => {
-        const distanciaA = Math.abs(cabeca.x + a.x - alvo.x) + Math.abs(cabeca.y + a.y - alvo.y);
-        const distanciaB = Math.abs(cabeca.x + b.x - alvo.x) + Math.abs(cabeca.y + b.y - alvo.y);
-        return distanciaA - distanciaB;
-    });
-
-    return candidatas[0];
+    return escolherDirecaoBot(cabeca, jogador.direcao, escolherAlvoBot(cabeca), andar, casaLivre, espaçoNecessario);
 }
 
 function alternarPausa() {
-    pausado = !pausado;
-
     if (pausado) {
-        pausadoDesde = performance.now();
+        iniciarContagem(sairDaPausa);  // o loop continua esperando; só despausava no "Vai!"
     } else {
-        tempoPausadoTotal += performance.now() - pausadoDesde;
-        pausadoDesde = null;
+        entrarNaPausa();
     }
-    
-    botaoPausa.textContent = pausado ? "Continuar" : "Pausar";
-    tocarSom(pausado ? 300 : 500, 0.08, "sine");
+}
+
+function entrarNaPausa() {
+    pausado = true;
+    pausadoDesde = performance.now();
+    botaoPausa.textContent = "Continuar";
+    tocarSom(300, 0.08, "sine");
+}
+
+function sairDaPausa() {
+    tempoPausadoTotal += performance.now() - pausadoDesde;
+    pausadoDesde = null;
+    pausado = false;
+    botaoPausa.textContent = "Pausar";
 }
 
 // ==========================================
@@ -1311,7 +1408,14 @@ botaoPausa.addEventListener("click", () => {
 
 // pausa sozinho se o jogador sair da aba/janela (e não despausa sozinho ao voltar)
 function pausarAutomaticamente() {
-    if (noMenu || !jogoAtivo || pausado) return;
+    if (noMenu || !jogoAtivo) return;
+
+    if (pausado) {
+        // saiu da aba no meio da contagem de volta: cancela e continua pausado
+        if (contagemAtiva) cancelarContagem();
+        return;
+    }
+    
     alternarPausa();
 }
 
@@ -1325,6 +1429,31 @@ window.addEventListener("blur", pausarAutomaticamente);
 document.addEventListener("keydown", mudarDirecao);
 botaoJogarDeNovo.addEventListener("click", reiniciar);
 botaoVoltarMenu.addEventListener("click", voltarAoMenu);
+
+// ==========================================
+// Tela "Como jogar"
+// ==========================================
+function abrirComoJogar() {
+    telaInicial.hidden = true;
+    telaComoJogar.hidden = false;
+    telaComoJogar.scrollTop = 0;
+    botaoFecharComoJogar.focus();
+}
+
+function fecharComoJogar() {
+    telaComoJogar.hidden = true;
+    telaInicial.hidden = false;
+    botaoComoJogar.focus();
+}
+
+botaoComoJogar.addEventListener("click", abrirComoJogar);
+botaoFecharComoJogar.addEventListener("click", fecharComoJogar);
+
+document.addEventListener("keydown", (evento) => {
+    if (evento.key === "Escape" && !telaComoJogar.hidden) {
+        fecharComoJogar();
+    }
+});
 
 function voltarAoMenu() {
     telaGameOver.hidden = true;
@@ -1433,20 +1562,32 @@ function loop() {
     }
     
     // só quem andou pode ter batido
-    const jogadoresQueBateram = jogadoresQueAndam.filter((jogador) => colidiuJogador(jogador));
+    const batidas = jogadoresQueAndam
+        .map((jogador) => ({ jogador, motivo: motivoDaBatida(jogador) }))
+        .filter((batida) => batida.motivo !== null);
 
-    if (jogadoresQueBateram.length > 0) {
+    if (batidas.length > 0) {
         jogoAtivo = false;
         pararMusicaFundo();
         tocarSomColisao();
-        mostrarTelaGameOver(jogadores.filter((jogador) => !jogadoresQueBateram.includes(jogador)));
+        mostrarTelaGameOver(
+            jogadores.filter((jogador) => !batidas.some((batida) => batida.jogador === jogador)),
+            batidas
+        );
         return;
     }
 
     if (passoCompleto) {
-        if (modoAtual === "rato") {
+
+    const imaLigado = jogadores.some((jogador) => jogador.imaAtivo);
+
+    if (imaLigado) {
+        puxarAlimento(); // os ratos não fogem: são puxados
+    } else if (modoAtual === "rato") {
         moverRatos();
     }
+
+    moverPedras();
     
     if (!powerUp && Math.random() < CHANCE_POWERUP_POR_TICK) {
         const posicao = gerarPosicaoLivre();
@@ -1480,9 +1621,11 @@ function reiniciar() {
         jogador.elementoPontuacao.textContent = jogador.pontuacao;
     });
     obstaculos = gerarObstaculos();
+    tornarPedrasMoveis();
     comida = gerarComida();
     criarRatosIniciais();
     contadorMeiosPassos = 0;
+    contadorPassosPedras = 0;
     textosFlutuantes = [];
     powerUp = null;
     comidaDourada = null;
@@ -1499,6 +1642,7 @@ function aplicarDificuldade() {
 
     VELOCIDADE_INICIAL_MS = configuracao.velocidadeInicial;
     QUANTIDADE_OBSTACULOS = modoAtual === "clássico" ? 0 : configuracao.obstaculos;
+    QUANTIDADE_PEDRAS_MOVEIS = modoAtual === "clássico" ? 0 : configuracao.pedrasMoveis;
 }
 
 function comecarJogo(quantidade, comBot = false) {

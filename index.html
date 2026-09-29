@@ -72,6 +72,7 @@
                         <span id="nomeExibido1">Jogador 1</span>
                         <strong id="score1">0</strong>
                         <span class="efeitos" id="efeitosJogador1">
+                            <span class="efeito" data-efeito="imaAtivo" hidden>Imã<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                             <span class="efeito" data-efeito="invencivel" hidden>Invencível<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                             <span class="efeito" data-efeito="velocidadeExtraAtiva" hidden>Turbo<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                             <span class="efeito" data-efeito="pontosDobradosAtivo" hidden>Pontos x2<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
@@ -82,6 +83,7 @@
                         <span id="nomeExibido2">Jogador 2</span>
                         <strong id="score2">0</strong>
                         <span class="efeitos" id="efeitosJogador2">
+                            <span class="efeito" data-efeito="imaAtivo" hidden>Imã<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                             <span class="efeito" data-efeito="invencivel" hidden>Invencível<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                             <span class="efeito" data-efeito="velocidadeExtraAtiva" hidden>Turbo<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                             <span class="efeito" data-efeito="pontosDobradosAtivo" hidden>Pontos x2<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
@@ -102,10 +104,12 @@
 
                 <div id="telaInicial" class="overlay overlay-menu">
                     <div class="menu-cabecalho">
-                        <p class="rotulo">Novo jogo</p>
-                        <h2>Quem vai jogar?</h2>
+                    <div>
+                         <p class="rotulo">Novo jogo</p>
+                         <h2>Quem vai jogar?</h2>
                     </div>
-
+                    <button id="botaoComoJogar" class="botao-link" type="button">Como jogar</button>
+                    </div>
                     <div class="menu-nomes">
                         <label class="campo campo-1">
                             Jogador 1 · setas
@@ -149,10 +153,60 @@
                     <p class="rotulo">Fim de jogo</p>
                     <p id="avisoRecorde" class="aviso-recorde" hidden>Novo recorde!</p>
                     <p id="resultadoFinal" class="resultado">Game Over</p>
+                    <P id="causaMorte" class="causa-morte"></P>
                     <p id="pontuacaoFinal" class="pontuacao-final">Pontuação: 0</p>
                     <button id="botaoJogarDeNovo" class="botao-principal">Jogar de novo</button>
                     <button id="botaoVoltarMenu" class="botao-secundario">Voltar ao menu</button>
                     <p class="dica">ou aperte qualquer tecla · Esc volta ao menu</p>
+                </div>
+
+                <div id="telaComoJogar" class="overlay overlay-como-jogar" role="dialog" aria-labelledby="tituloComoJogar" hidden>
+                    <div class="como-jogar-topo">
+                        <h2 id="tituloComoJogar">Como jogar</h2>
+                        <button id="botaoFecharComoJogar" class="botao-secundario" type="button">Voltar</button>
+                    </div>
+
+                    <section>
+                        <h3>Objetivo</h3>
+                        <p>Coma para crescer e fazer pontos. Não bata na parede, nas pedras, no próprio corpo nem na outra cobra.</p>
+                    </section>
+
+                    <section>
+                        <h3>Controles</h3>
+                        <ul>
+                            <li><b>Jogador 1:</b> setas do teclado. No celular, deslize o dedo no tabuleiro ou use os botões de seta.</li>
+                            <li><b>Jogador 2:</b> W, A, S, D.</li>
+                            <li><b>Espaço:</b> pausa. O Jogo também pausa sozinho se você trocar de aba.</li>
+                            <li><b>Esc:</b> no fim de jogo, volta ao menu.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h3>Modos</h3>
+                        <ul>
+                            <li><b>Normal:</b> tem pedras no mapa, e nasce uma nova a cada 3 pontos.</li>
+                            <li><b>Clássico:</b> sem pedras.</li>
+                            <li><b>Rato:</b> no lugar de maçã, ratos. O cinza fica parado e vale 1 ponto; o marrom foge quando você chega perto e vale 3.</li>
+                            <li><b>Sem paredes:</b> opção no topo da página. A cobra atravessa a borda e sai do outro lado.</li>
+                            <li><b>Dificuldade:</b> muda a velocidade e a quantidade de pedras. A cobra também acelera conforme você pontua. No Difícil, 3 pedras azuladas andam de um lado para o outro.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h3>Combo e maçã dourada</h3>
+                        <p>Coma de novo em menos de 3 segundos para fazer combo: a 2° vale o dobro, a 3° o triplo, e assim por diante. A maçã dourada vale 5 pontos e some em 4 segundos.</p>
+                    </section>
+
+                    <section>
+                        <h3>Power-ups</h3>
+                        <ul>
+                            <li><b>Invencível</b> (amarelo): por 5 s, atravessa pedras e corpos. A parede ainda mata.</li>
+                            <li><b>Turbo</b> (azul): por 5 s, só a sua cobra anda 2x mais rápido.</li>
+                            <li><b>Pontos x2</b> (rosa): por 5 s, tudo o que você come vale o dobro.</li>
+                            <li><b>Ímã</b> (laranja): por 5 s, a comida (e os ratos) vêm até você.</li>
+                            <li><b>Encolher</b> (branco): a cobra perde 3 pedaços do rabo.</li>
+                        </ul>
+                    </section>
                 </div>
             </div>
         </section>
@@ -169,6 +223,7 @@
                     <li><span class="item-icone" style="--cor: #f5c451"></span><div><b>Invencível</b><span>Atravessa corpos e pedras por 5 s</span></div></li>
                     <li><span class="item-icone" style="--cor: #38bdf8"></span><div><b>Turbo</b><span>Velocidade dobrada por 5 s</span></div></li>
                     <li><span class="item-icone" style="--cor: #e879f9"></span><div><b>Pontos x2</b><span>Pontuação dobrada por 5 s</span></div></li>
+                    <li><span class="item-icone" style="--cor: #fb923c"></span><div><b>Imã</b><span>Puxa a comida até você por 5 s</span></div></li>
                     <li><span class="item-icone" style="--cor: #f1f5f9"></span><div><b>Encolher</b><span>Perde 3 segmentos</span></div></li>
                     <li><span class="item-icone item-redondo" style="--cor: #f5c451"></span><div><b>Maçã dourada</b><span>+5 pontos, some em 4 s</span></div></li>
                     <li><span class="item-icone item-redondo" style="--cor: #b0b5bb"></span> <div><b>Rato cinza</b><span>Modo Rato: parado, 1 ponto</span></div></li>
