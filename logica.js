@@ -353,3 +353,101 @@ function proximoPassoPedra(pedra, casaLivre) {
 
     return { x: pedra.x, y: pedra.y, direcao: direcaoContraria };   
 }
+
+// ==========================================
+// Velocidade no placar (função para - testadas em  testes.js)
+// ==========================================
+// quantas vezes mais rápido que no começo da partida, ex.: "1,4x"
+function formatarVelocidade(velocidadeInicialMs, velocidadeAtualMs) {
+    const fator = velocidadeInicialMs / velocidadeAtualMs;
+    return `${fator.toFixed(1).replace(".", ",")}x`;
+}
+
+// ==========================================
+// Preferências salvas (função pura - testada em testes.js)
+// ==========================================
+// aceita só os valores que existem no jogo; o resto volta pro padrão
+function limparPreferencias(salvas, modosValidos, dificuldadesValidas) {
+    const preferencias = salvas && typeof salvas === "object" ? salvas : {};
+    const nome = (valor) => (typeof valor === "string" ? valor.slice(0, 12) : "");
+
+    return {
+        nome1: nome(preferencias.nome1),
+        nome2: nome(preferencias.nome2),
+        modo: modosValidos.includes(preferencias.modo) ? preferencias.modo : modosValidos[0],
+        dificuldade: dificuldadesValidas.includes(preferencias.dificuldade) ? preferencias.dificuldade : "normal",
+        semParedes: preferencias.semParedes === true,
+    };
+}
+
+// ==========================================
+// Estatíticas (funções puras - testadas em teste.js)
+// ==========================================
+function estatisticasVazias() {
+    return {
+        partidas: 0,
+        tempoTotalMs: 0,
+        comidas: 0,
+        macasDouradas: 0,
+        powerUps: 0,
+        maiorCombo: 0,
+        maiorTamanho: 0,
+        mortes: { parede: 0, proprioCorpo: 0, pedra: 0, outroJogador: 0 },
+    };
+}
+
+// aceita só numeros válidos (>= 0); o que faltar ou vier estragado vira 0
+function limparEstatisticas(salvas) {
+    const limpas = estatisticasVazias();
+
+    if(!salvas || typeof salvas !== "object") {
+        return limpas;
+    }
+
+    const numero = (valor) => (Number.isFinite(valor) && valor >= 0 ? valor: 0);
+
+    for (const chave of Object.keys(limpas)) {
+        if (chave !== "mortes") {
+            limpas[chave] = numero(salvas[chave]);
+        }
+    }
+
+    const mortesSalvas = salvas.mortes && typeof salvas.mortes === "object" ? salvas.mortes : {};
+
+    for (const motivo of Object.keys(limpas.mortes)) {
+        limpas.mortes[motivo] = numero(mortesSalvas[motivo]);
+    }
+
+    return limpas;
+}
+
+// 4500 -> "45 s"; 750000 -> "12 min 30 s"; 390000 -> "1 h 05 min"
+function formatarTempo(milissegundos) {
+    const totalSegundos = Math.floor(milissegundos / 1000);
+    const horas = Math.floor(totalSegundos / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    const segundos = totalSegundos % 60;
+
+    if (horas > 0) {
+        return `${horas} h ${String(minutos).padStart(2, "0")} min`;
+    }
+
+    if (minutos > 0) {
+        return `${minutos} min ${String(segundos).padStart(2, "0")} s`;
+    }
+
+    return `${segundos} s`;
+}
+
+// qual motivo de morte aparece mais (ou null se ainda não morreu)
+function morteMaisComum(mortes) {
+    let maisComum= null;
+
+    for (const [motivo, quantidade] of Object.entries(mortes)) {
+        if (quantidade > 0 && (maisComum === null || quantidade > mortes[maisComum])) {
+            maisComum = motivo;
+        }
+    }
+
+    return maisComum;
+}

@@ -275,7 +275,7 @@ kbd {
     font-weight: 600;
 }
 
-.barra-recordes {
+.barra-recorde {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -837,6 +837,68 @@ canvas {
     color: var(--texto-suave);
 }
 
+/* ==========================================
+   Velocidade no placar
+   ========================================== */
+.placar-direita {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.barra-velocidade {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--texto-suave);
+    font-family: var(--fonte-numeros);
+    font-size: 15px;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.barra-velocidade.acelerou {
+    color: var(--destaque);
+}
+
+/* ==========================================
+   Estatísticas
+   ========================================== */
+.lista-estatisticas {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lista-estatisticas div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+}
+
+.lista-estatisticas dt {
+    color: var(--texto-suave);
+}
+
+.lista-estatisticas dd {
+    margin: 0;
+    font-family: var(--fonte-numeros);
+    font-weight: 600;
+    text-align: right;
+}
+
+.estatisticas .botao-link {
+    align-self: flex-start;
+    font-size: 13px;
+}
+
+/* "Sem paredes" travado durante a partida */
+.botao-contorno:has(input:disabled) {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
 
 
 

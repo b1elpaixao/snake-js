@@ -226,6 +226,47 @@ verificar("pedra bloqueada na frente volta pra trás",
 verificar("pedra presa fica parada e vira",
     JSON.stringify(proximoPassoPedra(pedraTeste, () => false)), JSON.stringify({ x: 5, y: 5, direcao: { x: -1, y: 0 } }));
 
+// velocidade no placar
+verificar("velocidade no começo é 1,0x", formatarVelocidade(250, 250), "1,0x");
+verificar("passo com metade do tempo é 2,0x", formatarVelocidade(250, 125), "2,0x");
+verificar("velocidade arredonda pra 1 casa decimal", formatarVelocidade(180, 50), "3,6x");
+
+// preferências salvas
+const prefValidas = limparPreferencias(
+    { nome1: "Ana", nome2: "Leo", modo: "rato", dificuldade: "dificil", semParedes: true },
+    ["normal", "rato"], ["facil", "normal", "dificil"]
+);
+verificar("preferências válidas são mantidas",
+    JSON.stringify(prefValidas), JSON.stringify({ nome1: "Ana", nome2: "Leo", modo: "rato",
+dificuldade: "dificil", semParedes: true }));
+const prefLixo = limparPreferencias({ nome1: 42, modo: "voador", dificuldade: "impossivel",
+semParedes: "sim" }, ["normal", "rato"], ["facil", "normal", "dificil"]);
+verificar("preferência inválida volta pro padrão",
+    JSON.stringify(prefLixo), JSON.stringify({ nome1: "", nome2: "", modo: "normal", dificuldade:
+"normal", semParedes: false }));
+verificar("sem nada salvo usa o padrão", limparPreferencias(null, ["normal"], ["normal"]).modo,
+"normal");
+verificar("nome grande é cortado em 12 letras", limparPreferencias({ nome1: "Maria Eduarda Silva"
+}, ["normal"], ["normal"]).nome1, "Maria Eduard");
+
+// estatisticas
+verificar("estatísticas vazias começam com 0 partidas", estatisticasVazias().partidas, 0);
+const estatLimpas = limparEstatisticas({ partidas: 5, comidas: -3, maiorCombo: "muito", mortes: {
+pedra: 2, voou: 9 } });
+verificar("limparEstatisticas mantém número válido", estatLimpas.partidas, 5);
+verificar("limparEstatisticas troca negativo e texto por 0", estatLimpas.comidas +
+estatLimpas.maiorCombo, 0);
+verificar("limparEstatisticas mantém morte válida e ignora a inventada",
+    JSON.stringify(estatLimpas.mortes), JSON.stringify({ parede: 0, proprioCorpo: 0, pedra: 2,
+outroJogador: 0 }));
+verificar("limparEstatisticas com lixo devolve tudo zerado", limparEstatisticas("{lixo").partidas, 0);
+verificar("formatarTempo em segundos", formatarTempo(45000), "45 s");
+verificar("formatarTempo em minutos", formatarTempo(750000), "12 min 30 s");
+verificar("formatarTempo em horas", formatarTempo(3900000), "1 h 05 min");
+verificar("morteMaisComum acha a maior", morteMaisComum({ parede: 2, proprioCorpo: 5, pedra: 1,
+outroJogador: 0 }), "proprioCorpo");
+verificar ("morteMaisComum sem mortes é null", morteMaisComum({ parede: 0, pedra: 0 }), null);
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

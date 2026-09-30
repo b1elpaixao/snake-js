@@ -34,7 +34,8 @@
             <label class="botao-contorno">
                 <input type="checkbox" id="modoSemParedes" /> Sem paredes
             </label>
-            <button id="botaoMudo" class="botao-contorno">🔊 Som</button>
+            <button id="botaoMusica" class="botao-contorno">🎵 Música</button>
+            <button id="botaoMudo" class="botao-contorno">🔊 Efeitos</button>
             <button id="botaoPausa" class="botao-destaque">Pausar</button>
         </div>
     </header>
@@ -90,6 +91,13 @@
                         </span>
                     </span>
                 </div>
+                <div class="placar-direita">
+                <span class="barra-velocidade" id="barraVelocidade" title="Velocidade (comparada ao começo da partida)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M13 2 4 14h7l-1 8 9-12h-7z" />
+                    </svg>
+                    <span id="velocidade">1,0x</span>
+                </span> 
                 <span class="barra-recorde" title="Recorde">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M8 21h8" /><path d="M12 17v4" /><path d="M7 4h10v5a5 5 0 0 1-10 0z" />
@@ -97,6 +105,7 @@
                     </svg>
                     <span id="highscore">0</span>
                 </span>
+                </div>
             </div>
 
             <div class="canvas-wrapper">
@@ -215,6 +224,21 @@
             <div class="cartao recordes">
                 <p class="rotulo">Top 5 recordes · <span id="modoRecordes"></span></p>
                 <ol id="listaRecordes"></ol>
+            </div>
+
+            <div class="cartao estatisticas">
+                <p class="rotulo">Estatisticas</p>
+                <dl class="lista-estatisticas">
+                    <div><dt>Partidas</dt><dd id="estatPartidas">0</dd></div>
+                    <div><dt>Tempo jogando</dt><dd id="estatTempo">0 s</dd></div>
+                    <div><dt>Comidas</dt><dd id="estatComidas">0</dd></div>
+                    <div><dt>Maçãs Douradas</dt><dd id="estatDouradas">0</dd></div>
+                    <div><dt>Power-ups</dt><dd id="estatPowerUps">0</dd></div>
+                    <div><dt>Maior Combo</dt><dd id="estatCombo">0</dd></div>
+                    <div><dt>Maior cobra</dt><dd id="estatTamanho">0</dd></div>
+                    <div><dt>Morte mais comum</dt><dd id="estatMorte">-</dd></div>
+                </dl>
+                <button id="botaoZerarEstatisticas" class="botao-link" type="button">Apagar estatíticas</button>
             </div>
 
             <div class="cartao">

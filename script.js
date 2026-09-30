@@ -4,6 +4,8 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const elementoRecorde = document.getElementById("highscore");
+const elementoVelocidade = document.getElementById("velocidade");
+const barraVelocidade = document.getElementById("barraVelocidade");
 const telaGameOver = document.getElementById("telaGameOver");
 const elementoResultadoFinal = document.getElementById("resultadoFinal");
 const elementoCausaMorte = document.getElementById("causaMorte");
@@ -104,6 +106,7 @@ const elementoModoRecordes = document.getElementById("modoRecordes");
 
 const botaoPausa = document.getElementById("botaoPausa");
 const botaoMudo = document.getElementById("botaoMudo");
+const botaoMusica = document.getElementById("botaoMusica");
 const botaoCima = document.getElementById("botaoCima");
 const botaoBaixo = document.getElementById("botaoBaixo");
 const botaoEsquerda = document.getElementById("botaoEsquerda");
@@ -182,6 +185,11 @@ let ratos = []; // só tem ratos no modo rato
 let contadorTicksRatos = 0;
 let contadorMeiosPassos = 0;
 let contadorPassosPedras = 0;
+// animação de morte: a cobra que bateu pisca e o tabuleiro treme antes da tela de fim
+const DURACAO_ANIMACAO_MORTE_MS = 900;
+let animacaoMorte = null; // { inicio, batidos } enquanto está animando, ou null
+let temporizadorAnimacaoMorte =  null;
+const reduzirMovimento = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 let textosFlutuantes = []; // os "=3" que sobem ao comer
 const DURACAO_TEXTO_FLUTUANTE_MS = 800;
 // ==========================================
@@ -232,13 +240,20 @@ let noMenu = true;
 let quantidadeJogadoresAtual = 2;
 let modoComBotAtivo = false;
 let modoAtual = "normal";
+let semParedesNaPartida = false; // o "Sem paredes" que vale na partida atual (fica fixo até ela acabar)
 let recordesPorModo = lerRecordesSalvos();
 let modoExibidoRecordes = "normal";
 let melhorPontuacao = 0;
 let ultimoTickEm = performance.now();
 let velocidadeAtual = VELOCIDADE_INICIAL_MS;
+let temporizadorDestaqueVelocidade = null;
+let estatisticas = lerEstatisticas();
+let tempoDaPartidaMs = 0;
+let velocidadeMostrada = null;  
 let nomesJogadoresAtuais = ["Jogador 1", "Jogador 2"];
-let mudo = lerDoArmazenamento("snakeMudo") === "true";
+let mudo = lerDoArmazenamento("snakeMudo") === "true"; // "mudo" agora vale só para os efeitos que já tinha desligado o som antes continua sem música
+const musicaSalva = lerDoArmazenamento("snakeMusicaDesligada");
+let musicaDesligada = musicaSalva === null ? mudo : musicaSalva === "true";
 let tempoPausadoTotal= 0;
 let pausadoDesde = null;
 
@@ -473,6 +488,19 @@ function desenharCelula(x, y, cor) {
 
 function desenhar() {
     ctx.clearRect(0, 0, LARGURA_TABULEIRO, ALTURA_TABULEIRO);
+
+    // progresso da animação de morte (0 no começo, 1 no fim)
+    const progressoMorte = animacaoMorte
+        ? Math.min((performance.now() - animacaoMorte.inicio) / DURACAO_ANIMACAO_MORTE_MS, 1)
+        : 1;
+
+    ctx.save();
+
+    if (animacaoMorte && !reduzirMovimento) {
+        const forca = 5 * (1 - progressoMorte); // treme forte no começo e vai parando
+        ctx.translate((Math.random() * 2 - 1) * forca, (Math.random() * 2 - 1) * forca);
+    }
+
     desenharTabuleiro();
 
     const progresso = jogoAtivo && !pausado
@@ -508,10 +536,27 @@ function desenhar() {
     }
 
     for (const jogador of jogadores) {
+        const bateu = animacaoMorte && animacaoMorte.batidos.includes(jogador);
+        // pisca: some e aparece a cada 120 ms
+        const apagada = bateu && Math.floor((performance.now() - animacaoMorte.inicio) / 120) % 2 === 0;
+
+        ctx.save();
+        if (apagada) {
+            ctx.globalAlpha = 0.2;
+        }
         desenharCobra(jogador, progressoDoJogador(jogador));
+        ctx.restore();
     }
 
     desenharTextosFlutuantes();
+
+    if (animacaoMorte) {
+        // clarão vermelho que vai sumindo
+        ctx.fillStyle = `rgba(231, 71, 29, ${0.35 * (1 - progressoMorte)})`;
+        ctx.fillRect(0, 0, LARGURA_TABULEIRO, ALTURA_TABULEIRO);
+    }
+
+    ctx.restore();
 }
 
 // cada cobra tem o próprio ritmo (com Turbo o passo dura metade)
@@ -855,6 +900,7 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
             .map((jogador) => ({nome: jogador.nome, pontuacao: jogador.pontuacao }))
     );
     telaGameOver.hidden = false;
+    registrarFimDePartida(batidas);
 }
 
 function mostrarConquista(conquista) {
@@ -1024,7 +1070,7 @@ function tocarSomComidaDourada() {
 }
 
 function tocarNotaMusica(frequencia) {
-    if (mudo) return;
+    if (musicaDesligada) return;
 
     const ctxAudio = obterContextoAudio();
     const oscilador = ctxAudio.createOscillator();
@@ -1068,11 +1114,110 @@ function pararMusicaFundo() {
 }
 
 function atualizarBotaoMudo() {
-    botaoMudo.textContent = mudo ? "🔇 Som" : "🔊 Som";
+    botaoMudo.textContent = mudo ? "🔇 Efeitos" : "🔊 Efeitos";
+    botaoMudo.setAttribute("aria-pressed", String(!mudo));
 }
 
+function atualizarBotaoMusica() {
+    botaoMusica.textContent = musicaDesligada ? "🔇 Música" : "🎵 Música";
+    botaoMusica.setAttribute("aria-pressed", String(!musicaDesligada));
+}
+
+// ==========================================
+// Estatisticas (só de quem joga de verdade, não do bot)
+// ==========================================
+const NOMES_MORTES = { parede: "Parede", proprioCorpo: "Próprio corpo", pedra: "Pedra", outroJogador: "Outra cobra" };
+
+function lerEstatisticas() {
+    try {
+        return limparEstatisticas(JSON.parse(lerDoArmazenamento("snakeEstatisticas")));
+    } catch {
+        return estatisticasVazias(); // dado corrompido: começa do zero
+    }
+}
+
+function salvarEstatisticas() {
+    salvarNoArmazenamento("snakeEstatisticas", JSON.stringify(estatisticas));
+}
+
+function mostrarEstatisticas() {
+    const morte = morteMaisComum(estatisticas.mortes);
+
+    document.getElementById("estatPartidas").textContent = estatisticas.partidas;
+    document.getElementById("estatTempo").textContent = formatarTempo(estatisticas.tempoTotalMs);
+    document.getElementById("estatComidas").textContent = estatisticas.comidas;
+    document.getElementById("estatDouradas").textContent = estatisticas.macasDouradas;
+    document.getElementById("estatPowerUps").textContent = estatisticas.powerUps;
+    document.getElementById("estatCombo").textContent = estatisticas.maiorCombo > 1 ? `x${estatisticas.maiorCombo}` : "-";
+    document.getElementById("estatTamanho").textContent = estatisticas.maiorTamanho
+    document.getElementById("estatMorte").textContent = morte ? `${NOMES_MORTES[morte]} (${estatisticas.mortes[morte]}x)` : "-";
+}
+
+function registrarFimDePartida(batidas) {
+    const humanos = jogadores.filter((jogador) => !jogador.bot);
+    
+    estatisticas.partidas++;
+    estatisticas.tempoTotalMs += tempoDaPartidaMs;
+    estatisticas.maiorTamanho = Math.max(estatisticas.maiorTamanho, ...humanos.map((jogador) => jogador.cobra.length));
+
+    for (const { jogador, motivo } of batidas) {
+        if (!jogador.bot) {
+            estatisticas.mortes[motivo]++;
+        }
+    }
+
+    salvarEstatisticas();
+    mostrarEstatisticas();
+}
+
+document.getElementById("botaoZerarEstatisticas").addEventListener("click", () => {
+    if (confirm("Apagar todas as estatisticas? Isso não dá pra desfazer.")) {
+        estatisticas = estatisticasVazias();
+        salvarEstatisticas();
+        mostrarEstatisticas();
+    }
+});
+
+mostrarEstatisticas();
+
+// ==========================================
+// Preferências: nomes, modo, dificuldade e "Sem paredes" ficam salvos
+// ==========================================
+function aplicarPreferenciasSalvas() {
+    let salvas = null;
+
+    try {
+        salvas = JSON.parse(lerDoArmazenamento("snakePreferencias"));
+    } catch {
+        salvas = null; // dado corrompido: usa o padrão
+    }
+
+    const preferencias = limparPreferencias(salvas, MODOS_DE_JOGO, Object.keys(CONFIGURACAO_DIFICULDADE));
+
+    inputNomeJogador1.value = preferencias.nome1;
+    inputNomeJogador2.value = preferencias.nome2;
+    seletorModo.value = preferencias.modo;
+    seletorDificuldade.value = preferencias.dificuldade;
+    inputModoSemParedes.checked = preferencias.semParedes;
+}
+
+function salvarPreferencias() {
+    salvarNoArmazenamento("snakePreferencias", JSON.stringify({
+        nome1: inputNomeJogador1.value.trim(),
+        nome2: inputNomeJogador2.value.trim(),
+        modo: seletorModo.value,
+        dificuldade: seletorDificuldade.value,
+        semParedes: inputModoSemParedes.checked,
+    }));
+}
+
+aplicarPreferenciasSalvas(); // antes de mostrar os recordes, pra já abrir no modo salvo
+inputModoSemParedes.addEventListener("change", salvarPreferencias);
+
 mostrarRecordesDoModo(seletorModo.value);
+
 atualizarBotaoMudo();
+atualizarBotaoMusica();
 
 seletorModo.addEventListener("change", () => mostrarRecordesDoModo(seletorModo.value));
 
@@ -1082,12 +1227,18 @@ botaoMudo.addEventListener("click", () => {
     atualizarBotaoMudo();
 });
 
+botaoMusica.addEventListener("click", () => {
+    musicaDesligada = !musicaDesligada;
+    salvarNoArmazenamento("snakeMusicaDesligada", musicaDesligada);
+    atualizarBotaoMusica();
+});
+
 // ==========================================
 // Movimento e colisão
 // ==========================================
 function moverJogador(jogador) {
     const novaCabeca = calcularNovaCabeca(
-        jogador.cobra[0], jogador.direcao, inputModoSemParedes.checked, COLUNAS, LINHAS
+        jogador.cobra[0], jogador.direcao, semParedesNaPartida, COLUNAS, LINHAS
     );
     
     jogador.cobra.unshift(novaCabeca);
@@ -1123,6 +1274,10 @@ function moverJogador(jogador) {
         atualizarRecordeSeNecessario(jogador.pontuacao);
         tocarSomComidaDourada();
 
+        if (!jogador.bot) {
+            estatisticas.macasDouradas++;
+        }
+
         comidaDourada = null;
     }
 
@@ -1133,6 +1288,9 @@ function moverJogador(jogador) {
     const pegouPowerUp = powerUp && novaCabeca.x === powerUp.x && novaCabeca.y === powerUp.y;
 
     if (pegouPowerUp) {
+        if (!jogador.bot) {
+            estatisticas.powerUps++;
+        }
         if (powerUp.tipo === "invencibilidade") {
             ativarInvencibilidade(jogador);
         } else if (powerUp.tipo === "velocidade") {
@@ -1171,6 +1329,11 @@ function comerAlimento(jogador, pontosBase) {
     atualizarRecordeSeNecessario(jogador.pontuacao);
     adicionarObstaculosSeNecessario();
     tocarSomComer();
+
+    if (!jogador.bot) {
+        estatisticas.comidas++;
+        estatisticas.maiorCombo = Math.max(estatisticas.maiorCombo, jogador.comboAtual);
+    }
 }
 
 function atualizarRecordeSeNecessario(pontuacaoAtual) {
@@ -1323,7 +1486,7 @@ function escolherAlvoBot(cabeca) {
 }
 
 function decidirDirecaoBot(jogador) {
-    const semParedes = inputModoSemParedes.checked;
+    const semParedes = semParedesNaPartida;
     const andar = (posicao, direcao) => calcularNovaCabeca(posicao, direcao, semParedes, COLUNAS, LINHAS);
     const casaLivre = (posicao) =>
         !foraDoTabuleiro(posicao, COLUNAS, LINHAS) && !posicaoOcupada(posicao, obstaculos, jogadores);
@@ -1361,7 +1524,7 @@ function sairDaPausa() {
 // Controle: teclado
 // ==========================================
 function mudarDirecao(evento) {
-    if (noMenu) return;
+    if (noMenu || animacaoMorte) return;
     if (!jogoAtivo) {
         if (evento.key === "Escape") {
             voltarAoMenu();
@@ -1478,7 +1641,7 @@ canvas.addEventListener("touchmove", (evento) => {
 }, {passive: false});
 
 canvas.addEventListener("touchend", (evento) => {
-    if (noMenu) return;
+    if (noMenu || animacaoMorte) return;
     if (!jogoAtivo) {
         reiniciar();
         return;
@@ -1501,7 +1664,7 @@ canvas.addEventListener("touchend", (evento) => {
 });
 
 function pressionarDirecaoTela(direcao) {
-    if (noMenu) return;
+    if (noMenu || animacaoMorte) return;
     if (!jogoAtivo) {
         reiniciar();
         return;
@@ -1529,6 +1692,7 @@ function loop() {
     // o loop roda em meios passos: quem está com Turbo anda em todos,
     // os outros só nos passos completos (um sim, um não)
     contadorMeiosPassos++;
+    tempoDaPartidaMs += velocidadeAtual / MEIOS_PASSOS_POR_PASSO; // tempo jogado (não conta pausa)
     const passoCompleto = contadorMeiosPassos % MEIOS_PASSOS_POR_PASSO === 0;
     const agoraReal = performance.now();
 
@@ -1568,12 +1732,18 @@ function loop() {
 
     if (batidas.length > 0) {
         jogoAtivo = false;
+        travarSemParedes(false);
         pararMusicaFundo();
         tocarSomColisao();
-        mostrarTelaGameOver(
-            jogadores.filter((jogador) => !batidas.some((batida) => batida.jogador === jogador)),
-            batidas
-        );
+
+        animacaoMorte = { inicio: performance.now(), batidos: batidas.map((batida) => batida.jogador) };
+        temporizadorAnimacaoMorte = setTimeout(() => {
+            animacaoMorte = null;
+            mostrarTelaGameOver(
+                jogadores.filter((jogador) => !batidas.some((batida) => batida.jogador === jogador)),
+                batidas
+            );
+        }, DURACAO_ANIMACAO_MORTE_MS);
         return;
     }
 
@@ -1604,12 +1774,40 @@ function loop() {
         VELOCIDADE_MINIMA_MS,
         VELOCIDADE_INICIAL_MS - Math.max(...jogadores.map((j) => j.pontuacao)) * REDUCAO_VELOCIDADE_POR_PONTO
     );
+    atualizarVelocidadeNoPlacar();
     }
 
     setTimeout(loop, velocidadeAtual / MEIOS_PASSOS_POR_PASSO);
 }
 
+// mostra "1.4x" no placar e acende a cor por um instante quando o número sobe
+function atualizarVelocidadeNoPlacar() {
+    const texto = formatarVelocidade(VELOCIDADE_INICIAL_MS, velocidadeAtual);
+
+    if (texto === elementoVelocidade.textContent) return;
+
+    const acelerou = jogoAtivo && velocidadeMostrada !== null && velocidadeAtual < velocidadeMostrada;
+    elementoVelocidade.textContent = texto;
+    velocidadeMostrada = velocidadeAtual;
+
+    if (acelerou) {
+        barraVelocidade.classList.add("acelerou");
+        clearTimeout(temporizadorDestaqueVelocidade);
+        temporizadorDestaqueVelocidade = setTimeout(() => barraVelocidade.classList.remove("acelerou"), 600);
+    }
+}
+
+// "Sem paredes" só muda fora da partida (antes dava pra marcar no meio e escapar de uma batida)
+function travarSemParedes(travado) {
+    inputModoSemParedes.disabled = travado;
+    inputModoSemParedes.parentElement.title = travado ? "Só dá pra mudar fora da partida" : "";
+}
+
 function reiniciar() {
+    clearTimeout(temporizadorAnimacaoMorte);
+    animacaoMorte = null;
+    semParedesNaPartida = inputModoSemParedes.checked;
+    travarSemParedes(true);
     iniciarMusicaFundo();
     jogadores = criarJogadores(quantidadeJogadoresAtual, nomesJogadoresAtuais);
 
@@ -1626,6 +1824,9 @@ function reiniciar() {
     criarRatosIniciais();
     contadorMeiosPassos = 0;
     contadorPassosPedras = 0;
+    tempoDaPartidaMs = 0;
+    velocidadeAtual = VELOCIDADE_INICIAL_MS; // antes, o 1° passo usava a velocidade na partida anterior
+    atualizarVelocidadeNoPlacar();
     textosFlutuantes = [];
     powerUp = null;
     comidaDourada = null;
@@ -1647,6 +1848,7 @@ function aplicarDificuldade() {
 
 function comecarJogo(quantidade, comBot = false) {
     obterContextoAudio();
+    salvarPreferencias();
     modoAtual = seletorModo.value;
     mostrarRecordesDoModo(modoAtual);
     aplicarDificuldade();
