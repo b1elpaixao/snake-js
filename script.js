@@ -5,6 +5,23 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const elementoRecorde = document.getElementById("highscore");
 const elementoVelocidade = document.getElementById("velocidade");
+const elementoRelogio = document.getElementById("relogioTempo");
+const elementoFase = document.getElementById("indicadorFase");
+
+// modo Fases
+const PONTOS_POR_FASE = 10;
+let faseAtual = 1;
+let corDaCobraId = "azul"; // cor escolhida pro Jogador 1
+
+// Desafio do dia
+const PEDRAS_NO_DESAFIO = 10;
+let desafioDoDia = null;      // { pedras, comidas } de hoje, quando o modo é "desafio"
+let indiceComidaDesafio = 0;  // qual maçã da sequência do dia é a próxima
+
+// modo Contra o Tempo
+const DURACAO_MODO_TEMPO_MS = 120000; // 2 minutos
+const PEDACOS_PERDIDOS_NA_BATIDA = 3;
+const DURACAO_ATORDOADO_MS = 1000;    // depois de bater, a cobra fica 1 s parada
 const barraVelocidade = document.getElementById("barraVelocidade");
 const telaGameOver = document.getElementById("telaGameOver");
 const elementoResultadoFinal = document.getElementById("resultadoFinal");
@@ -90,6 +107,7 @@ const botaoComoJogar = document.getElementById("botaoComoJogar");
 const botaoFecharComoJogar = document.getElementById("botaoFecharComoJogar");
 const seletorDificuldade = document.getElementById("seletorDificuldade");
 const seletorModo = document.getElementById("seletorModo");
+const seletorNivelBot = document.getElementById("seletorNivelBot");
 
 const CONFIGURACAO_DIFICULDADE = {
     facil: { velocidadeInicial: 300, obstaculos: 5, pedrasMoveis: 0 },
@@ -134,6 +152,7 @@ function criarJogador(config) {
         bot: false,
         invencivel: false,
         velocidadeExtraAtiva: false,
+        atordoadoAte: 0,
         ultimoPassoEm: 0,
         duracaoPasso: VELOCIDADE_INICIAL_MS,
         pontosDobradosAtivo: false,
@@ -156,8 +175,8 @@ function criarJogadores(quantidade = 2, nomes = ["Jogador 1", "Jogador 2"]) {
             y: 10,
             direcaoInicial: { x: 1, y: 0 },
             teclas: { cima: "arrowup", baixo: "arrowdown", esquerda: "arrowleft", direita: "arrowright" },
-            corCabeca: "#6fa0ff",
-            corCorpo: "#2a3fb8",
+            corCabeca: corDaCobra().cabeca,
+            corCorpo: corDaCobra().corpo,
             nome: nomes[0],
             elementoPontuacao: document.getElementById("score1"),
         }),
@@ -211,11 +230,11 @@ function salvarNoArmazenamento(chave, valor) {
     }
 }
 
-const MODOS_DE_JOGO = ["normal", "clássico", "rato"];
-const NOMES_MODOS = { normal: "Normal", "clássico": "Clássico", rato: "Rato" };
+const MODOS_DE_JOGO = ["normal", "clássico", "rato", "tempo", "fases", "desafio"];
+const NOMES_MODOS = { normal: "Normal", "clássico": "Clássico", rato: "Rato", tempo: "Contra o tempo", fases: "Fases", desafio: "Desafio de hoje" };
 
 function lerRecordesSalvos() {
-    const porModo = { normal: [], "clássico": [], rato: [] };
+    const porModo = { normal: [], "clássico": [], rato: [], tempo: [], fases: [], desafio: [] };
 
     try {
         const salvos = JSON.parse(lerDoArmazenamento("snakeRecordesPorModo"));
@@ -248,6 +267,9 @@ let ultimoTickEm = performance.now();
 let velocidadeAtual = VELOCIDADE_INICIAL_MS;
 let temporizadorDestaqueVelocidade = null;
 let estatisticas = lerEstatisticas();
+let conquistasGanhas = lerConquistas();
+let partidaAtual = { powerUps: 0 }; // contadores só desta partida (pras conquistas)
+let temporizadorAvisoConquista = null;
 let tempoDaPartidaMs = 0;
 let velocidadeMostrada = null;  
 let nomesJogadoresAtuais = ["Jogador 1", "Jogador 2"];
@@ -376,7 +398,7 @@ function moverPedras() {
 }
 
 function adicionarObstaculosSeNecessario() {
-    if (modoAtual === "clássico") return;
+    if (modoAtual === "clássico" || modoAtual === "fases" || modoAtual === "desafio") return;
 
     const maiorPontuacao = Math.max(...jogadores.map((j) => j.pontuacao));
     const quantidadeAlvo = QUANTIDADE_OBSTACULOS + Math.floor(maiorPontuacao / PONTOS_POR_NOVO_OBSTACULO);
@@ -390,6 +412,11 @@ function adicionarObstaculosSeNecessario() {
 // Comida
 // ==========================================
 function gerarComida() {
+    // desafioDoDia vem primeiro: quando a página abre, modoAtual ainda nem existe
+    if (desafioDoDia && modoAtual === "desafio") {
+        return proximaComidaDoDesafio();
+    }
+
     let candidato;
 
     do {
@@ -402,6 +429,20 @@ function gerarComida() {
     );
     
     return candidato;
+}
+
+// pega a próxima maçã da lista do dia (pula as que caírem em cima de uma cobra)
+function proximaComidaDoDesafio() {
+    while (indiceComidaDesafio < desafioDoDia.comidas.length) {
+        const casa = desafioDoDia.comidas[indiceComidaDesafio];
+        indiceComidaDesafio++;
+
+        if (!posicaoOcupada(casa, obstaculos, jogadores)) {
+            return { x: casa.x, y: casa.y };
+        }
+    }
+
+    return gerarPosicaoLivre(); // acabou a lista (partida muito longa): sorteia normal
 }
 
 function gerarComidaDourada() {
@@ -538,7 +579,11 @@ function desenhar() {
     for (const jogador of jogadores) {
         const bateu = animacaoMorte && animacaoMorte.batidos.includes(jogador);
         // pisca: some e aparece a cada 120 ms
-        const apagada = bateu && Math.floor((performance.now() - animacaoMorte.inicio) / 120) % 2 === 0;
+        
+        const atordoado = estaAtordoado(jogador);
+        const apagada =
+            (bateu && Math.floor((performance.now() - animacaoMorte.inicio) / 120) % 2 === 0) ||
+            (atordoado && Math.floor(agoraDoJogo() / 120) % 2 === 0);
 
         ctx.save();
         if (apagada) {
@@ -868,7 +913,10 @@ function loopRenderizacao() {
 function mostrarTelaGameOver(jogadoresVivos, batidas) {
     let resultado;
 
-    if (jogadores.length === 1) {
+    if (modoAtual === "tempo") {
+        const vencedor = vencedorPorPontos(jogadores);
+        resultado = jogadores.length === 1 ? "Tempo esgotado!" : vencedor ? `${vencedor.nome} venceu!` : "Empate!";
+    } else if (jogadores.length === 1) {
         resultado = "Game Over";
     } else if (jogadoresVivos.length === 1) {
         resultado = `${jogadoresVivos[0].nome} venceu!`;
@@ -888,6 +936,10 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
             return descreverBatida(nome, motivo, outro ? outro.nome : "");
         })
         .join(" · ");
+
+    if (batidas.length === 0) {
+        elementoCausaMorte.textContent = "Acabou o tempo";
+    }
     elementoPontuacaoFinal.textContent = textoPontuacao;
 
      // compara com o Top 5 de antes, por isso vem antes de atualizarListaRecordes
@@ -944,7 +996,8 @@ function desenharContagem() {
 
     const progresso = decorrido / DURACAO_PASSO_CONTAGEM_MS;
     // o número "pula" grande e encolhe rápido até o tamanho normal
-    const tamanho = 96 * (1.25 - 0.25 * Math.min(progresso * 3, 1));
+    const tamanhoBase = textoContagem.length > 4 ? 64 : 96; // "Fase 2" é mais complicado que "3"
+    const tamanho = tamanhoBase * (1.25 - 0.25 * Math.min(progresso * 3, 1));
 
     ctx.save();
 
@@ -985,8 +1038,7 @@ function atualizarBarrasEfeitos() {
 }
 
 // aoTerminar: o que fazer depois do "Vai!" (começar o loop, ou sair da pausa)
-function iniciarContagem(aoTerminar = loop) {
-    const passos = ["3", "2", "1", "Vai!"];
+function iniciarContagem(aoTerminar = loop, passos = ["3", "2", "1", "Vai!"]) {
     let indice = 0;
 
     contagemAtiva = true;
@@ -1067,6 +1119,13 @@ function tocarSomColisao() {
 
 function tocarSomComidaDourada() {
     tocarSom(1000, 0.15, "triangle");
+}
+
+// vibra o celular (o botão "Efeitos" desliga a vibração também)
+// padrao: milissegundos de vibração, ou uma lista [vibra, pausa, vibra, ...]
+function vibrar(padrao) {
+    if (mudo || !navigator.vibrate) return;
+    navigator.vibrate(padrao);
 }
 
 function tocarNotaMusica(frequencia) {
@@ -1168,6 +1227,14 @@ function registrarFimDePartida(batidas) {
 
     salvarEstatisticas();
     mostrarEstatisticas();
+
+    const bot = jogadores.find((jogador) => jogador.bot);
+    const humano = humanos[0];
+    const venceuOBot = Boolean(bot && humano) && (modoAtual === "tempo"
+        ? humano.pontuacao > bot.pontuacao
+        : batidas.some((batida) => batida.jogador === bot) && !batidas.some((batida) => batida.jogador === humano));
+
+    verificarConquistas({ venceuBotDificil: venceuOBot && seletorNivelBot.value === "dificil"});
 }
 
 document.getElementById("botaoZerarEstatisticas").addEventListener("click", () => {
@@ -1179,6 +1246,89 @@ document.getElementById("botaoZerarEstatisticas").addEventListener("click", () =
 });
 
 mostrarEstatisticas();
+
+// ========================================== 
+// Conquistas
+// ========================================== 
+function lerConquistas() {
+    try {
+        return limparConquistas(JSON.parse(lerDoArmazenamento("snakeConquistas")));
+    } catch {
+        return []; // dado corrompido: começa sem conquistas
+    }
+}
+
+// junta o que as conquistas precisam saber: estatísticas de sempre + a partida de agora
+function contextoDasConquistas(extra = {}) {
+    const humanos = jogadores.filter((jogador) => !jogador.bot);
+
+    return {
+        estatisticas,
+        partida: {
+            pontos: Math.max(0, ...humanos.map((jogador) => jogador.pontuacao)),
+            tamanho: Math.max(0, ...humanos.map((jogador) => jogador.cobra.length)),
+            powerUps: partidaAtual.powerUps,
+            modo: modoAtual,
+            fase: faseAtual,
+            venceuBotDificil: false,
+            ...extra,
+        },
+    };
+}
+
+function verificarConquistas(extra) {
+    const novas = conquistasNovas(conquistasGanhas, contextoDasConquistas(extra));
+
+    if (novas.length === 0) return;
+
+    conquistasGanhas = conquistasGanhas.concat(novas.map((conquista) => conquista.id));
+    salvarNoArmazenamento("snakeConquistas", JSON.stringify(conquistasGanhas));
+    mostrarConquistas();
+    mostrarCoresDaCobra();
+    avisarConquistas(novas);
+}
+
+function mostrarConquistas() {
+    const lista = document.getElementById("listaConquistas");
+    lista.innerHTML = "";
+
+    for (const conquista of CONQUISTAS) {
+        const ganhou = conquistasGanhas.includes(conquista.id);
+        const item = document.createElement("li");
+        const textos = document.createElement("div");
+        const nome = document.createElement("b");
+        const descricao = document.createElement("span");
+
+        item.className = ganhou ? "ganhou" : "bloqueada";
+        nome.textContent = conquista.nome;
+        descricao.textContent = conquista.descricao;
+        textos.append(nome, descricao);
+        item.append(textos);
+        lista.append(item);
+    }
+
+    document.getElementById("contadorConquistas").textContent = `${conquistasGanhas.length}/${CONQUISTAS.length}`;
+}
+
+function avisarConquistas(novas) {
+    const aviso = document.getElementById("avisoConquista");
+
+    aviso.textContent = `Conquista: ${novas.map((conquista) => conquista.nome).join(" · ")}`;
+    // esconde e mostra de novo pra animação recomeçar
+    aviso.hidden = true;
+    void aviso.offsetWidth;
+    aviso.hidden = false;
+
+    tocarSom(880, 0.1, "triangle");
+    setTimeout(() => tocarSom(1320, 0.15, "triangle"), 110);
+
+    clearTimeout(temporizadorAvisoConquista);
+    temporizadorAvisoConquista = setTimeout(() => {
+        aviso.hidden = true;
+    }, 2800);
+}
+
+mostrarConquistas();
 
 // ==========================================
 // Preferências: nomes, modo, dificuldade e "Sem paredes" ficam salvos
@@ -1198,6 +1348,8 @@ function aplicarPreferenciasSalvas() {
     inputNomeJogador2.value = preferencias.nome2;
     seletorModo.value = preferencias.modo;
     seletorDificuldade.value = preferencias.dificuldade;
+    seletorNivelBot.value = limparNivelBot(salvas && salvas.nivelBot);
+    corDaCobraId = limparCorDaCobra(salvas && salvas.corCobra, conquistasGanhas);
     inputModoSemParedes.checked = preferencias.semParedes;
 }
 
@@ -1207,13 +1359,70 @@ function salvarPreferencias() {
         nome2: inputNomeJogador2.value.trim(),
         modo: seletorModo.value,
         dificuldade: seletorDificuldade.value,
+        nivelBot: seletorNivelBot.value,
+        corCobra: corDaCobraId,
         semParedes: inputModoSemParedes.checked,
     }));
+}
+
+// ==========================================
+// Cor da cobra
+// ==========================================
+function corDaCobra() {
+    return CORES_DA_COBRA.find((cor) => cor.id === corDaCobraId) || CORES_DA_COBRA[0];
+}
+
+// pinta a cobra do Jogador 1 e as bolinhas azuis do placar/menu com a cor escolhida
+function aplicarCorDaCobra() {
+    const cor = corDaCobra();
+    document.documentElement.style.setProperty("--jogador1", cor.cabeca);
+
+    if (jogadores[0] && !jogadores[0].bot) {
+        jogadores[0].corCabeca = cor.cabeca;
+        jogadores[0].corCorpo = cor.corpo;
+    }
+}
+
+function mostrarCoresDaCobra() {
+    const caixa = document.getElementById("coresDaCobra");
+    caixa.innerHTML = "";
+
+    for (const cor of CORES_DA_COBRA) {
+        const liberada = corEstaLiberada(cor, conquistasGanhas);
+        const conquista = CONQUISTAS.find((item) => item.id === cor.conquista);
+        const botao = document.createElement("button");
+
+        botao.type = "button";
+        botao.className = "amostra-cor";
+        botao.style.setProperty("--cor-cabeca", cor.cabeca);
+        botao.style.setProperty("--cor-corpo", cor.corpo);
+        botao.disabled = !liberada;
+        botao.setAttribute("aria-pressed", String(cor.id === corDaCobraId));
+        botao.title = liberada ? cor.nome : `${cor.nome}: ganhe a conquista "${conquista.nome}"`;
+        botao.setAttribute("aria-label", botao.title);
+        botao.addEventListener("click", () => escolherCorDaCobra(cor.id));
+        caixa.append(botao);
+    }
+
+    document.getElementById("nomeCorDaCobra").textContent = `${corDaCobra().nome} · as apagadas liberam com conquistas`;
+}
+
+function escolherCorDaCobra(id) {
+    const cor = CORES_DA_COBRA.find((opcao) => opcao.id === id);
+
+    if (!cor || !corEstaLiberada(cor, conquistasGanhas)) return; // bloqueada: não muda nada
+
+    corDaCobraId = cor.id;
+    aplicarCorDaCobra();
+    mostrarCoresDaCobra();
+    salvarPreferencias();
 }
 
 aplicarPreferenciasSalvas(); // antes de mostrar os recordes, pra já abrir no modo salvo
 inputModoSemParedes.addEventListener("change", salvarPreferencias);
 
+aplicarCorDaCobra();
+mostrarCoresDaCobra();
 mostrarRecordesDoModo(seletorModo.value);
 
 atualizarBotaoMudo();
@@ -1276,6 +1485,7 @@ function moverJogador(jogador) {
 
         if (!jogador.bot) {
             estatisticas.macasDouradas++;
+            vibrar([30, 40, 30]);
         }
 
         comidaDourada = null;
@@ -1290,6 +1500,9 @@ function moverJogador(jogador) {
     if (pegouPowerUp) {
         if (!jogador.bot) {
             estatisticas.powerUps++;
+            partidaAtual.powerUps++;
+            vibrar(50);
+            verificarConquistas();
         }
         if (powerUp.tipo === "invencibilidade") {
             ativarInvencibilidade(jogador);
@@ -1333,6 +1546,8 @@ function comerAlimento(jogador, pontosBase) {
     if (!jogador.bot) {
         estatisticas.comidas++;
         estatisticas.maiorCombo = Math.max(estatisticas.maiorCombo, jogador.comboAtual);
+        vibrar(30);
+        verificarConquistas();
     }
 }
 
@@ -1344,7 +1559,10 @@ function atualizarRecordeSeNecessario(pontuacaoAtual) {
 }
 
 function recordesDoModo(modo) {
-    return recordesPorModo[modo] || [];
+    const lista = recordesPorModo[modo] || [];
+
+    // o Top 5 do desafio só mostra ( e só guarda) os recordes de hoje
+    return modo === "desafio" ? lista.filter((registro) => registro.data === dataDeHoje()) : lista;
 }
 
 // mostra o Top 5 e o troféu do modo escolhido
@@ -1369,7 +1587,11 @@ function desenharListaRecordes() {
 }
 
 function atualizarListaRecordes(novosRegistros) {
-    recordesPorModo[modoAtual] = juntarRecordes(recordesDoModo(modoAtual), novosRegistros);
+    const registros = modoAtual === "desafio"
+        ? novosRegistros.map((registro) => ({ ...registro, data: dataDeHoje() }))
+        : novosRegistros;
+
+    recordesPorModo[modoAtual] = juntarRecordes(recordesDoModo(modoAtual), registros);
 
     salvarNoArmazenamento("snakeRecordesPorModo", JSON.stringify(recordesPorModo));
     mostrarRecordesDoModo(modoAtual);
@@ -1492,8 +1714,15 @@ function decidirDirecaoBot(jogador) {
         !foraDoTabuleiro(posicao, COLUNAS, LINHAS) && !posicaoOcupada(posicao, obstaculos, jogadores);
     const cabeca = jogador.cobra[0];
 
-    // precisa de espaço pra caber o corpo inteiro (+2 de folga), senão é beco
-    const espaçoNecessario = jogador.cobra.length + 2;
+    const nivel = NIVEIS_DO_BOT[limparNivelBot(seletorNivelBot.value)];
+
+    // de vez em quando (mais no fácil) ele se distrai e vira pra um lado qualquer
+    if (Math.random() < nivel.chanceDeErro) {
+        return direcaoAleatoriaSegura(cabeca, jogador.direcao, andar, casaLivre, Math.random);
+    }
+
+    // quando mais cuidadoso, mais espaço ele exige à frente pra não entrar em beco
+    const espaçoNecessario = espacoQueOBotExige(jogador.cobra.length, nivel.cuidado);
 
     return escolherDirecaoBot(cabeca, jogador.direcao, escolherAlvoBot(cabeca), andar, casaLivre, espaçoNecessario);
 }
@@ -1693,6 +1922,15 @@ function loop() {
     // os outros só nos passos completos (um sim, um não)
     contadorMeiosPassos++;
     tempoDaPartidaMs += velocidadeAtual / MEIOS_PASSOS_POR_PASSO; // tempo jogado (não conta pausa)
+
+    if (modoAtual === "tempo") {
+        atualizarRelogio();
+
+        if (tempoDaPartidaMs >= DURACAO_MODO_TEMPO_MS) {
+            encerrarPorTempo();
+            return;
+        }
+    }
     const passoCompleto = contadorMeiosPassos % MEIOS_PASSOS_POR_PASSO === 0;
     const agoraReal = performance.now();
 
@@ -1704,7 +1942,9 @@ function loop() {
         }
     }
 
-    const jogadoresQueAndam = jogadores.filter((jogador) => passoCompleto || jogador.velocidadeExtraAtiva);
+    const jogadoresQueAndam = jogadores.filter(
+        (jogador) => (passoCompleto || jogador.velocidadeExtraAtiva) && !estaAtordoado(jogador)
+    );
 
     for (const jogador of jogadoresQueAndam) {
         if (jogador.bot) {
@@ -1730,11 +1970,17 @@ function loop() {
         .map((jogador) => ({ jogador, motivo: motivoDaBatida(jogador) }))
         .filter((batida) => batida.motivo !== null);
 
-    if (batidas.length > 0) {
+    if (batidas.length > 0 && modoAtual === "tempo") {
+        // no Contra o Tempo bater não acaba o jogo: perde pedaços e fica parada um pouco
+        batidas.forEach(({ jogador }) => penalizarBatida(jogador));
+        tocarSomColisao();
+        vibrar(80);
+    } else if (batidas.length > 0) {
         jogoAtivo = false;
         travarSemParedes(false);
         pararMusicaFundo();
         tocarSomColisao();
+        vibrar([120, 60, 200]);
 
         animacaoMorte = { inicio: performance.now(), batidos: batidas.map((batida) => batida.jogador) };
         temporizadorAnimacaoMorte = setTimeout(() => {
@@ -1777,6 +2023,15 @@ function loop() {
     atualizarVelocidadeNoPlacar();
     }
 
+    if (modoAtual === "fases") {
+        const maiorPontuacao = Math.max(...jogadores.map((jogador) => jogador.pontuacao));
+        const fase = faseParaPontuacao(maiorPontuacao, PONTOS_POR_FASE, MAPAS_DAS_FASES.length);
+
+        if (fase > faseAtual) {
+            passarDeFase(fase);
+        }
+    }
+
     setTimeout(loop, velocidadeAtual / MEIOS_PASSOS_POR_PASSO);
 }
 
@@ -1803,10 +2058,78 @@ function travarSemParedes(travado) {
     inputModoSemParedes.parentElement.title = travado ? "Só dá pra mudar fora da partida" : "";
 }
 
+// ==========================================
+// Modo Contra o Tempo
+// ==========================================
+function estaAtordoado(jogador) {
+    return jogador.atordoadoAte > agoraDoJogo();
+}
+
+function penalizarBatida(jogador) {
+    // volta pra onde estava antes de bater e perde pedaços do rabo
+    jogador.cobra = encolherCobra(jogador.cobraAnterior, PEDACOS_PERDIDOS_NA_BATIDA);
+    jogador.cobraAnterior = jogador.cobra.map((segmento) => ({ ...segmento }));
+    jogador.filaDirecoes = [];
+    jogador.comboAtual = 0;
+    jogador.elementoPontuacao.textContent = jogador.pontuacao;
+    jogador.atordoadoAte = agoraDoJogo() + DURACAO_ATORDOADO_MS;
+    adicionarTextoFlutuante(jogador.cobra[0], "Bateu!", "#ff8a80");
+}
+
+function atualizarRelogio() {
+    const restante = DURACAO_MODO_TEMPO_MS - tempoDaPartidaMs;
+    elementoRelogio.textContent = formatarRelogio(restante);
+    elementoRelogio.classList.toggle("acabando", restante <= 10000);
+}
+
+function encerrarPorTempo() {
+    jogoAtivo = false;
+    travarSemParedes(false);
+    pararMusicaFundo();
+    tocarSom(660, 0.4, "square");
+    vibrar(200);
+    mostrarTelaGameOver(jogadores, []);
+}
+
+// ==========================================
+// Modo Fases
+// ==========================================
+// coloca as paredes do mapa e põe as cobras (pequenas) nos pontos de partida
+function carregarFase(numero) {
+    const mapa = lerMapa(MAPAS_DAS_FASES[numero - 1]. linhas);
+
+    faseAtual = numero;
+    obstaculos = mapa.paredes;
+
+    jogadores.forEach((jogador, indice) => {
+        const inicio = mapa.inicios[indice];
+        jogador.cobra = [{ x: inicio.x, y: inicio.y }];
+        jogador.cobraAnterior = [{ x: inicio.x, y: inicio.y }];
+        jogador.direcao = indice === 0 ? { x: 1, y: 0 } : { x: -1, y: 0};
+        jogador.filaDirecoes = [];
+    });
+
+    elementoFase.textContent = `Fase ${numero} · ${MAPAS_DAS_FASES[numero - 1].nome}`;
+}
+
+function passarDeFase(numero) {
+    carregarFase(numero);
+    verificarConquistas();
+    comida = gerarComida();
+    powerUp = null;
+    comidaDourada = null;
+    textosFlutuantes = [];
+
+    // pausa e mostra "Fase 2", depois 3, 2, 1, Vai!
+    pausado = true;
+    pausadoDesde = performance.now();
+    iniciarContagem(sairDaPausa, [`Fase ${numero}`, "3", "2", "1", "Vai!"]);
+}
+
 function reiniciar() {
     clearTimeout(temporizadorAnimacaoMorte);
     animacaoMorte = null;
-    semParedesNaPartida = inputModoSemParedes.checked;
+    semParedesNaPartida = inputModoSemParedes.checked && modoAtual !== "desafio"; // desafio: sempre com paredes
     travarSemParedes(true);
     iniciarMusicaFundo();
     jogadores = criarJogadores(quantidadeJogadoresAtual, nomesJogadoresAtuais);
@@ -1820,11 +2143,26 @@ function reiniciar() {
     });
     obstaculos = gerarObstaculos();
     tornarPedrasMoveis();
+    elementoFase.hidden = modoAtual !== "fases" && modoAtual !== "desafio";
+    if (modoAtual === "fases") {
+        carregarFase(1);
+    }
+    desafioDoDia = null;
+    if (modoAtual === "desafio") {
+        const hoje = dataDeHoje();
+        desafioDoDia = gerarDesafioDoDia(hoje, COLUNAS, LINHAS, PEDRAS_NO_DESAFIO, jogadores.map((jogador) => jogador.cobra[0]), 400);
+        obstaculos = desafioDoDia.pedras.map((pedra) => ({ x: pedra.x, y: pedra.y }));
+        indiceComidaDesafio = 0;
+        elementoFase.textContent = `Desafio de ${hoje.slice(8, 10)}/${hoje.slice(5, 7)}`;
+    }
     comida = gerarComida();
     criarRatosIniciais();
     contadorMeiosPassos = 0;
     contadorPassosPedras = 0;
     tempoDaPartidaMs = 0;
+    partidaAtual = { powerUps: 0 };
+    elementoRelogio.hidden = modoAtual !== "tempo";
+    atualizarRelogio();
     velocidadeAtual = VELOCIDADE_INICIAL_MS; // antes, o 1° passo usava a velocidade na partida anterior
     atualizarVelocidadeNoPlacar();
     textosFlutuantes = [];
@@ -1839,7 +2177,9 @@ function reiniciar() {
 }
 
 function aplicarDificuldade() {
-    const configuracao = CONFIGURACAO_DIFICULDADE[seletorDificuldade.value];
+    // no desafio a velocidade é sempre a Normal, pra todo mundo jogar igual
+    const dificuldade= modoAtual === "desafio" ? "normal" : seletorDificuldade.value;
+    const configuracao = CONFIGURACAO_DIFICULDADE[dificuldade];
 
     VELOCIDADE_INICIAL_MS = configuracao.velocidadeInicial;
     QUANTIDADE_OBSTACULOS = modoAtual === "clássico" ? 0 : configuracao.obstaculos;
@@ -1865,6 +2205,11 @@ function comecarJogo(quantidade, comBot = false) {
     noMenu = false;
     telaInicial.hidden= true;
     reiniciar();
+
+    // no celular, rola a página pra deixar o tabuleiro e as setas na tela
+    if (window.matchMedia("(pointer: coarse)").matches) {
+        document.querySelector(".jogo").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
 }
 
 botaoJogar1.addEventListener("click", () => comecarJogo(1));

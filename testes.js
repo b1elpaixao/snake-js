@@ -267,6 +267,107 @@ verificar("morteMaisComum acha a maior", morteMaisComum({ parede: 2, proprioCorp
 outroJogador: 0 }), "proprioCorpo");
 verificar ("morteMaisComum sem mortes é null", morteMaisComum({ parede: 0, pedra: 0 }), null);
 
+// modo contra o tempo
+verificar("relógio: 2 minutos", formatarRelogio(120000), "2:00");
+verificar("relógio: 1 minuto e 5 segundos", formatarRelogio(65000), "1:05");
+verificar("relógio: arredonda pra cima no finalzinho", formatarRelogio(400), "0:01");
+verificar("relógio: acabou", formatarRelogio(0), "0:00");
+const cobraGrande = [{ x: 5, y: 5 }, { x: 4, y: 5 }, { x: 3, y: 5 }, { x: 2, y: 5 }, { x: 1, y: 5 }];
+verificar("encolherCobra tira 3 pedaços do rabo", encolherCobra(cobraGrande, 3).length, 2);
+verificar("encolherCobra mantém a cabeça no lugar", JSON.stringify(encolherCobra(cobraGrande, 3) [0]), JSON.stringify({ x: 5, y: 5 }));
+verificar("encolherCobra nunca deixa a cobra sumir", encolherCobra([{ x: 1, y: 1 }, { x: 0, y: 1 }], 3).length, 1);
+verificar("encolherCobra não mexe na cobra original", cobraGrande.length, 5);
+verificar("vencedor é quem fez mais pontos", vencedorPorPontos([{ nome: "Ana", pontuacao: 3 }, { nome: "Leo", pontuacao: 8 }]).nome, "Leo");
+verificar("empate não tem vencedor", vencedorPorPontos([{ nome: "Ana", pontuacao: 4 }, { nome: "Leo", pontuacao: 4 }]), null);
+
+// modo fases
+verificar("faseParaPontuacao: começa na fase 1", faseParaPontuacao(0, 10, 4), 1);
+verificar("faseParaPontuacao: 10 pontos é fase 2", faseParaPontuacao(10, 10, 4), 2);
+verificar("faseParaPontuacao: não passa da última", faseParaPontuacao(500, 10, 4), 4);
+verificar("lerMapa achas as paredes e o início", JSON.stringify(lerMapa(["#1", ".2"])), JSON.stringify({ paredes: [{ x: 0, y: 0 }], inicios: [{ x: 1, y: 0 }, { x: 1, y: 1 }] }));
+
+MAPAS_DAS_FASES.forEach((mapa, indice) => {
+    const fase = `fase ${indice + 1} (${mapa.nome})`;
+    const tamanhoCerto = mapa.linhas.length === 20 && mapa.linhas.every((linha) => linha.length === 20);
+    verificar(`${fase}: tem 20x20 casas`, tamanhoCerto, true);
+
+    const { paredes, inicios } = lerMapa(mapa.linhas);
+    const ehParede = (casa) => paredes.some((parede) => mesmaPosicao(parede, casa));
+    const casaLivreNoMapa = (casa) => !foraDoTabuleiro(casa, 20, 20) && !ehParede(casa);
+    const andarNoMapa = (casa, direcao) => ({ x: casa.x + direcao.x, y: casa.y + direcao.y });
+
+    verificar(`${fase}: tem os dois pontos de partida`, inicios.length === 2 && inicios.every(Boolean), true);
+
+    // as 3 casas na frente de cada cobra estão livres (J1 vai pra direita, J2 pra esquerda)
+    const frenteLivre = [1, 2, 3].every((passo) =>
+        casaLivreNoMapa({ x: inicios[0].x + passo, y: inicios[0].y }) &&
+        casaLivreNoMapa({ x: inicios[1].x - passo, y: inicios[1].y })
+    );
+    verificar(`${fase}: frente das cobras livre`, frenteLivre, true);
+
+    // dá pra chegar em todas as casas livres (nenhuma área fechada onde a comida ficaria presa)
+    const totalLivre = 400 - paredes.length;
+    verificar(`${fase}: nenhuma área fechada`, contarEspacoLivre(inicios[0], andarNoMapa, casaLivreNoMapa, 400), totalLivre);
+});
+
+// desafio do dia
+verificar("dataDeHoje formata com zeros", dataDeHoje(new Date(2026, 0, 5)), "2026-01-05");
+verificar("sementeDoTexto: mesmo texto, mesmo número", sementeDoTexto("2026-10-02"), sementeDoTexto("2026-10-02"));
+verificar("sementeDoTexto: textos diferentes, números diferentes", sementeDoTexto("2026-10-02") === sementeDoTexto("2026-10-03"), false);
+const sorteioA = criarSorteador(42), sorteioB = criarSorteador(42);
+verificar("criarSorteador: mesma semente, mesmo números", [sorteioA(), sorteioA(), sorteioA()].join(), [sorteioB(), sorteioB(), sorteioB()].join());
+const numerosSorteados = Array.from({ length: 1000 }, criarSorteador(7));
+verificar("criarSorteador: números entre 0 e 1", numerosSorteados.every((n) => n >= 0 && n < 1), true);
+
+const iniciosTeste = [{ x: 6, y: 10 }, { x: 14, y: 10 }];
+const desafioHoje = gerarDesafioDoDia("2026-10-02", 20, 20, 10, iniciosTeste, 50);
+const desafioDeNovo = gerarDesafioDoDia("2026-10-02", 20, 20, 10, iniciosTeste, 50);
+const desafioAmanha = gerarDesafioDoDia("2026-10-03", 20, 20, 10, iniciosTeste, 50);
+verificar("desafio: mesma data, mesmo mapa e mesmas maçãs", JSON.stringify(desafioHoje), JSON.stringify(desafioDeNovo));
+verificar("desafio: outra data, outro mapa", JSON.stringify(desafioHoje.pedras) === JSON.stringify(desafioAmanha.pedras), false);
+verificar("desafio: tem 10 pedras e 50 maçãs", desafioHoje.pedras.length + "/" + desafioHoje.comidas.length, "10/50");
+verificar("desafio: nenhuma pedra perto do começo das cobras", desafioHoje.pedras.every((pedra) => iniciosTeste.every((inicio) => distanciaManhattan(pedra, inicio) > 2)), true);
+verificar("desafio: nenhuma maçã em cima da pedra", desafioHoje.comidas.every((comida) => !desafioHoje.pedras.some((pedra) => mesmaPosicao(pedra, comida))), true);
+
+// nível do bot
+verificar("limparNivelBot aceita um nivel que existe", limparNivelBot("dificil"), "dificil");
+verificar("limparNivelBot troca nível inventado por normal", limparNivelBot("impossivel"), "normal");
+verificar("bot fácil não olha à frente (exige só 1 casa)", espacoQueOBotExige(20, 0), 1);
+verificar("bot difícil exige o corpo inteiro + 2", espacoQueOBotExige(20, 1), 22);
+verificar("bot normal exige metade", espacoQueOBotExige(20, 0.5), 11);
+const mapaAleatorio = criarMapaTeste([{ x: 3, y: 2 }]);
+const direcoesSorteadas = [0, 0.4, 0.99].map((valor) => JSON.stringify(direcaoAleatoriaSegura({ x: 2, y: 2 }, { x: 1, y: 0}, mapaAleatorio.andar, mapaAleatorio.casaLivre, () => valor)));
+verificar("direção aleatória nunca é meia-volta nem pra cima de algo", direcoesSorteadas.every((direcao) => direcao === JSON.stringify({ x: 0, y: -1 }) || direcao === JSON.stringify({ x: 0, y: 1 })), true);
+verificar("sem saída, a direção aleatória segue em frente", JSON.stringify(direcaoAleatoriaSegura({ x: 2, y: 2 }, { x: 1, y: 0 }, mapaFechado.andar, mapaFechado.casaLivre, () => 0.5)), JSON.stringify({ x: 1, y: 0 }));
+
+// conquistas
+function contextoTeste(estatisticasTeste = {}, partidaTeste = {}) {
+    return {
+        estatisticas: { ...estatisticasVazias(), ...estatisticasTeste },
+        partida: { pontos: 0, tamanho: 1, powerUps: 0, modo: "normal", fase: 1, venceuBotDificil: false, ...partidaTeste },
+    };
+}
+const idsDe = (lista) => lista.map((conquista) => conquista.id).join(",");
+verificar("conquista: começando do zero não ganha nada", idsDe(conquistasNovas([], contextoTeste())), "");
+verificar("conquista: primeira comida", idsDe(conquistasNovas([], contextoTeste({ comidas: 1 }))), "primeiraMordida");
+verificar("conquista: não ganha de novo o que já tem", idsDe(conquistasNovas(["primeiraMordida"], contextoTeste({ comidas: 1}))), "");
+verificar("conquista: 100 comidas dá duas de uma vez", idsDe(conquistasNovas([], contextoTeste({ comidas: 100 }))), "primeiraMordida,faminta");
+verificar("conquista: cobra grande vale na partida de agora", idsDe(conquistasNovas([], contextoTeste({}, { tamanho: 20 }))), "cobraGrande");
+verificar("conquista: 30 pontos só valem no Contra o tempo", idsDe(conquistasNovas([], contextoTeste({}, { pontos: 30, modo: "normal" }))) + "|" + idsDe(conquistasNovas([], contextoTeste({}, { pontos: 30, modo: "tempo" }))), "|contraORelogio");
+verificar("conquista: ids únicos", new Set(CONQUISTAS.map((c) => c.id)).size, CONQUISTAS.length);
+verificar("limparConquistas tira o que não existe", JSON.stringify(limparConquistas(["faminta", "voar", 7])), JSON.stringify(["faminta"]));
+verificar("limparCOnquistas com lixo devolve lista vazia", JSON.stringify(limparConquistas(" {lixo")), "[]");
+
+// cores da cobra
+verificar("cores: azul e ciano já começam liberadas",
+    CORES_DA_COBRA.filter((cor) => corEstaLiberada(cor, [])).map((cor) => cor.id).join(","), "azul,ciano");
+verificar("cores: a conquista libera a cor", corEstaLiberada(CORES_DA_COBRA.find((cor) => cor.id === "rosa"), ["faminta"]), true);
+verificar("limparCorDaCobra: cor bloqueada volta pra azul", limparCorDaCobra("rosa", []), "azul");
+verificar("limparCorDaCobra: cor liberada fica", limparCorDaCobra("rosa", ["faminta"]), "rosa");
+verificar("limparCorDaCobra: cor inventada volta pra azul", limparCorDaCobra("arco-íris", []), "azul");
+verificar("cores: toda conquista pedida existe",
+    CORES_DA_COBRA.every((cor) => cor.conquista === null || CONQUISTAS.some((conquista) => conquista.id === cor.conquista)), true);
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

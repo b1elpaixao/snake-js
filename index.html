@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0e1712" />
     <title>Snake</title>
     <meta name="description" content="Jogo da cobrinha (Snake) feito em JavaScript puro - power-ups, modo 2 jogadores, obstáculos e efeitos sonoros." />
 
@@ -92,6 +93,8 @@
                     </span>
                 </div>
                 <div class="placar-direita">
+                    <span class="indicador-fase" id="indicadorFase" title="Fase atual" hidden>Fase 1</span>
+                <span class="relogio-tempo" id="relogioTempo" title="Tempo restante" hidden>2:00</span>
                 <span class="barra-velocidade" id="barraVelocidade" title="Velocidade (comparada ao começo da partida)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M13 2 4 14h7l-1 8 9-12h-7z" />
@@ -137,6 +140,9 @@
                                 <option value="normal" selected>Normal</option>
                                 <option value="clássico">clássico (sem pedras)</option>
                                 <option value="rato">Rato (caçada)</option>
+                                <option value="tempo">Contra o tempo (2 min)</option>
+                                <option value="fases">Fases(mapas)</option>
+                                <option value="desafio">Desafio do dia</option>
                             </select>
                         </div>
                         <div class="menu-dificuldade">
@@ -147,6 +153,14 @@
                                 <option value="dificil">Difícil</option>
                         </select>
                     </div>
+                        <div class="menu-dificuldade">
+                            <label for="seletorNivelBot">Nível do bot</label>
+                            <select id="seletorNivelBot">
+                                <option value="facil">Fácil</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="dificil">Difícil</option>
+                            </select>
+                        </div>
                 </div>
 
                     <div class="menu-botoes">
@@ -196,8 +210,11 @@
                             <li><b>Normal:</b> tem pedras no mapa, e nasce uma nova a cada 3 pontos.</li>
                             <li><b>Clássico:</b> sem pedras.</li>
                             <li><b>Rato:</b> no lugar de maçã, ratos. O cinza fica parado e vale 1 ponto; o marrom foge quando você chega perto e vale 3.</li>
+                            <li><b>Contra o tempo:</b>2 minutos para fazer o máximo de pontos. Bater não acaba o jogo: a cobra perde 3 pedaços e fica 1 segundo parada.</li>
+                            <li><b>Fases:</b> em vez de pedras soltas, mapas com paredes desenhadas. A cada 10 pontos você passa de fase, e a cobra volta pequena para o começo do mapa novo.</li>
                             <li><b>Sem paredes:</b> opção no topo da página. A cobra atravessa a borda e sai do outro lado.</li>
                             <li><b>Dificuldade:</b> muda a velocidade e a quantidade de pedras. A cobra também acelera conforme você pontua. No Difícil, 3 pedras azuladas andam de um lado para o outro.</li>
+                            <li><b>Desafio do dia:</b> o mesmo mapa e a mesma sequência de maçãs para todo mundo que jogar no mesmo dia. Velocidade sempre Normal e sem "Sem paredes", pra ser justo. O Top 5 do desafio zera todo dia.</li>
                         </ul>
                     </section>
 
@@ -217,6 +234,14 @@
                         </ul>
                     </section>
                 </div>
+
+                <p id="avisoConquista" class="aviso-conquista" role="status" hidden></p>
+            </div>
+            <div class="controles-toque">
+                <button id="botaoCima" class="botao-direcao seta-cima" aria-label="Cima">▲</button>
+                <button id="botaoEsquerda" class="botao-direcao seta-esquerda" aria-label="Esquerda">◀</button>
+                <button id="botaoBaixo" class="botao-direcao seta-baixo" aria-label="Baixo">▼</button>
+                <button id="botaoDireita" class="botao-direcao seta-direita" aria-label="Direita">▶</button>
             </div>
         </section>
 
@@ -242,6 +267,17 @@
             </div>
 
             <div class="cartao">
+                <p class="rotulo">Conquistas · <span id="contadorConquistas">0/0</span></p>
+                <ul id="listaConquistas" class="lista-conquistas"></ul>
+            </div>
+
+            <div class="cartao">
+                <p class="rotulo">Cor da sua cobra</p>
+                <div id="coresDaCobra" class="cores-da-cobra" role="group" aria-label="Cor da cobra do Jogador 1"></div>
+                <p id="nomeCorDaCobra" class="nome-cor-da-cobra"></p>
+            </div>
+
+            <div class="cartao">
                 <p class="rotulo">Itens no mapa</p>
                 <ul class="itens">
                     <li><span class="item-icone" style="--cor: #f5c451"></span><div><b>Invencível</b><span>Atravessa corpos e pedras por 5 s</span></div></li>
@@ -256,13 +292,6 @@
             </div>
         </aside>
     </main>
-
-    <div class="controles-toque">
-        <button id="botaoCima" class="botao-direcao seta-cima" aria-label="Cima">▲</button>
-        <button id="botaoEsquerda" class="botao-direcao seta-esquerda" aria-label="Esquerda">◀</button>
-        <button id="botaoBaixo" class="botao-direcao seta-baixo" aria-label="Baixo">▼</button>
-        <button id="botaoDireita" class="botao-direcao seta-direita" aria-label="Direita">▶</button>
-    </div>
 
     <script src="logica.js"></script>
     <script src="script.js"></script>

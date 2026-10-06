@@ -451,3 +451,320 @@ function morteMaisComum(mortes) {
 
     return maisComum;
 }
+
+// ==========================================
+// Modo Contra o Tempo (funções puras - testadas em teste.js)
+// ==========================================
+// 65000 -> "1:05" (arredonda pra cima: com 0,4 s ainda mostra "0:01")
+function formatarRelogio(milissegundos) {
+    const totalSegundos = Math.ceil(Math.max(0, milissegundos) / 1000);
+    const minutos = Math.floor(totalSegundos / 60);
+    const segundos = totalSegundos % 60;
+    return `${minutos}:${String(segundos).padStart(2, "0")}`;
+}
+
+// tira "quantidade" pedaços do rabo, mas a cobra fica com pelo menos 1
+function encolherCobra (cobra, quantidade) {
+    const tamanho = Math.max(1, cobra.length - quantidade);
+    return cobra.slice(0, tamanho).map((segmento) => ({ ...segmento }));
+}
+
+// quem fez mais pontos; null se empatou
+function vencedorPorPontos(jogadores) {
+    const ordenados = [...jogadores].sort((a, b) => b.pontuacao - a.pontuacao);
+
+    if (ordenados.length > 1 && ordenados[0].pontuacao === ordenados[1].pontuacao) {
+        return null;
+    }
+
+    return ordenados[0];
+}
+
+// ==========================================
+// Modo Fases (mapas desenhados - testados em testes.js)
+// ==========================================
+// cada mapa tem 20 linhas de 20 letras:
+// "#" = parede, "." = livre, "1" = onde o Jogador 1 começa, "2" = onde o Jogador 2 começa
+const MAPAS_DAS_FASES = [
+    {
+        nome: "Cantos",
+        linhas: [
+            "....................",
+            "....................",
+            "..####........####..",
+            "..#..............#..",
+            "..#..............#..",
+            "....................",
+            "....................",
+            "....................",
+            "....................",
+            "....................",
+            ".....1........2.....",
+            "....................",
+            "....................",
+            "....................",
+            "....................",
+            "..#..............#..",
+            "..#..............#..",
+            "..####........####..",
+            "....................",
+            "....................",
+        ],
+    },
+    {
+        nome: "Corredores",
+        linhas: [
+            "....................",
+            "....................",
+            "....................",
+            "....................",
+            "....................",
+            "....................",
+            "...######..######...",
+            "....................",
+            "....................",
+            "....................",
+            ".....1........2.....",
+            "....................",
+            "....................",
+            "...######..######...",
+            "....................",
+            "....................",
+            "....................",
+            "....................",
+            "....................",
+            "....................",
+        ],
+    },
+    {
+        nome: "Cruz",
+        linhas: [
+            "....................",
+            "....................",
+            ".........##.........",
+            ".........##.........",
+            ".........##.........",
+            ".........##.........",
+            ".........##.........",
+            "....................",
+            "..#####......#####..",
+            "....................",
+            ".....1........2.....",
+            "....................",
+            "..#####......#####..",
+            "....................",
+            ".........##.........",
+            ".........##.........",
+            ".........##.........",
+            ".........##.........",
+            ".........##.........",
+            "....................",
+        ],
+    },
+    { 
+        nome: "Labirinto",
+        linhas: [
+            "....................",
+            ".####..........####.",
+            ".#................#.",
+            ".#..####....####..#.",
+            "....................",
+            "......#......#......",
+            "......#......#......",
+            "..#####......#####..",
+            "....................",
+            "....................",
+            "....1.........2.....",
+            "....................",
+            "..#####......#####..",
+            "......#......#......",
+            "......#......#......",
+            "....................",
+            ".#..####....####..#.",
+            ".#................#.",
+            ".####..........####.",
+            "....................",
+        ],
+    },
+];
+
+// transforma o desenho em paredes e pontos de partida
+function lerMapa(linhas) {
+    const paredes = [];
+    const inicios = [];
+
+    linhas.forEach((linha, y) => {
+        [...linha].forEach((letra, x) => {
+            if (letra === "#") {
+                paredes.push({ x, y });
+            } else if (letra === "1" || letra === "2") {
+                inicios[Number(letra) - 1] = { x, y };
+            }
+        });
+    });
+
+    return{ paredes, inicios };
+}
+
+// fase 1 até 9 pontos, fase 2 de 10 a 19... sem passar na última
+function faseParaPontuacao(pontos, pontosPorFase, totalDeFases) {
+    return Math.min(totalDeFases, 1 + Math.floor(pontos / pontosPorFase));
+}
+
+// ==========================================
+// Desafio do dia (funções puras - testadas em testes.js)
+// ==========================================
+// data local no formato "2026-10-02"
+function dataDeHoje(data = new Date()) {
+    const mes = String(data.getMonth() + 1).padStart(2, "0");
+    const dia = String(data.getDate()). padStart(2, "0");
+    return `${data.getFullYear()}-${mes}-${dia}`;
+}
+
+// transforma um texto num número (sempre o mesmo número para o mesmo texto)
+function sementeDoTexto(texto) {
+    let hash = 2166136261;
+
+    for (const letra of texto) {
+        hash ^= letra.charCodeAt(0);
+        hash = Math.imul(hash, 16777619);
+    }
+
+    return hash >>> 0;
+}
+
+// sorteador "previsível": com a mesma semente, sai sempre a mesma sequência de números
+// (funciona como Math.random, devolve números de 0 até quase 1)
+function criarSorteador(semente) {
+    let estado = semente >>> 0;
+
+    return function () {
+        estado = (estado + 0x6d2b79f5) >>> 0;
+        let numero = estado;
+        numero = Math.imul(numero ^ (numero >>> 15), numero | 1);
+        numero ^= numero + Math.imul(numero ^ (numero >>> 7), numero | 61);
+        return ((numero ^ (numero >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+// o mapa (pedras) e a sequência de maçãs do dia: iguais para todo mundo na mesma data
+function gerarDesafioDoDia(dataTexto, colunas, linhas, quantidadePedras, inicios, quantidadeComidas) {
+    const sortear = criarSorteador(sementeDoTexto(dataTexto));
+    const casaSorteada = () => ({ x: Math.floor(sortear() * colunas), y: Math.floor(sortear() * linhas) });
+    const pedras = [];
+    
+    while (pedras.length < quantidadePedras) {
+        const casa = casaSorteada();
+        const pertoDoInicio = inicios.some((inicio) => distanciaManhattan(inicio, casa) <= 2);
+        const repetida = pedras.some((pedra) => mesmaPosicao(pedra, casa));
+
+        if (!pertoDoInicio && !repetida) {
+            pedras.push(casa);
+        }
+    }
+
+    const comidas = [];
+
+    while (comidas.length < quantidadeComidas) {
+        const casa = casaSorteada();
+
+        if (!pedras.some((pedra) => mesmaPosicao(pedra, casa))) {
+            comidas.push(casa);
+        }
+    }
+
+    return { pedras, comidas };
+}
+
+// ==========================================
+// Nível do bot (funções puras - testadas em testes.js)
+// ==========================================
+// chanceDeErro: de vez em quando ele vira pra um lado qualquer (mas nunca pra cima de algo)
+// cuidado: o quanto ele olha à frente pra não entrar em beco (0 = nada, 1 = tudo)
+const NIVEIS_DO_BOT = {
+    facil: { chanceDeErro: 0.3, cuidado: 0 },
+    normal:{ chanceDeErro: 0.1, cuidado: 0.5 },
+    dificil: { chanceDeErro: 0, cuidado: 1 },
+};
+
+function limparNivelBot(valor) {
+    return Object.keys(NIVEIS_DO_BOT).includes(valor) ? valor : "normal";
+}
+
+// quantas casas livres o bot exige à frente antes de entrar num caminho
+function espacoQueOBotExige(tamanhoDaCobra, cuidado) {
+    return Math.max(1, Math.round((tamanhoDaCobra + 2) * cuidado));
+}
+
+// uma direção qualquer que não seja meia-volta nem bata em nada
+function direcaoAleatoriaSegura(cabeca, direcaoAtual, andar, casaLivre, sorteio) {
+    const opcoes = DIRECOES.filter(
+        (direcao) =>
+            !(direcao.x === -direcaoAtual.x && direcao.y === -direcaoAtual.y) &&
+            casaLivre(andar(cabeca, direcao))
+    );
+
+    if (opcoes.length === 0) {
+        return direcaoAtual;
+    }
+
+    return opcoes[Math.floor(sorteio() * opcoes.length)];
+}
+
+// ==========================================
+// Conquistas (funções puras - testadas em testes.js)
+// ==========================================
+// cada conquista olha o "contexto": as estatísticas de sempre e a partida de agora
+const CONQUISTAS = [
+    { id: "primeiraMordida", nome: "Primeira Mordida", descricao: "Comer a primeira comida", condicao: (c) => c.estatisticas.comidas >= 1 },
+    { id: "faminta", nome: "Faminta", descricao: "Comer 100 comidas no total", condicao: (c) => c.estatisticas.comidas >= 100 },
+    { id: "glutona", nome: "Glutona", descricao: "Comer 500 comidas no total", condicao: (c) => c.estatisticas.comidas >= 500 },
+    { id: "combo5", nome: "Combo x5", descricao: "Fazer um combo x5", condicao: (c) => c.estatisticas.maiorCombo >= 5 },
+    { id: "cobraGrande", nome: "Cobra grande", descricao: "Chegar a 20 pedaços", condicao: (c) => Math.max(c.estatisticas.maiorTamanho, c.partida.tamanho,) >= 20 },
+    { id: "ouro", nome: "Ouro!", descricao: "Comer 10 maçãs douradas", condicao: (c) => c.estatisticas.macasDouradas >= 10 },
+    { id: "colecionadora", nome: "Colecionadora", descricao: "Pegar 3 power-ups numa partida", condicao: (c) => c.partida.powerUps >= 3 },
+    { id: "cinquenta", nome: "50 pontos", descricao: "Fazer 50 pontos numa partida", condicao: (c) => c.partida.pontos >= 50 },
+    { id: "contraORelogio", nome: "Contra o relógio", descricao: "Fazer 30 pontos no Contra o tempo", condicao: (c) => c.partida.modo === "tempo" && c.partida.pontos >= 30 },
+    { id: "labirinto", nome: "Saí do labirinto", descricao: "Chegar à fase 4 no modo Fases", condicao: (c) => c.partida.modo === "fases" && c.partida.fase >= 4 },
+    { id: "venceuBot", nome: "Mais esperta que o bot", descricao: "Vencer o bot no nível Difícil", condicao: (c) => c.partida.venceuBotDificil === true },
+    { id: "veterana", nome: "Veterana", descricao: "Jogar 50 partidas", condicao: (c) => c.estatisticas.partidas >= 50 },
+    { id: "maratona", nome: "Maratona", descricao: "Jogar 1 hora no total", condicao: (c) => c.estatisticas.tempoTotalMs >= 3600000 },
+];
+
+// quais conquistas acabaram de ser ganhas (as que já tinha não contam de novo)
+function conquistasNovas(jaGanhas, contexto) {
+    return CONQUISTAS.filter((conquista) => !jaGanhas.includes(conquista.id) && conquista.condicao(contexto));
+}
+
+// só aceita ids que existem (dado salvo ou estragado não quebra nada)
+function limparConquistas(salvas) {
+    if (!Array.isArray(salvas)) {
+        return[];
+    }
+
+    return CONQUISTAS.map((conquista) => conquista.id).filter((id) => salvas.includes(id));
+}
+
+// ==========================================
+// Cores da cobra (funções puras - testadas em testes.js)
+// ==========================================
+// conquista: null = livre desde o começo; senão, o id da conquista que libera a cor
+const CORES_DA_COBRA = [
+    { id: "azul", nome: "Azul", cabeca: "#6fa0ff", corpo: "#2a3fb8", conquista: null },
+    { id: "ciano", nome: "Ciano", cabeca: "#67e8f9", corpo: "#0e7490", conquista: null },
+    { id: "roxa", nome: "Roxa", cabeca: "#c4a1ff", corpo: "#6b3fc9", conquista: "primeiraMordida" },
+    { id: "rosa", nome: "Rosa", cabeca: "#ff9ed2", corpo: "#c2185b", conquista: "faminta" },
+    { id: "neon", nome: "Neon", cabeca: "#c6f36b", corpo: "#3f6212", conquista: "combo5" },
+    { id: "dourada", nome: "Dourada", cabeca: "#ffe27a", corpo: "#b8860b", conquista: "ouro" },
+    { id: "noite", nome: "Noite", cabeca: "#9aa7ff", corpo: "#1e1b4b", conquista: "veterana" },
+];
+
+function corEstaLiberada(cor, conquistasGanhas) {
+    return cor.conquista === null || conquistasGanhas.includes(cor.conquista);
+}
+
+// a cor salva só vale se existir e estiver liberada; senão volta pra azul
+function limparCorDaCobra(id, conquistasGanhas) {
+    const cor = CORES_DA_COBRA.find((opcao) => opcao.id === id);
+    return cor && corEstaLiberada(cor, conquistasGanhas) ? cor.id : "azul";
+}
