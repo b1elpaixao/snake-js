@@ -88,6 +88,16 @@ const CORES_POWERUP = {
     encolher: "#f1f5f9",
     ima: "#fb923c",
 };
+// símbolo de cada power-up (pra não depender só da cor - ajuda quem é daltônico)
+// caminhos no formato SVG, numa caixa de 24x24; "cheio" = pintado por dentro, senão só o contorno
+const SIMBOLOS_POWERUP = {
+    invencibilidade: { caminho: "M12 2 L20 5.5 V11 C20 16 16.5 19.8 12 22 C7.5 19.8 4 16 4 11 V5.5 Z", cheio: true }, // escudo
+    velocidade: { caminho: "M14 1 L5 14 H11 L10 23 L19 10 H13 Z", cheio: true }, // raio
+    pontosDobrados: { caminho: "M2 7 L9 17 M9 7 L2 17 M13 9.5 C13 5.5 21 5.5 21 9.5 C21 13 13 14 13 18 H21", cheio: false }, // x2
+    ima: { caminho: "M6 3 V12 A6 6 0 0 0 18 12 V3 M3 7.5 H9 M15 7.5 H21", cheio: false }, // imã em U
+    encolher: { caminho: "M1 12 H9 M5.5 8 L9.5 12 L5.5 16 M23 12 H15 M18.5 8 L14.5 12 L18.5 16", cheio: false }, // setas pra dentro
+};
+const COR_SIMBOLO_POWERUP = "#1f2937";
 const EFEITOS_COM_DURACAO = [
     { ativo: "invencivel", ate: "invencivelAte", duracao: DURACAO_INVENCIBILIDADE_MS },
     { ativo: "velocidadeExtraAtiva", ate: "velocidadeExtraAte", duracao: DURACAO_VELOCIDADE_EXTRA_MS },
@@ -764,10 +774,54 @@ function desenharPowerUp(item) {
     // reflexo
     ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
     ctx.beginPath();
-    ctx.roundRect(-metade * 0.7, -metade * 0.7, metade * 0.7, metade * 0.7, 1);
+    ctx.roundRect(-metade * 0.85, -metade * 0.85, metade * 0.35, metade * 0.35, 1);
     ctx.fill();
 
     ctx.restore();
+
+    desenharSimboloPowerUp(item.tipo, centroX, centroY, TAMANHO_CELULA * 0.48);
+}
+
+// desenha o símbolo centralizado em (centroX, centroY), com "tamanho" pixels de largura
+function desenharSimboloPowerUp(tipo, centroX, centroY, tamanho) {
+    const simbolo = SIMBOLOS_POWERUP[tipo];
+    const escala = tamanho / 24;
+    const caminho = new Path2D(simbolo.caminho);
+
+    ctx.save();
+    ctx.translate(centroX - tamanho / 2, centroY - tamanho / 2);
+    ctx.scale(escala, escala);
+    ctx.fillStyle = COR_SIMBOLO_POWERUP;
+    ctx.strokeStyle = COR_SIMBOLO_POWERUP;
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    if (simbolo.cheio) {
+        ctx.fill(caminho);
+    } else {
+        ctx.stroke(caminho);
+    }
+
+    ctx.restore();
+}
+
+// legenda "Itens no mapa": o mesmo losango + símbolo do tabuleiro
+function mostrarSimbolosNaLegenda() {
+    for (const icone of document.querySelectorAll(".item-icone[data-powerup]")) {
+        const tipo = icone.dataset.powerup;
+        const simbolo = SIMBOLOS_POWERUP[tipo];
+        const pintura = simbolo.cheio
+            ? `fill="${COR_SIMBOLO_POWERUP}"`
+            : `fill="none" stroke="${COR_SIMBOLO_POWERUP}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"`;
+
+        icone.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="4.5" y="4.5" width="15" height="15" rx="2" transform="rotate(45 12 12)" fill="${CORES_POWERUP[tipo]}" stroke="rgba(0, 0, 0, 0.35)" />
+                <path d="${simbolo.caminho}" transform="translate(7 7) scale(0.4167)" ${pintura} />
+                
+            </svg>`;
+    }
 }
 
 function desenharMacaDourada(item) {
@@ -1423,6 +1477,7 @@ inputModoSemParedes.addEventListener("change", salvarPreferencias);
 
 aplicarCorDaCobra();
 mostrarCoresDaCobra();
+mostrarSimbolosNaLegenda();
 mostrarRecordesDoModo(seletorModo.value);
 
 atualizarBotaoMudo();
