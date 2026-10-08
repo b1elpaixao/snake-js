@@ -61,7 +61,7 @@
                 </div>
 
                 <div class="controle-pausa">
-                    Pausar <kbd class="tecla-larga">ESPAÇO</kbd>
+                    Pausar <kbd class="tecla-larga">ESPAÇO</kbd> <kbd>ESC</kbd>
                 </div>
             </div>
         </aside>
@@ -183,6 +183,15 @@
                     <p class="dica">ou aperte qualquer tecla · Esc volta ao menu</p>
                 </div>
 
+                <div id="menuPausa" class="overlay overlay-game-over" role="dialog" aria-labelledby="tituloPausa" hidden>
+                    <p class="rotulo">Jogo parado</p>
+                    <p id="tituloPausa" class="resultado">Pausado</p>
+                    <button id="botaoContinuar" class="botao-principal" type="button">Continuar</button>
+                    <button id="botaoReiniciarPausa" class="botao-secundario" type="button">Reiniciar</button>
+                    <button id="botaoMenuPausa" class="botao-secundario" type="button">Voltar ao menu</button>
+                    <p class="dica">Espaço ou Esc continua · a partida é perdida se reiniciar ou sair</p>
+                </div>
+
                 <div id="telaComoJogar" class="overlay overlay-como-jogar" role="dialog" aria-labelledby="tituloComoJogar" hidden>
                     <div class="como-jogar-topo">
                         <h2 id="tituloComoJogar">Como jogar</h2>
@@ -199,7 +208,7 @@
                         <ul>
                             <li><b>Jogador 1:</b> setas do teclado. No celular, deslize o dedo no tabuleiro ou use os botões de seta.</li>
                             <li><b>Jogador 2:</b> W, A, S, D.</li>
-                            <li><b>Espaço:</b> pausa. O Jogo também pausa sozinho se você trocar de aba.</li>
+                            <li><b>Espaço ou Esc:</b> pausa e abre o menu (Continuar, Reiniciar, Voltar ao menu). O jogo também pausa sozinho se você trocar de aba.</li>
                             <li><b>Esc:</b> no fim de jogo, volta ao menu.</li>
                         </ul>
                     </section>

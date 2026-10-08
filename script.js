@@ -30,6 +30,10 @@ const elementoPontuacaoFinal = document.getElementById("pontuacaoFinal");
 const elementoAvisoRecorde = document.getElementById("avisoRecorde");
 const botaoJogarDeNovo = document.getElementById("botaoJogarDeNovo");
 const botaoVoltarMenu = document.getElementById("botaoVoltarMenu");
+const menuPausa = document.getElementById("menuPausa");
+const botaoContinuar = document.getElementById("botaoContinuar");
+const botaoReiniciarPausa = document.getElementById("botaoReiniciarPausa");
+const botaoMenuPausa = document.getElementById("botaoMenuPausa");
 const inputModoSemParedes = document.getElementById("modoSemParedes");
 
 const TAMANHO_CELULA = 20;
@@ -291,6 +295,7 @@ let pausadoDesde = null;
 
 const DURACAO_PASSO_CONTAGEM_MS = 700;
 let contagemAtiva = false;
+let temporizadorLoop = null; // guardado pra poder parar o loop ao reiniciar/sair pela pausa
 let textoContagem = "";
 let inicioPassoContagem = 0;
 let temporizadorContagem = null;
@@ -954,10 +959,6 @@ function desenharCobra(jogador, progresso) {
 function loopRenderizacao() {
     desenhar();
 
-    if (pausado && !contagemAtiva) {
-        desenharPausa();
-    }
-
     desenharContagem();
     atualizarBarrasEfeitos();
 
@@ -1027,18 +1028,6 @@ function tocarFanfarra() {
         // espera o som da batida terminar antes de começar
         setTimeout(() => tocarSom(frequencia, 0.15, "triangle"), 350 + indice * 120);
     });
-}
-
-function desenharPausa() {
-    ctx.fillStyle = "rgba(14, 23, 18, 0.8)";
-    ctx.fillRect(0, 0, LARGURA_TABULEIRO, ALTURA_TABULEIRO);
-    ctx.fillStyle = "#eef3e6";
-    ctx.font = "800 32px 'Bricolage Grotesque', sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("PAUSADO", LARGURA_TABULEIRO / 2, ALTURA_TABULEIRO / 2);
-    ctx.textAlign = "start";
-    ctx.textBaseline = "alphabetic";
 }
 
 function desenharContagem() {
@@ -1784,6 +1773,7 @@ function decidirDirecaoBot(jogador) {
 
 function alternarPausa() {
     if (pausado) {
+        menuPausa.hidden = true;
         iniciarContagem(sairDaPausa);  // o loop continua esperando; só despausava no "Vai!"
     } else {
         entrarNaPausa();
@@ -1795,6 +1785,38 @@ function entrarNaPausa() {
     pausadoDesde = performance.now();
     botaoPausa.textContent = "Continuar";
     tocarSom(300, 0.08, "sine");
+    mostrarMenuPausa();
+}
+
+function mostrarMenuPausa() {
+    menuPausa.hidden = false;
+    botaoContinuar.focus();
+}
+
+// os botões do menu só valem com o jogo parado ( e não no meio do 3, 2, 1)
+function menuPausaDisponivel() {
+    return jogoAtivo && pausado && !contagemAtiva && !menuPausa.hidden;
+}
+
+function reiniciarPelaPausa() {
+    if (!menuPausaDisponivel()) return;
+    reiniciar();
+}
+
+// abandona a partida: não conta recorde, estatísticas nem conquista
+function sairPelaPausa() {
+    if (!menuPausaDisponivel()) return;
+
+    clearTimeout(temporizadorLoop);
+    cancelarContagem();
+    jogoAtivo = false;
+    pausado = false;
+    pausadoDesde = null;
+    menuPausa.hidden = true;
+    botaoPausa.textContent = "Pausar";
+    travarSemParedes(false);
+    pararMusicaFundo();
+    voltarAoMenu();
 }
 
 function sairDaPausa() {
@@ -1823,7 +1845,7 @@ function mudarDirecao(evento) {
 
     const tecla = evento.key.toLowerCase();
 
-    if (tecla === " ") {
+    if (tecla === " " || tecla === "escape") {
         evento.preventDefault();
         if (!contagemAtiva) alternarPausa();
         return;
@@ -1859,7 +1881,10 @@ function pausarAutomaticamente() {
 
     if (pausado) {
         // saiu da aba no meio da contagem de volta: cancela e continua pausado
-        if (contagemAtiva) cancelarContagem();
+        if (contagemAtiva) {
+            cancelarContagem();
+            mostrarMenuPausa();
+        }
         return;
     }
     
@@ -1876,6 +1901,11 @@ window.addEventListener("blur", pausarAutomaticamente);
 document.addEventListener("keydown", mudarDirecao);
 botaoJogarDeNovo.addEventListener("click", reiniciar);
 botaoVoltarMenu.addEventListener("click", voltarAoMenu);
+botaoContinuar.addEventListener("click", () => {
+    if (menuPausaDisponivel()) alternarPausa();
+});
+botaoReiniciarPausa.addEventListener("click", reiniciarPelaPausa);
+botaoMenuPausa.addEventListener("click", sairPelaPausa);
 
 // ==========================================
 // Tela "Como jogar"
@@ -1970,7 +2000,7 @@ function loop() {
     if (!jogoAtivo) return;
 
     if (pausado) {
-        setTimeout(loop, 100);
+        temporizadorLoop = setTimeout(loop, 100);
         return;
     }
     // o loop roda em meios passos: quem está com Turbo anda em todos,
@@ -2087,7 +2117,7 @@ function loop() {
         }
     }
 
-    setTimeout(loop, velocidadeAtual / MEIOS_PASSOS_POR_PASSO);
+    temporizadorLoop = setTimeout(loop, velocidadeAtual / MEIOS_PASSOS_POR_PASSO);
 }
 
 // mostra "1.4x" no placar e acende a cor por um instante quando o número sobe
@@ -2183,6 +2213,9 @@ function passarDeFase(numero) {
 
 function reiniciar() {
     clearTimeout(temporizadorAnimacaoMorte);
+    clearTimeout(temporizadorLoop);
+    cancelarContagem();
+    menuPausa.hidden = true;
     animacaoMorte = null;
     semParedesNaPartida = inputModoSemParedes.checked && modoAtual !== "desafio"; // desafio: sempre com paredes
     travarSemParedes(true);
