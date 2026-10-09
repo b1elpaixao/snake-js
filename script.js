@@ -12,6 +12,7 @@ const elementoFase = document.getElementById("indicadorFase");
 const PONTOS_POR_FASE = 10;
 let faseAtual = 1;
 let corDaCobraId = "azul"; // cor escolhida pro Jogador 1
+let teclasDosJogadores = lerTeclasSalvas(); // [teclas do Jogador 1, teclas do Jogador 2]
 
 // Desafio do dia
 const PEDRAS_NO_DESAFIO = 10;
@@ -188,7 +189,7 @@ function criarJogadores(quantidade = 2, nomes = ["Jogador 1", "Jogador 2"]) {
             x: 6,
             y: 10,
             direcaoInicial: { x: 1, y: 0 },
-            teclas: { cima: "arrowup", baixo: "arrowdown", esquerda: "arrowleft", direita: "arrowright" },
+            teclas: teclasDosJogadores[0],
             corCabeca: corDaCobra().cabeca,
             corCorpo: corDaCobra().corpo,
             nome: nomes[0],
@@ -198,7 +199,7 @@ function criarJogadores(quantidade = 2, nomes = ["Jogador 1", "Jogador 2"]) {
             x: 14,
             y: 10,
             direcaoInicial: { x: -1, y: 0 },
-            teclas: { cima: "w", baixo: "s", esquerda: "a", direita: "d"},
+            teclas: teclasDosJogadores[1],
             corCabeca: "#ff9a6b",
             corCorpo: "#c7431a",
             nome: nomes[1],
@@ -1374,6 +1375,85 @@ function avisarConquistas(novas) {
 mostrarConquistas();
 
 // ==========================================
+// Teclas configuráveis
+// ==========================================
+let teclaSendoTrocada = null; // { jogador, direcao } enquanto espera a pessoa apertar a nova tecla
+
+function lerTeclasSalvas() {
+    try {
+        return limparTeclas(JSON.parse(lerDoArmazenamento("snakeTeclas")));
+    } catch {
+        return limparTeclas(null);
+    }
+}
+
+function guardarTeclas(novas) {
+    teclasDosJogadores = novas;
+    salvarNoArmazenamento("snakeTeclas", JSON.stringify(teclasDosJogadores));
+    jogadores.forEach((jogador, indice) => {
+        jogador.teclas = teclasDosJogadores[indice]; // vale na hora, até no meio da partida
+    });
+}
+
+function mostrarTeclas() {
+    for (const caixa of document.querySelectorAll(".teclas[data-jogador]")) {
+        const jogador = Number(caixa.dataset.jogador);
+        caixa.innerHTML = "";
+
+        for (const direcao of DIRECOES_DAS_TECLAS) {
+            const esperando = teclaSendoTrocada !== null && teclaSendoTrocada.jogador === jogador && teclaSendoTrocada.direcao === direcao;
+            const nome = nomeDaTecla(teclasDosJogadores[jogador][direcao]);
+            const botao = document.createElement("button");
+
+            botao.type = "button";
+            botao.className = esperando ? "tecla-botao esperando" : "tecla-botao";
+            botao.textContent = esperando ? ".." : nome;
+            botao.setAttribute("aria-label", `Jogador ${jogador + 1}, ${direcao}: ${esperando ? "aperte a nova tecla" : nome + ". Clique para trocar"}`);
+            botao.addEventListener("click", () => comecarTrocaDeTecla(jogador, direcao));
+            caixa.append(botao);
+        }
+    }
+
+    document.getElementById("resumoTeclas1").textContent =
+resumoDasTeclas(teclasDosJogadores[0]);
+    document.getElementById("resumoTeclas2").textContent =
+resumoDasTeclas(teclasDosJogadores[1]);
+    document.getElementById("dicaTeclas").textContent = teclaSendoTrocada ? "Aperte a nova tecla · Esc cancela" : "Clique numa tecla pra trocar";
+}
+
+function comecarTrocaDeTecla(jogador, direcao) {
+    const mesmaTecla = teclaSendoTrocada !== null && teclaSendoTrocada.jogador === jogador && teclaSendoTrocada.direcao === direcao;
+
+    teclaSendoTrocada = mesmaTecla ? null : { jogador, direcao }; // clicar de novo cancela
+    mostrarTeclas();
+}
+
+// roda antes de todos os outros "keydown": enquanto espera a tecla nova, o jogo não recebe nada
+function capturarTecla(evento) {
+    if (teclaSendoTrocada === null) return;
+
+    evento.preventDefault();
+    evento.stopImmediatePropagation();
+
+    const tecla = evento.key.toLowerCase();
+    const { jogador, direcao } = teclaSendoTrocada;
+    teclaSendoTrocada = null;
+
+    if (teclaPodeSerUsada(tecla)) { // Esc (ou Espaço, Enter...) só cancela
+        guardarTeclas(trocarTecla(teclasDosJogadores, jogador, direcao, tecla));
+    }
+    mostrarTeclas();
+}
+
+window.addEventListener("keydown", capturarTecla, true);
+
+document.getElementById("botaoTeclasPadrao").addEventListener("click", () => {
+    teclaSendoTrocada = null;
+    guardarTeclas(copiarTeclasPadrao());
+    mostrarTeclas();
+});
+
+// ==========================================
 // Preferências: nomes, modo, dificuldade e "Sem paredes" ficam salvos
 // ==========================================
 function aplicarPreferenciasSalvas() {
@@ -1467,6 +1547,7 @@ inputModoSemParedes.addEventListener("change", salvarPreferencias);
 aplicarCorDaCobra();
 mostrarCoresDaCobra();
 mostrarSimbolosNaLegenda();
+mostrarTeclas();
 mostrarRecordesDoModo(seletorModo.value);
 
 atualizarBotaoMudo();

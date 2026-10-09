@@ -768,3 +768,67 @@ function limparCorDaCobra(id, conquistasGanhas) {
     const cor = CORES_DA_COBRA.find((opcao) => opcao.id === id);
     return cor && corEstaLiberada(cor, conquistasGanhas) ? cor.id : "azul";
 }
+
+// ==========================================
+// Teclas configuráveis (funções puras - testadas em testes.js)
+// ==========================================
+const DIRECOES_DAS_TECLAS = ["cima", "esquerda", "baixo", "direita"]; // ordem dos botões no painel
+const TECLAS_PADRAO = [
+    { cima: "arrowup", baixo: "arrowdown", esquerda: "arrowleft", direita: "arrowright" },
+    { cima: "w", baixo: "s", esquerda: "a", direita: "d" },
+];
+// Espaço/Esc pausam, Enter/Tab mexem nos botões; as outras são teclas "invisíveis" do teclado
+const TECLAS_RESERVADAS = [" ", "escape", "enter", "tab", "dead", "unidentified", "process"];
+
+function copiarTeclasPadrao() {
+    return TECLAS_PADRAO.map((teclas) => ({ ...teclas }));
+}
+
+function teclaPodeSerUsada(tecla) {
+    return typeof tecla === "string" && tecla.length > 0 && !TECLAS_RESERVADAS.includes(tecla);
+}
+
+// as telas salvas só valem se estiverem completas e sem repetir; senão volta pro padrão
+function limparTeclas(salvas) {
+    if (!Array.isArray(salvas) || salvas.length !== 2) return copiarTeclasPadrao();
+
+    const usadas = [];
+    for (const teclasDoJogador of salvas) {
+        for (const direcao of DIRECOES_DAS_TECLAS) {
+            const tecla = teclasDoJogador && teclasDoJogador[direcao];
+            if (!teclaPodeSerUsada(tecla) || usadas.includes(tecla)) return copiarTeclasPadrao();
+            usadas.push(tecla);
+        }
+    }
+
+    return salvas.map((teclas) => ({ cima: teclas.cima, baixo: teclas.baixo, esquerda: teclas.esquerda, direita: teclas.direita }));
+}
+
+// troca uma tecla; se a nova já era usada em outro lugar, as duas trocam de lugar (nunca fica repetida)
+function trocarTecla(teclas, jogador, direcao, novaTecla) {
+    const novas = teclas.map((teclasDoJogador) => ({ ...teclasDoJogador }));
+    const antiga = novas[jogador][direcao];
+
+    for (const teclasDoJogador of novas) {
+        for (const outraDirecao of DIRECOES_DAS_TECLAS) {
+            if (teclasDoJogador[outraDirecao] === novaTecla) teclasDoJogador[outraDirecao] = antiga;
+        }
+    }
+    novas[jogador][direcao] = novaTecla;
+    return novas;
+}
+
+const NOME_DAS_SETAS = { arrowup: "↑", arrowdown: "↓", arrowleft: "←", arrowright: "→" };
+
+function nomeDaTecla(tecla) {
+    if (NOME_DAS_SETAS[tecla]) return NOME_DAS_SETAS[tecla];
+    return tecla.charAt(0).toUpperCase() + tecla.slice(1);
+}
+
+// texto curto pro menu: "setas". "WASD", "I J K L "...
+function resumoDasTeclas(teclas) {
+    const nomes = DIRECOES_DAS_TECLAS.map((direcao) => nomeDaTecla(teclas[direcao]));
+
+    if (nomes.join("") === "↑←↓→") return "setas";
+    return nomes.every((nome) => nome.length === 1) ? nomes.join("") : nomes.join(" ");
+}

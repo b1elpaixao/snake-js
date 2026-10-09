@@ -198,10 +198,12 @@ button {
 
 .teclas {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
 }
 
-kbd {
+kbd,
+.tecla-botao {
     min-width: 36px;
     height: 36px;
     padding: 0 8px;
@@ -215,6 +217,39 @@ kbd {
     color: var(--texto);
     font-family: var(--fonte-numeros);
     font-size: 14px;
+}
+
+.tecla-botao {
+    cursor: pointer;
+}
+
+.tecla-botao:hover {
+    border-color: var(--destaque);
+}
+
+.tecla-botao.esperando {
+    border-color: var(--destaque);
+    color: var(--destaque);
+    animation: piscarTecla 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes piscarTecla {
+    to { opacity: 0.4; }
+}
+
+.dica-teclas {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 10px;
+    font-size: 12px;
+    color: var(--texto-suave);
+}
+
+.dica-teclas .botao-link {
+    font-size: 12px;
 }
 
 .tecla-larga {
@@ -611,7 +646,10 @@ canvas {
     .jogo {
         order: -1;
     }
+}
 
+/* no celular não tem teclado: o painel de teclas some */
+@media (pointer: coarse) {
     .painel-controles {
         display: none;
     }
@@ -1185,9 +1223,3 @@ canvas {
     font-size: 13px;
     color: var(--texto-suave);
 }
-
-
-
-
-
-

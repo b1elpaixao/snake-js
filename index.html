@@ -48,17 +48,18 @@
 
                 <div class="controle">
                     <p class="controle-nome"><span class="ponto ponto-1"></span>Jogador 1</p>
-                    <div class="teclas">
-                        <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd>
-                    </div>
+                    <div class="teclas" data-jogador="0"></div>
                 </div>
 
                 <div class="controle">
                     <p class="controle-nome"><span class="ponto ponto-2"></span>Jogador 2</p>
-                    <div class="teclas">
-                        <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
-                    </div>
+                    <div class="teclas" data-jogador="1"></div>
                 </div>
+
+                <p class="dica-teclas">
+                    <span id="dicaTeclas">Clique numa tecla pra trocar</span>
+                    <button id="botaoTeclasPadrao" class="botao-link" type="button">Restaurar padrão</button>
+                </p>
 
                 <div class="controle-pausa">
                     Pausar <kbd class="tecla-larga">ESPAÇO</kbd> <kbd>ESC</kbd>
@@ -124,11 +125,11 @@
                     </div>
                     <div class="menu-nomes">
                         <label class="campo campo-1">
-                            Jogador 1 · setas
+                            Jogador 1 · <span id="resumoTeclas1">setas</span>
                             <input type="text" id="inputNomeJogador1" placeholder="Jogador 1" maxlength="12" />
                         </label>
                         <label class="campo campo-2">
-                            Jogador 2 · WASD
+                            Jogador 2 · <span id="resumoTeclas2">WASD</span>
                             <input type="text" id="inputNomeJogador2" placeholder="Jogador 2" maxlength="12" />
                         </label>
                     </div>
@@ -208,6 +209,7 @@
                         <ul>
                             <li><b>Jogador 1:</b> setas do teclado. No celular, deslize o dedo no tabuleiro ou use os botões de seta.</li>
                             <li><b>Jogador 2:</b> W, A, S, D.</li>
+                            <li><b>Trocar teclas:</b> clique numa tecla no painel Controles e aperte a nova. Elas ficam salvas.</li>
                             <li><b>Espaço ou Esc:</b> pausa e abre o menu (Continuar, Reiniciar, Voltar ao menu). O jogo também pausa sozinho se você trocar de aba.</li>
                             <li><b>Esc:</b> no fim de jogo, volta ao menu.</li>
                         </ul>

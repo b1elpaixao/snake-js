@@ -368,6 +368,24 @@ verificar("limparCorDaCobra: cor inventada volta pra azul", limparCorDaCobra("ar
 verificar("cores: toda conquista pedida existe",
     CORES_DA_COBRA.every((cor) => cor.conquista === null || CONQUISTAS.some((conquista) => conquista.id === cor.conquista)), true);
 
+// teclas configuráveis
+verificar("limparTeclas: nada salvo volta pro padrão", JSON.stringify(limparTeclas(null)), JSON.stringify(TECLAS_PADRAO));
+verificar("limparTeclas: teclas certas ficam",
+    limparTeclas([{ cima: "i", baixo: "k", esquerda: "j", direita: "l" }, TECLAS_PADRAO[1]]) [0].cima, "i");
+verificar("limparTeclas: tecla repetida volta pro padrão",
+    limparTeclas([{ cima: "w", baixo: "k", esquerda: "j", direita: "l" }, TECLAS_PADRAO[1]]) [0].cima, "arrowup");
+verificar("limparTeclas: faltando direção volta pro padrão",
+    limparTeclas([{ cima: "i", baixo: "k", esquerda: "j" }, TECLAS_PADRAO[1]])[0].cima, "arrowup");
+verificar("limparTeclas: Espaço não pode", limparTeclas([{ cima: " ", baixo: "k", esquerda: "j", direita: "l" }, TECLAS_PADRAO[1]])[0].cima, "arrowup");
+verificar("trocarTecla: tecla livre", trocarTecla(TECLAS_PADRAO, 0, "cima", "i")[0].cima, "i");
+const teclasTrocadas = trocarTecla(TECLAS_PADRAO, 0, "cima", "w");
+verificar("trocarTecla: tecla do outro jogador troca de lugar", teclasTrocadas[0].cima + "," + teclasTrocadas[1].cima, "w,arrowup");
+verificar("trocarTecla: não mexe no padrão original", TECLAS_PADRAO[1].cima, "w");
+verificar("nomeDaTecla: seta", nomeDaTecla("arrowleft"), "←");
+verificar("nomeDaTecla: letra", nomeDaTecla("k"), "K");
+verificar("resumoDasTeclas: setas", resumoDasTeclas(TECLAS_PADRAO[0]), "setas");
+verificar("resumoDasTeclas: WASD", resumoDasTeclas(TECLAS_PADRAO[1]), "WASD");
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";
