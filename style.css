@@ -1223,3 +1223,56 @@ canvas {
     font-size: 13px;
     color: var(--texto-suave);
 }
+
+/* ==========================================
+   Tela cheia
+   ========================================== */
+.botao-tela-cheia {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--borda-forte);
+    border-radius: 8px;
+    background: none;
+    color: var(--texto-suave);
+    cursor: pointer;
+}
+
+.botao-tela-cheia:hover,
+.botao-tela-cheia[aria-pressed="true"] {
+    color: var(--destaque);
+    border-color: var(--destaque);
+}
+
+/* o placar e o tabuleiro ficam do maior tamanho quadrado que cabe na tela */
+.jogo:fullscreen {
+    --lado: min(100vw - 40px, 100vh - 120px);
+    width: 100%;
+    max-width: none;
+    border: none;
+    border-radius: 0;
+    background: var(--fundo);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.jogo:fullscreen .barra-placar,
+.jogo:fullscreen .canvas-wrapper {
+    width: var(--lado);
+}
+
+.jogo:fullscreen .canvas-wrapper {
+    margin: 0;
+}
+
+@media (pointer: coarse) {
+    /* no celular sobra espaço embaixo pras setas de toque */
+    .jogo:fullscreen {
+        --lado: min(100vw - 20px, 100vh - 360px);
+    }
+}

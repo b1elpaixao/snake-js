@@ -777,8 +777,8 @@ const TECLAS_PADRAO = [
     { cima: "arrowup", baixo: "arrowdown", esquerda: "arrowleft", direita: "arrowright" },
     { cima: "w", baixo: "s", esquerda: "a", direita: "d" },
 ];
-// Espaço/Esc pausam, Enter/Tab mexem nos botões; as outras são teclas "invisíveis" do teclado
-const TECLAS_RESERVADAS = [" ", "escape", "enter", "tab", "dead", "unidentified", "process"];
+// Espaço/Esc pausam, F é a tela cheia, Enter/Tab mexem nos botões; as outras são teclas "invisíveis" do teclado
+const TECLAS_RESERVADAS = [" ", "escape", "f", "enter", "tab", "dead", "unidentified", "process"];
 
 function copiarTeclasPadrao() {
     return TECLAS_PADRAO.map((teclas) => ({ ...teclas }));

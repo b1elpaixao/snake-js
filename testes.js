@@ -377,6 +377,8 @@ verificar("limparTeclas: tecla repetida volta pro padrão",
 verificar("limparTeclas: faltando direção volta pro padrão",
     limparTeclas([{ cima: "i", baixo: "k", esquerda: "j" }, TECLAS_PADRAO[1]])[0].cima, "arrowup");
 verificar("limparTeclas: Espaço não pode", limparTeclas([{ cima: " ", baixo: "k", esquerda: "j", direita: "l" }, TECLAS_PADRAO[1]])[0].cima, "arrowup");
+verificar("teclaPodeSerUsada: F é da tela cheia", teclaPodeSerUsada("f"), false);
+verificar("teclaPodeSerUsada: G pode", teclaPodeSerUsada("g"), true);
 verificar("trocarTecla: tecla livre", trocarTecla(TECLAS_PADRAO, 0, "cima", "i")[0].cima, "i");
 const teclasTrocadas = trocarTecla(TECLAS_PADRAO, 0, "cima", "w");
 verificar("trocarTecla: tecla do outro jogador troca de lugar", teclasTrocadas[0].cima + "," + teclasTrocadas[1].cima, "w,arrowup");

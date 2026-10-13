@@ -36,6 +36,8 @@ const botaoContinuar = document.getElementById("botaoContinuar");
 const botaoReiniciarPausa = document.getElementById("botaoReiniciarPausa");
 const botaoMenuPausa = document.getElementById("botaoMenuPausa");
 const inputModoSemParedes = document.getElementById("modoSemParedes");
+const botaoTelaCheia = document.getElementById("botaoTelaCheia");
+const areaDoJogo = document.querySelector(".jogo");
 
 const TAMANHO_CELULA = 20;
 const LARGURA_TABULEIRO = canvas.width; // 400 tamanho usado nos desenhos
@@ -1227,6 +1229,42 @@ function atualizarBotaoMusica() {
 }
 
 // ==========================================
+// Tela Cheia
+// ==========================================
+function alternarTelaCheia() {
+    if (!document.fullscreenEnabled) return;
+
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else {
+        areaDoJogo.requestFullscreen().catch(() => {}); // o navegador pode recusar; aí só não muda nada
+    }
+}
+
+function atualizarBotaoTelaCheia() {
+    const cheia = Boolean(document.fullscreenElement);
+    const texto = cheia ? "Sair da tela cheia (F)" : "Tela cheia (F)";
+
+    botaoTelaCheia.setAttribute("aria-pressed", String(cheia));
+    botaoTelaCheia.setAttribute("aria-label", texto);
+    botaoTelaCheia.title = texto;
+    ajustarResolucaoCanvas(); // o tabuleiro mudou de tamanho: redesenha nítido
+}
+
+botaoTelaCheia.hidden = !document.fullscreenEnabled; // iPhone não deixa: o botão some
+botaoTelaCheia.addEventListener("click", () => {
+    alternarTelaCheia();
+    botaoTelaCheia.blur(); // senão o Espaço da pausa "clicaria" o botão de novo
+});
+document.addEventListener("fullscreenchange", atualizarBotaoTelaCheia);
+
+document.addEventListener("keydown", (evento) => {
+    if (evento.key.toLowerCase() !== "f" || evento.ctrlKey || evento.metaKey || evento.altKey) return;
+    if (["INPUT", "SELECT", "TEXTAREA"].includes(evento.target.tagName)) return; // digitando o nome
+    alternarTelaCheia();
+});
+
+// ==========================================
 // Estatisticas (só de quem joga de verdade, não do bot)
 // ==========================================
 const NOMES_MORTES = { parede: "Parede", proprioCorpo: "Próprio corpo", pedra: "Pedra", outroJogador: "Outra cobra" };
@@ -1919,6 +1957,7 @@ function mudarDirecao(evento) {
         }
         // Enter/Espaço num botão já disparam o clique dele; evita reiniciar duas vezes
         if (evento.target.tagName === "BUTTON") return;
+        if (evento.key.toLowerCase() === "f") return; // F é só a tela cheia
 
         reiniciar();
         return;
@@ -2384,6 +2423,36 @@ function comecarJogo(quantidade, comBot = false) {
 botaoJogar1.addEventListener("click", () => comecarJogo(1));
 botaoJogar2.addEventListener("click", () => comecarJogo(2));
 botaoJogarBot.addEventListener("click", () => comecarJogo(1, true));
+
+// ==========================================
+// Instalar como app (PWA)
+// ==========================================
+const botaoInstalar = document.getElementById("botaoInstalar");
+let pedidoDeInstalacao = null; // o navegador entrega quando o jogo pode ser instalado
+
+// só funciona em http(s) (GitHub Pages, localhost); abrindo o arquivo direto do computador não faz nada
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+window.addEventListener("beforeinstallprompt", (evento) => {
+    evento.preventDefault(); // guarda o pedido pra mostrar só quando clicarem no botão
+    pedidoDeInstalacao = evento;
+    botaoInstalar.hidden = false;
+});
+
+botaoInstalar.addEventListener("click", async () => {
+    if (!pedidoDeInstalacao) return;
+
+    pedidoDeInstalacao.prompt();
+    await pedidoDeInstalacao.userChoice;
+    pedidoDeInstalacao = null;
+    botaoInstalar.hidden = true;
+});
+
+window.addEventListener("appinstalled", () => {
+    botaoInstalar.hidden = true;
+});
 
 // ==========================================
 // Início
