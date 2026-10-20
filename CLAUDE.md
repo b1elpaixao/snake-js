@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (167 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (189' na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -26,10 +26,11 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 4. `som.js` - efeitos, música, vibração
 5. `movimento.js` - mover, colisão, recordes, power-ups, bot, pausa
 6. `modos.js` - Contra o tempo e Fases
-7. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último)
+7. `fantasma.js` - fantasma do recorde: com 1 jogador, uma cobra transparente refaz a melhor partida de hoje
+8. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último)
 
-Os arquivos 2 a 6 só tem funções e valores fixos; o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-V2`), `manifest.webmanifest`, `icone.svg`.
+Os arquivos 2 a 7 só tem funções e valores fixos; o que executa ao carregar fica no `script.js`.
+Outros: `style.css`, `sw.js` (service worker, cache `snake-V3`), `manifest.webmanifest`, `icone.svg`.
 **Ao criar um arquivo .js novo:** incluir no `index.html` antes do `script.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
@@ -52,6 +53,6 @@ do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
 ## Melhorias pendentes (lista 4)
 
-Feito: 1 movimento por trilha / delay nas teclas.
+Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 3 fantasma do recorde.
 Em andamento: 2 compartilhar resultado (feito numa branch na nuvem, falta juntar na `main`).
-A fazer: 3 fantasma do recorde no Desafio do dia · 4 modo cooperativo · 5 novos power-ups (Escudo, Fantasma, Câmera lenta) · 6 temas do tabuleiro · 7 editor de fases com link · 8 controle de videogame · 9 tutorial na primeira vez · 10 acessibilidade · 11 histórico com gráfico · 12 ícones PNG e conferir instalação · 13 terminar de dividir o `script.js` (`salvos.js`).
+A fazer: 4 modo cooperativo · 5 novos power-ups (Escudo, Fantasma, Câmera lenta) · 6 temas do tabuleiro · 7 editor de fases com link · 8 controle de videogame · 9 tutorial na primeira vez · 10 acessibilidade · 11 histórico com gráfico · 12 ícones PNG e conferir instalação · 13 terminar de dividir o `script.js` (`salvos.js`).
