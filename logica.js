@@ -898,10 +898,16 @@ function passoDoFantasmaNoTempo(passos, tempo) {
     return resposta;
 }
 
-// pra onde a cabeça foi de um passo pro outro (atravessar a borda no "Sem paredes" conta como 1 casa)
-function direcaoDoFantasma(de, para) {
-    const passo = (diferenca) => (Math.abs(diferenca) > 1 ? -Math.sign(diferenca) : diferenca);
-    return { x: passo(para.x - de.x), y: passo(para.y - de.y) };
+// pra onde a cabeça foi de um passo pro outro; null se não foi 1 casa (parada ou troca de fase)
+// atravessar a borda no "Sem paredes" conta como 1 casa
+function direcaoDoFantasma(de, para, colunas, linhas) {
+    const passo = (diferenca, tamanho) => {
+        if (Math.abs(diferenca) === tamanho - 1 && tamanho > 2) return -Math.sign(diferenca);
+        return diferenca;
+    };
+    const direcao = { x: passo(para.x - de.x, colunas), y: passo(para.y - de.y, linhas) };
+
+    return Math.abs(direcao.x) + Math.abs(direcao.y) === 1 ? direcao : null;
 }
 
 // os fantasmas guardados só valem no dia em que foram feitos

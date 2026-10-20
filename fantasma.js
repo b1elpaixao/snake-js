@@ -39,7 +39,7 @@ function prepararFantasma() {
 
 // chamado no loop a cada meio passo, logo depois de somar o tempo da partida
 function marcarTempoDoFantasma(duracao) {
-    tempoDoUltimoMeioPasso = { em: performance.now(), duracao };
+    tempoDoUltimoMeioPasso = { em: agoraDoJogo(), duracao };
 }
 
 // chamado no loop depois que a cobra anda
@@ -63,14 +63,44 @@ function guardarFantasmaDaPartida() {
 }
 
 // o tempo da partida "agora", contando o pedaço do meio passo que já passou
+// (relógio do jogo: na pausa ele para, e o fantasma congela junto com a cobra)
 function tempoDaPartidaParaDesenho() {
     const { em, duracao } = tempoDoUltimoMeioPasso;
 
     if (em === null) return 0;
-    if (!jogoAtivo || pausado) return tempoDaPartidaMs;
+    if (!jogoAtivo) return tempoDaPartidaMs;
 
-    // a cobra chega na casa nova só no fim do passo; o fantasma acompanha o mesmo atraso
-    return tempoDaPartidaMs - duracao + Math.min(performance.now() - em, duracao);
+    return tempoDaPartidaMs + Math.min(Math.max(agoraDoJogo() - em, 0), duracao);
+}
+
+// a trilha do fantasma no mesmo formato da trilhaDaCobra: está nas casas do passo "indice"
+// e a cabeça já vai andando rumo à casa do passo seguinte
+function trilhaDoFantasma(passos, indice, andou) {
+    const celulas = corpoDoFantasma(passos, indice);
+    const proximo = passos[indice + 1];
+    const cabecaDepois = proximo ? { x: proximo[1], y: proximo[2] } : celulas[0];
+    const direcao = direcaoDoFantasma(celulas[0], cabecaDepois, COLUNAS, LINHAS);
+
+    if (!direcao) {
+        // parada (fim da partida dele) ou trocou de fase: fica onde está, olhando pra onde veio
+        const anterior = passos[indice - 1];
+        const veioDe = anterior ? direcaoDoFantasma({ x: anterior[1], y: anterior[2] }, celulas[0], COLUNAS, LINHAS) : null;
+        return { pontos: celulas.length > 1 ? celulas : [celulas[0]], direcao: veioDe || { x: 1, y: 0 } };
+    }
+
+    const crescendo = proximo[3] > passos[indice][3];
+    const cabeca = { x: celulas[0].x + direcao.x * andou, y: celulas[0].y + direcao.y * andou };
+    const pontos = [cabeca, ...celulas];
+
+    if (!crescendo && celulas.length > 1) {
+        const rabo = celulas[celulas.length - 1];
+        const frente = celulas[celulas.length - 2];
+        pontos[pontos.length - 1] = { x: rabo.x + (frente.x - rabo.x) * andou, y: rabo.y + (frente.y - rabo.y) * andou };
+    } else if (!crescendo) {
+        pontos.pop(); // cobra de 1 casa: só a cabeça
+    }
+
+    return { pontos, direcao };
 }
 
 function desenharFantasma() {
@@ -87,16 +117,12 @@ function desenharFantasma() {
 
     if (tempoDepoisDoFim >= DURACAO_SUMIR_FANTASMA_MS) return; // a partida do fantasma acabou: ele some
 
-    const proximo = ultimo ? indice : indice + 1;
-    const duracaoDoPasso = passos[proximo][0] - passos[indice][0];
-    const progresso = duracaoDoPasso > 0 ? Math.min((tempo - passos[indice][0]) / duracaoDoPasso, 1) : 1;
-    const cobra = corpoDoFantasma(passos, proximo);
-    const cobraAnterior = corpoDoFantasma(passos, indice);
-    const cabecaAntes = { x: passos[Math.max(proximo - 1, 0)][1], y: passos[Math.max(proximo - 1, 0)][2] };
-    const direcao = mesmaPosicao(cabecaAntes, cobra[0]) ? { x: 1, y: 0 } : direcaoDoFantasma(cabecaAntes, cobra[0]);
+    const duracaoDoPasso = ultimo ? 0 : passos[indice + 1][0] - passos[indice][0];
+    const andou = duracaoDoPasso > 0 ? Math.min((tempo - passos[indice][0]) / duracaoDoPasso, 1) : 0;
+    const cores = { invencivel: false, corCorpo: COR_FANTASMA, corCabeca: COR_FANTASMA };
 
     ctx.save();
     ctx.globalAlpha = OPACIDADE_FANTASMA * (1 - tempoDepoisDoFim / DURACAO_SUMIR_FANTASMA_MS);
-    desenharCobra({ cobra, cobraAnterior, direcao, invencivel: false, corCorpo: COR_FANTASMA, corCabeca: COR_FANTASMA }, progresso);
+    desenharCobra(cores, trilhaDoFantasma(passos, indice, andou));
     ctx.restore();
 }

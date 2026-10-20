@@ -464,8 +464,8 @@ function desenharCabecaCobra(corCabeca) {
     }
 }
 
-function desenharCobra(jogador) {
-    const { pontos: caminho, direcao } = trilhaDaCobra(jogador);
+function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
+    const { pontos: caminho, direcao } = trilha;
     const pontos = arredondarCantos(caminho).map((p) => ({
             x: (p.x + 0.5) * TAMANHO_CELULA,
             y: (p.y + 0.5) * TAMANHO_CELULA,

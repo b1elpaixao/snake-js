@@ -412,9 +412,13 @@ verificar("fantasma: depois do fim fica no último", passoDoFantasmaNoTempo(pass
 verificar("fantasma: vários passos no tempo 0 (corpo inicial) pega o último",
     passoDoFantasmaNoTempo([[0, 1, 1, 3], [0, 2, 1, 3], [0, 3, 1, 3], [100, 4, 1, 3]], 0), 2);
 verificar("fantasma: direção para a direita",
-    JSON.stringify(direcaoDoFantasma({ x: 3, y: 3 }, { x: 4, y: 3 })), JSON.stringify({ x: 1, y: 0 }));
+    JSON.stringify(direcaoDoFantasma({ x: 3, y: 3 }, { x: 4, y: 3 }, 20, 20)), JSON.stringify({ x: 1, y: 0 }));
 verificar("fantasma: atravessar a borda (sem paredes) conta como 1 casa",
-    JSON.stringify(direcaoDoFantasma({ x: 19, y: 3 }, { x: 0, y: 3 })), JSON.stringify({ x: 1, y: 0 }));
+    JSON.stringify(direcaoDoFantasma({ x: 19, y: 3 }, { x: 0, y: 3 }, 20, 20)), JSON.stringify({ x: 1, y: 0 }));
+verificar("fantasma: atravessar a borda de cima pra baixo",
+    JSON.stringify(direcaoDoFantasma({ x: 4, y: 0 }, { x: 4, y: 19 }, 20, 20)), JSON.stringify({ x: 0, y: -1 }));
+verificar("fantasma: parada não tem direção", direcaoDoFantasma({ x: 3, y: 3 }, { x: 3, y: 3 }, 20, 20), null);
+verificar("fantasma: salto de troca de fase não tem direção", direcaoDoFantasma({ x: 3, y: 3 }, { x: 9, y: 3 }, 20, 20), null);
 verificar("fantasma: de outro dia não vale",
     JSON.stringify(fantasmasDoDia({ data: "2026-10-19", porModo: { normal: { pontuacao: 9, passos: [] } } }, "2026-10-20")),
     JSON.stringify({ data: "2026-10-20", porModo: {} }));
