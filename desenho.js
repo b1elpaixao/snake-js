@@ -73,7 +73,7 @@ function desenhar() {
         if (apagada) {
             ctx.globalAlpha = 0.2;
         }
-        desenharCobra(jogador, progressoDoJogador(jogador));
+        desenharCobra(jogador);
         ctx.restore();
     }
 
@@ -88,13 +88,108 @@ function desenhar() {
     ctx.restore();
 }
 
-// cada cobra tem o próprio ritmo (com Turbo o passo dura metade)
+// quanto a cabeça já andou rumo à próxima casa (0 a 1); null = parada (contagem, atordoada, fim)
 function progressoDoJogador(jogador) {
-    if (!jogoAtivo || pausado) {
-        return 1;
+    if (!jogoAtivo || jogador.ultimoPassoEm === 0 || estaAtordoado(jogador)) {
+        return null;
     }
 
-    return Math.min((performance.now() - jogador.ultimoPassoEm) / jogador.duracaoPasso, 1);
+    // relógio do jogo: na pausa ele para, então o desenho congela no meio do caminho
+    const duracao = Math.max(1, jogador.passoTerminaEm - jogador.ultimoPassoEm);
+    return Math.min(Math.max((agoraDoJogo() - jogador.ultimoPassoEm) / duracao, 0), 1);
+}
+
+// no próximo passo a cabeça cai em comida? então o rabo fica parado (a cobra cresce)
+function vaiComerEm(casa) {
+    return (modoAtual !== "rato" && mesmaPosicao(casa, comida)) ||
+        (comidaDourada !== null && mesmaPosicao(casa, comidaDourada)) ||
+        ratos.some((rato) => mesmaPosicao(rato, casa));
+}
+
+// a próxima casa é parede, corpo ou pedra, então a cabeça só encosta, não entra
+function proximaCasaBloqueada(jogador) {
+    const proxima = calcularNovaCabeca(jogador.cobra[0], jogador.direcao, semParedesNaPartida, COLUNAS, LINHAS);
+    const corpo = vaiComerEm(proxima) ? jogador.cobra : jogador.cobra.slice(0, -1);
+    const simulada = { ...jogador, cobra: [proxima, ...corpo] };
+    const todos = jogadores.map((outro) => (outro === jogador ? simulada : outro));
+
+    return motivoDaColisao(simulada, todos, obstaculos, COLUNAS, LINHAS) !== null;
+}
+
+const ENCOSTA_NA_BATIDA = 0.42; // a cabeça para quase na metade da casa: parece que encostou
+
+// o caminho do corpo, da cabeça até a ponta do rabo (em casas, com frações)
+function trilhaDaCobra(jogador) {
+    let celulas = jogador.cobra;
+    let direcao = jogador.direcao;
+    let andou = progressoDoJogador(jogador) ?? 0;
+    let crescendo = false;
+
+    if (!jogoAtivo && jogador.bateu) {
+        // bateu: mostra a cobra de antes da batida, com a cabeça encostada
+        celulas = jogador.cobraAnterior;
+        direcao = jogador.direcaoAndada || jogador.direcao;
+        andou = ENCOSTA_NA_BATIDA;
+    } else if (jogoAtivo) {
+        const proxima = calcularNovaCabeca(celulas[0], direcao, semParedesNaPartida, COLUNAS, LINHAS);
+        crescendo = vaiComerEm(proxima);
+        if (proximaCasaBloqueada(jogador)) {
+            andou = Math.min(andou, ENCOSTA_NA_BATIDA);
+        }
+    }
+
+    const cabeca = { x: celulas[0].x + direcao.x * andou, y: celulas[0].y + direcao.y * andou };
+    const pontos = [cabeca, ...celulas];
+
+    if (!crescendo && celulas.length > 1) {
+        // o rabo anda junto, rumo ao pedaço da frente
+        const rabo = celulas[celulas.length - 1];
+        const frente = celulas[celulas.length - 2];
+        pontos[pontos.length - 1] = { x: rabo.x + (frente.x - rabo.x) * andou, y: rabo.y + (frente.y - rabo.y) * andou };
+    } else if (!crescendo) {
+        pontos.pop(); // cobra de 1 casa: só a cabeça
+    }
+
+    return { pontos, direcao };
+}
+
+// troca cada quina por um quarto de círculo ( o corpo faz a curva em vez de dobrar)
+function arredondarCantos(pontos) {
+    const RAIO = 0.5;
+    const resultado = [pontos[0]];
+
+    for (let i = 1; i < pontos.length - 1; i++) {
+        const antes = pontos[i - 1];
+        const canto = pontos[i];
+        const depois = pontos[i + 1];
+        const ida = { x: canto.x - antes.x, y: canto.y - antes.y };
+        const volta = { x: depois.x - canto.x, y: depois.y - canto.y };
+        const tamanhoIda = Math.hypot(ida.x, ida.y);
+        const tamanhoVolta = Math.hypot(volta.x, volta.y);
+        const ehQuina = Math.abs(ida.x * volta.y - ida.y * volta.x) > 0.0001;
+
+        // atravessou a borda (Sem paredes) ou não é quina: segue reto
+        if (!ehQuina || tamanhoIda > 1.5 || tamanhoVolta > 1.5) {
+            resultado.push(canto);
+            continue;
+        }
+
+        const raio = Math.min(RAIO, tamanhoIda, tamanhoVolta);
+        const inicio = { x: canto.x - (ida.x / tamanhoIda) * raio, y: canto.y - (ida.y / tamanhoIda) * raio };
+        const fim = { x: canto.x + (volta.x / tamanhoVolta) * raio, y: canto.y + (volta.y / tamanhoVolta) * raio };
+
+        for (let passo = 0; passo <= 6; passo++) {
+            const t = passo / 6;
+            // curva suave com o canto como ponto de controle
+            resultado.push({
+                x: (1 - t) * (1 - t) * inicio.x + 2 * (1 - t) * t * canto.x + t * t * fim.x,
+                y: (1 - t) * (1 - t) * inicio.y + 2 * (1 - t) * t * canto.y + t * t * fim.y,
+            });
+        }
+    }
+
+    if (pontos.length > 1) resultado.push(pontos[pontos.length - 1]);
+    return resultado;
 }
 
 // "+3" que sobe de cabeça da cobra e some
@@ -367,37 +462,45 @@ function desenharCabecaCobra(corCabeca) {
     }
 }
 
-function desenharCobra(jogador, progresso) {
-    const pontos = jogador.cobra.map((segmento, indice) => {
-        const anterior = jogador.cobraAnterior[indice] || segmento;
-        return {
-            x: (interpolarEixo(anterior.x, segmento.x, progresso) + 0.5) * TAMANHO_CELULA,
-            y: (interpolarEixo(anterior.y, segmento.y, progresso) + 0.5) * TAMANHO_CELULA,
-        };
-    });
+function desenharCobra(jogador) {
+    const { pontos: caminho, direcao } = trilhaDaCobra(jogador);
+    const pontos = arredondarCantos(caminho).map((p) => ({
+            x: (p.x + 0.5) * TAMANHO_CELULA,
+            y: (p.y + 0.5) * TAMANHO_CELULA,
+    }));
 
     const corCauda = jogador.invencivel ? "#d4a800" : jogador.corCorpo;
     const corCabeca = jogador.invencivel ? "#fff27a" : jogador.corCabeca;
-    const distanciaMaxima = TAMANHO_CELULA * 1.5;
     const larguraBase = TAMANHO_CELULA * 0.7;
-    const totalSegmentos = pontos.length;
+    const pedacoMaximo = TAMANHO_CELULA / 4; // desenha em pedacinhos pra cor e largura mudarem aos poucos
+
+    // comprimento total, pra saber onde cada pedacinho fica no corpo (1 = cabeça, 0 = rabo)
+    let total = 0;
+    for (let i = 1; i < pontos.length; i++) {
+        const d = Math.hypot(pontos[i].x - pontos[i - 1].x, pontos[i].y - pontos[i - 1].y);
+        if (d <= TAMANHO_CELULA * 1.5) total += d;
+    }
 
     ctx.lineCap = "round";
 
-    for (let i = totalSegmentos - 1; i >= 1; i--) {
+    // do rabo pra cabeça, assim a parte da frente fica por cima
+    let distanciaDaCabeca = total;
+    for (let i = pontos.length - 1; i >= 1; i--) {
         const deste = pontos[i];
         const proximo = pontos[i - 1];
+        const tamanho = Math.hypot(proximo.x - deste.x, proximo.y - deste.y);
 
-        if (Math.hypot(proximo.x - deste.x, proximo.y - deste.y) > distanciaMaxima) {
-            continue;
+        if (tamanho > TAMANHO_CELULA * 1.5) {
+            continue; // atravessou a borda no "Sem paredes": não liga um lado ao outro
         }
 
-        for (let passo = 0; passo < SUBDIVISOES_CORPO; passo++) {
-            const t0 = passo / SUBDIVISOES_CORPO;
-            const t1 = (passo + 1) / SUBDIVISOES_CORPO;
-            const indiceMeio = i - (t0 + t1) / 2;
-            const posicaoNoCorpo = 1 - indiceMeio / (totalSegmentos - 1);
-            
+        const partes = Math.max(1, Math.ceil(tamanho / pedacoMaximo));
+        for (let parte = 0; parte < partes; parte++) {
+            const t0 = parte / partes;
+            const t1 = (parte + 1) / partes;
+            const meio = distanciaDaCabeca - tamanho * (t0 + t1) / 2;
+            const posicaoNoCorpo = total > 0 ? 1 - meio / total : 1;
+
             ctx.strokeStyle = misturarCores(corCauda, corCabeca, posicaoNoCorpo);
             ctx.lineWidth = larguraBase * (0.6 + 0.4 * posicaoNoCorpo);
             ctx.beginPath();
@@ -405,16 +508,37 @@ function desenharCobra(jogador, progresso) {
             ctx.lineTo(deste.x + (proximo.x - deste.x) * t1, deste.y + (proximo.y - deste.y) * t1);
             ctx.stroke();
         }
+
+        distanciaDaCabeca -= tamanho;
     }
 
+    // pintinhas a cada 2 casas, contadas da cabeça (andam junto com a cobra)
     ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
-    for (let i = 2; i < totalSegmentos; i += 2) {
-        ctx.beginPath();
-        ctx.arc(pontos[i].x, pontos[i].y, TAMANHO_CELULA * 0.09, 0, Math.PI * 2);
-        ctx.fill();
+    let percorrido = 0;
+    let proximaPinta = TAMANHO_CELULA * 2;
+    for (let i = 1; i < pontos.length; i++) {
+        const de = pontos[i - 1];
+        const ate = pontos[i];
+        const tamanho = Math.hypot(ate.x - de.x, ate.y - de.y);
+
+        if (tamanho > TAMANHO_CELULA * 1.5) {
+            percorrido += TAMANHO_CELULA;
+            continue;
+        }
+
+        while (proximaPinta <= percorrido + tamanho && proximaPinta < total - TAMANHO_CELULA * 0.5) {
+            const t = (proximaPinta - percorrido) / tamanho;
+            ctx.beginPath();
+            ctx.arc(de.x + (ate.x - de.x) * t, de.y + (ate.y - de.y) * t, TAMANHO_CELULA * 0.09, 0, Math.PI * 2);
+            ctx.fill();
+            proximaPinta += TAMANHO_CELULA * 2;
+    }
+    percorrido += tamanho;
+    
     }
 
-    const angulo = Math.atan2(jogador.direcao.y, jogador.direcao.x);
+    // a cabeça sempre olha pra onde está indo
+    const angulo = Math.atan2(direcao.y, direcao.x);
     const escala = TAMANHO_CELULA / 26;
 
     ctx.save();
@@ -426,6 +550,11 @@ function desenharCobra(jogador, progresso) {
 }
 
 function loopRenderizacao() {
+    // o jogo anda no mesmo compasso do desenho: o passo acontece no quadro em que a cobra chega na casa
+    while (jogoAtivo && !pausado && !contagemAtiva && agoraDoJogo() >= proximoLoopEm) {
+        loop();
+    }
+
     desenhar();
 
     desenharContagem();
