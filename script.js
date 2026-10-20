@@ -301,6 +301,7 @@ let pausadoDesde = null;
 const DURACAO_PASSO_CONTAGEM_MS = 700;
 let contagemAtiva = false;
 let temporizadorLoop = null; // guardado pra poder parar o loop ao reiniciar/sair pela pausa
+let proximoLoopEm = 0; // no relógio do jogo: quando é o próximo meio passo (o loopRenderizacao confere a cada quadro)
 let textoContagem = "";
 let inicioPassoContagem = 0;
 let temporizadorContagem = null;
@@ -953,8 +954,7 @@ function loop() {
     if (!jogoAtivo) return;
 
     if (pausado) {
-        temporizadorLoop = setTimeout(loop, 100);
-        return;
+        return; // ao despausar, o loopRenderizacao volta a chamar o loop sozinho
     }
     // o loop roda em meios passos: quem está com Turbo anda em todos,
     // os outros só nos passos completos (um sim, um não)
@@ -972,6 +972,10 @@ function loop() {
     }
     const passoCompleto = contadorMeiosPassos % MEIOS_PASSOS_POR_PASSO === 0;
     const agoraReal = performance.now();
+    // o quadro chega um pouquinho depois do horário do passo: conta sempre do horário combinado,
+    // senão o atraso se acumula e a cobra "engasga" no fim de cada passo
+    const agoraJogo = agoraDoJogo();
+    const horaDoPasso = Math.abs(agoraJogo - proximoLoopEm) < velocidadeAtual / MEIOS_PASSOS_POR_PASSO ? proximoLoopEm : agoraJogo;
 
     for (const jogador of jogadores) {
         atualizarEfeitos(jogador);
@@ -986,18 +990,10 @@ function loop() {
     );
 
     for (const jogador of jogadoresQueAndam) {
-        if (jogador.bot) {
-            definirDirecaoJogador(jogador, decidirDirecaoBot(jogador));
-        }
-        
         jogador.cobraAnterior = jogador.cobra.map((segmento) => ({ ...segmento }));
-        aplicarProximaDirecao(jogador);
-        moverJogador(jogador);
-
-        jogador.ultimoPassoEm = agoraReal;
-        jogador.duracaoPasso = jogador.velocidadeExtraAtiva
-            ? velocidadeAtual / MEIOS_PASSOS_POR_PASSO
-            : velocidadeAtual;
+        moverJogador(jogador); // anda pra direção combinada no passo anterior
+        jogador.direcaoAndada = jogador.direcao;
+        jogador.ultimoPassoEm = horaDoPasso; // contado horário certo do passo (o quadro pode ter chegado um pouco depois)
     }
 
     if (comidaDourada && agoraDoJogo() >= comidaDourada.expiraEm) {
@@ -1008,6 +1004,8 @@ function loop() {
     const batidas = jogadoresQueAndam
         .map((jogador) => ({ jogador, motivo: motivoDaBatida(jogador) }))
         .filter((batida) => batida.motivo !== null);
+
+    batidas.forEach(({ jogador }) => { jogador.bateu = true; }); // o desenho mostra a cabeça encostada
 
     if (batidas.length > 0 && modoAtual === "tempo") {
         // no Contra o Tempo bater não acaba o jogo: perde pedaços e fica parada um pouco
@@ -1073,7 +1071,26 @@ function loop() {
         }
     }
 
-    temporizadorLoop = setTimeout(loop, velocidadeAtual / MEIOS_PASSOS_POR_PASSO);
+    const meioPasso = velocidadeAtual / MEIOS_PASSOS_POR_PASSO;
+    const proximoEhCompleto = (contadorMeiosPassos + 1) % MEIOS_PASSOS_POR_PASSO === 0;
+    proximoLoopEm = horaDoPasso + meioPasso;
+
+    for (const jogador of jogadores) {
+        if (jogadoresQueAndam.includes(jogador)) {
+            // já combina a direção do próximo passo: o desenho mostra a cobra indo exatamente pra lá
+
+            if (jogador.bot) {
+                definirDirecaoJogador(jogador, decidirDirecaoBot(jogador));
+            }
+            aplicarProximaDirecao(jogador);
+        } else if (!(jogador.passoTerminaEm > horaDoPasso)) {
+            jogador.ultimoPassoEm = horaDoPasso; // estava parada (começo, atordoada): sai andando daqui
+        }
+
+        // quando ela anda de novo: no próximo meio passo (Turbo ou passo completo) ou no seguinte
+        const turboNoProximo = jogador.velocidadeExtraAtiva && jogador.velocidadeExtraAte > proximoLoopEm;
+        jogador.passoTerminaEm = proximoLoopEm + (turboNoProximo || proximoEhCompleto ? 0 : meioPasso);
+    }
 }
 
 // mostra "1.4x" no placar e acende a cor por um instante quando o número sobe
