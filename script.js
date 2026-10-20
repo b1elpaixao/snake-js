@@ -31,6 +31,8 @@ const elementoPontuacaoFinal = document.getElementById("pontuacaoFinal");
 const elementoAvisoRecorde = document.getElementById("avisoRecorde");
 const botaoJogarDeNovo = document.getElementById("botaoJogarDeNovo");
 const botaoVoltarMenu = document.getElementById("botaoVoltarMenu");
+const botaoCompartilhar = document.getElementById("botaoCompartilhar");
+const elementoTextoCompartilhar = document.getElementById("textoCompartilhar");
 const menuPausa = document.getElementById("menuPausa");
 const botaoContinuar = document.getElementById("botaoContinuar");
 const botaoReiniciarPausa = document.getElementById("botaoReiniciarPausa");
@@ -817,6 +819,41 @@ window.addEventListener("blur", pausarAutomaticamente);
 document.addEventListener("keydown", mudarDirecao);
 botaoJogarDeNovo.addEventListener("click", reiniciar);
 botaoVoltarMenu.addEventListener("click", voltarAoMenu);
+
+// ==========================================
+// Compartilhar resultado
+// ==========================================
+function linkDoJogo() {
+    // aberto direto do computador (file://) não tem link: usa o do site publicado
+    return location.protocol.startsWith("http") ? location.origin + location.pathname : "https://b1elpaixao.github.io/snake-js/";
+}
+
+function avisarNoBotao(texto) {
+    botaoCompartilhar.textContent = texto;
+    setTimeout(() => { botaoCompartilhar.textContent = "Compartilhar resultado"; }, 2000);
+}
+
+async function compartilharResultado() {
+    const placar = jogadores.map((jogador) => ({ nome: jogador.nome, pontuacao: jogador.pontuacao }));
+    const texto = textoDeCompartilhar(modoAtual, dataDeHoje(), placar, linkDoJogo());
+    const ehCelular = window.matchMedia("(pointer: coarse)").matches;
+
+    try {
+        if (ehCelular && navigator.share) {
+            await navigator.share({ text: texto }); // abre o menu do celular (WhatsApp, Instagram...)
+            return;
+        }
+        await navigator.clipboard.writeText(texto);
+        avisarNoBotao("✓ Copiado! Cole no WhatsApp");
+    } catch (erro) {
+        if (erro.name === "AbortError") return; // fechou o menu de compartilhar sem escolher
+        // não deu pra copiar sozinho: mostra o texto pra pessoa copiar na mão
+        elementoTextoCompartilhar.textContent = texto;
+        elementoTextoCompartilhar.hidden = false;
+    }
+}
+
+botaoCompartilhar.addEventListener("click", compartilharResultado);
 botaoContinuar.addEventListener("click", () => {
     if (menuPausaDisponivel()) alternarPausa();
 });
@@ -1061,6 +1098,7 @@ function travarSemParedes(travado) {
 
 function reiniciar() {
     clearTimeout(temporizadorAnimacaoMorte);
+    elementoTextoCompartilhar.hidden = true;
     clearTimeout(temporizadorLoop);
     cancelarContagem();
     menuPausa.hidden = true;

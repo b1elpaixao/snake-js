@@ -1276,3 +1276,34 @@ canvas {
         --lado: min(100vw - 20px, 100vh - 360px);
     }
 }
+
+/* ==========================================
+   Compartilhar resultado
+   ========================================== */
+/* com um botão a mais a tela pode ficar apertada: os itens mantêm o tamanho e a tela rola */
+.overlay-game-over > * {
+    flex-shrink: 0;
+}
+
+/* aparece só se o navegador não deixar copiar sozinho: a pessoa seleciona e copia */
+.texto-compartilhar {
+    max-width: 260px;
+    padding: 8px 10px;
+    border: 1px dashed var(--borda-forte);
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.4;
+    white-space: pre-line;
+    user-select: all;
+}
+
+/* no celular: sem teclado, a dica de tecla não serve; e aperta o espaço pra caber tudo */
+@media (pointer: coarse) {
+    .overlay-game-over {
+        gap: 8px;
+    }
+
+    .overlay-game-over .dica {
+        display: none;
+    }
+}

@@ -832,3 +832,32 @@ function resumoDasTeclas(teclas) {
     if (nomes.join("") === "↑←↓→") return "setas";
     return nomes.every((nome) => nome.length === 1) ? nomes.join("") : nomes.join(" ");
 }
+
+// ==========================================
+// Compartilhar resultado (função pura - testada em testes.js)
+// ==========================================
+const NOMES_DOS_MODOS = {
+    normal: "Normal",
+    "clássico": "Clássico",
+    rato: "Rato",
+    tempo: "Contra o tempo",
+    fases: "Fases",
+    desafio: "Desafio do dia",
+};
+
+// placar: [{ nome, pontuacao }] · data: "2026-10-20"
+function textoDeCompartilhar(modo, data, placar, link) {
+    const titulo = modo === "desafio"
+        ? `Desafio de ${data.slice(8, 10)}/${data.slice(5, 7)}`
+        : `Modo ${NOMES_DOS_MODOS[modo] || modo}`;
+
+    const resultado = placar.length === 1
+        ? `${placar[0].pontuacao} ${placar[0].pontuacao === 1 ? "ponto" : "pontos"}`
+        : placar.map((jogador) => `${jogador.nome} ${jogador.pontuacao}`).join(" x ");
+
+    const convite = modo === "desafio"
+        ? "Hoje todo mundo joga o mesmo mapa. Consegue fazer mais?"
+        : "Joga também:";
+
+    return `🐍 Snake · ${titulo}: ${resultado}\n${convite} ${link}`;
+}

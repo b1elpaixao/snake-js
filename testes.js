@@ -388,6 +388,17 @@ verificar("nomeDaTecla: letra", nomeDaTecla("k"), "K");
 verificar("resumoDasTeclas: setas", resumoDasTeclas(TECLAS_PADRAO[0]), "setas");
 verificar("resumoDasTeclas: WASD", resumoDasTeclas(TECLAS_PADRAO[1]), "WASD");
 
+// compartilhar resultado
+verificar("compartilhar: desafio com data e 1 jogador",
+    textoDeCompartilhar("desafio", "2026-10-20", [{ nome: "Ana", pontuacao: 81 }], "https://x"),
+    "🐍 Snake · Desafio de 20/10: 81 pontos\nHoje todo mundo joga o mesmo mapa. Consegue fazer mais? https://x");
+verificar("compartilhar: 1 ponto no singular",
+    textoDeCompartilhar("normal", "2026-10-20", [{ nome: "Ana", pontuacao: 1 }], "https://x").split("\n")[0],
+    "🐍 Snake · Modo Normal: 1 ponto");
+verificar("compartilhar: 2 jogadores",
+    textoDeCompartilhar("clássico", "2026-10-20", [{ nome: "Ana", pontuacao: 12 }, { nome: "Bot", pontuacao: 8 }], "https://x").split("\n")[0],
+    "🐍 Snake · Modo Clássico: Ana 12 x Bot 8");
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";
