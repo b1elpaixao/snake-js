@@ -272,7 +272,7 @@ function lerRecordesSalvos() {
 
     return porModo;
 }
-let jogoAtivo = true;
+let jogoAtivo = false; // só fica true quando a partida começa ( o loopRenderizacao anda o jogo sempre que for true)
 let pausado = false;
 let noMenu = true;
 let quantidadeJogadoresAtual = 2;

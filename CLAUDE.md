@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (189' na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (189 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -30,7 +30,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 8. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último)
 
 Os arquivos 2 a 7 só tem funções e valores fixos; o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-V3`), `manifest.webmanifest`, `icone.svg`.
+Outros: `style.css`, `sw.js` (service worker, cache `snake-v3`), `manifest.webmanifest`, `icone.svg`.
 **Ao criar um arquivo .js novo:** incluir no `index.html` antes do `script.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
