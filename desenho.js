@@ -60,6 +60,8 @@ function desenhar() {
         desenharPowerUp(powerUp);
     }
 
+    desenharFantasma(); // por baixo das cobras de verdade
+
     for (const jogador of jogadores) {
         const bateu = animacaoMorte && animacaoMorte.batidos.includes(jogador);
         // pisca: some e aparece a cada 120 ms
@@ -436,6 +438,8 @@ function loopRenderizacao() {
 
 function mostrarTelaGameOver(jogadoresVivos, batidas) {
     let resultado;
+
+    guardarFantasmaDaPartida();
 
     if (modoAtual === "tempo") {
         const vencedor = vencedorPorPontos(jogadores);

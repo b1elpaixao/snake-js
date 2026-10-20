@@ -960,6 +960,7 @@ function loop() {
     // os outros só nos passos completos (um sim, um não)
     contadorMeiosPassos++;
     tempoDaPartidaMs += velocidadeAtual / MEIOS_PASSOS_POR_PASSO; // tempo jogado (não conta pausa)
+    marcarTempoDoFantasma(velocidadeAtual / MEIOS_PASSOS_POR_PASSO);
 
     if (modoAtual === "tempo") {
         atualizarRelogio();
@@ -1030,6 +1031,8 @@ function loop() {
         }, DURACAO_ANIMACAO_MORTE_MS);
         return;
     }
+
+    jogadoresQueAndam.forEach(gravarPassoDoFantasma); // depois das batidas: no Contra o tempo a cobra já voltou
 
     if (passoCompleto) {
 
@@ -1147,6 +1150,7 @@ function reiniciar() {
     telaGameOver.hidden = true;
     jogoAtivo = true;
     botaoPausa.textContent = "Pausar";
+    prepararFantasma();
     iniciarContagem();
 }
 

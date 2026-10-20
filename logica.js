@@ -861,3 +861,62 @@ function textoDeCompartilhar(modo, data, placar, link) {
 
     return `🐍 Snake · ${titulo}: ${resultado}\n${convite} ${link}`;
 }
+
+// ==========================================
+// Fantasma do recorde (funções puras - testadas em testes.js)
+// ==========================================
+// cada passo gravado: [tempo da partida em ms, x da cabeça, y da cabeça, tamanho da cobra]
+
+// o corpo no passo "indice": as últimas cabeças, do tamanho que a cobra tinha
+function corpoDoFantasma(passos, indice) {
+    const tamanho = passos[indice][3];
+    const corpo = [];
+
+    for (let i = indice; i >= 0 && corpo.length < tamanho; i--) {
+        corpo.push({ x: passos[i][1], y: passos[i][2] });
+    }
+    return corpo;
+}
+
+// o último passo que já aconteceu nesse tempo de partida (-1 se nenhum)
+function passoDoFantasmaNoTempo(passos, tempo) {
+    let inicio = 0;
+    let fim = passos.length - 1;
+    let resposta = -1;
+
+    // busca binária: a gravação pode ter milhares de passos
+    while (inicio <= fim) {
+        const meio = Math.floor((inicio + fim) / 2);
+
+        if (passos[meio][0] <= tempo) {
+            resposta = meio;
+            inicio = meio + 1;
+        } else {
+            fim = meio - 1;
+        }
+    }
+    return resposta;
+}
+
+// pra onde a cabeça foi de um passo pro outro (atravessar a borda no "Sem paredes" conta como 1 casa)
+function direcaoDoFantasma(de, para) {
+    const passo = (diferenca) => (Math.abs(diferenca) > 1 ? -Math.sign(diferenca) : diferenca);
+    return { x: passo(para.x - de.x), y: passo(para.y - de.y) };
+}
+
+// os fantasmas guardados só valem no dia em que foram feitos
+function fantasmasDoDia(salvos, data) {
+    const valido = salvos && salvos.data === data && salvos.porModo && typeof salvos.porModo === "object";
+    return valido ? salvos : { data, porModo: {} };
+}
+
+// devolve os fantasmas com esta partida guardada, ou null se ela não superou o fantasma de hoje
+function guardarFantasmaSeMelhor(salvos, data, modo, pontuacao, passos) {
+    const doDia = fantasmasDoDia(salvos, data);
+    const atual = doDia.porModo[modo];
+
+    if (pontuacao <= 0 || passos.length === 0 || (atual && atual.pontuacao >= pontuacao)) {
+        return null;
+    }
+    return { data, porModo: { ...doDia.porModo, [modo]: { pontuacao, passos } } };
+}

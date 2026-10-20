@@ -399,6 +399,38 @@ verificar("compartilhar: 2 jogadores",
     textoDeCompartilhar("clássico", "2026-10-20", [{ nome: "Ana", pontuacao: 12 }, { nome: "Bot", pontuacao: 8 }], "https://x").split("\n")[0],
     "🐍 Snake · Modo Clássico: Ana 12 x Bot 8");
 
+// fantasma do recorde
+const passosFantasma = [[0, 5, 5, 1], [100, 6, 5, 1], [200, 7, 5, 2], [300, 7, 6, 2]];
+verificar("fantasma: corpo no passo 3 tem as 2 últimas cabeças",
+    JSON.stringify(corpoDoFantasma(passosFantasma, 3)), JSON.stringify([{ x: 7, y: 6 }, { x: 7, y: 5 }]));
+verificar("fantasma: corpo não passa do começo da gravação",
+    corpoDoFantasma([[0, 1, 1, 3]], 0).length, 1);
+verificar("fantasma: antes do 1º passo", passoDoFantasmaNoTempo(passosFantasma, -1), -1);
+verificar("fantasma: passo exatamente no tempo", passoDoFantasmaNoTempo(passosFantasma, 200), 2);
+verificar("fantasma: entre dois passos fica no anterior", passoDoFantasmaNoTempo(passosFantasma, 150), 1);
+verificar("fantasma: depois do fim fica no último", passoDoFantasmaNoTempo(passosFantasma, 9999), 3);
+verificar("fantasma: vários passos no tempo 0 (corpo inicial) pega o último",
+    passoDoFantasmaNoTempo([[0, 1, 1, 3], [0, 2, 1, 3], [0, 3, 1, 3], [100, 4, 1, 3]], 0), 2);
+verificar("fantasma: direção para a direita",
+    JSON.stringify(direcaoDoFantasma({ x: 3, y: 3 }, { x: 4, y: 3 })), JSON.stringify({ x: 1, y: 0 }));
+verificar("fantasma: atravessar a borda (sem paredes) conta como 1 casa",
+    JSON.stringify(direcaoDoFantasma({ x: 19, y: 3 }, { x: 0, y: 3 })), JSON.stringify({ x: 1, y: 0 }));
+verificar("fantasma: de outro dia não vale",
+    JSON.stringify(fantasmasDoDia({ data: "2026-10-19", porModo: { normal: { pontuacao: 9, passos: [] } } }, "2026-10-20")),
+    JSON.stringify({ data: "2026-10-20", porModo: {} }));
+verificar("fantasma: dado corrompido vira vazio", fantasmasDoDia("lixo", "2026-10-20").porModo.normal, undefined);
+const fantasmasHoje = { data: "2026-10-20", porModo: { normal: { pontuacao: 10, passos: [[0, 1, 1, 1]] } } };
+verificar("fantasma: partida pior não substitui",
+    guardarFantasmaSeMelhor(fantasmasHoje, "2026-10-20", "normal", 10, [[0, 2, 2, 1]]), null);
+verificar("fantasma: partida melhor substitui",
+    guardarFantasmaSeMelhor(fantasmasHoje, "2026-10-20", "normal", 11, [[0, 2, 2, 1]]).porModo.normal.pontuacao, 11);
+verificar("fantasma: outro modo não apaga o fantasma do normal",
+    guardarFantasmaSeMelhor(fantasmasHoje, "2026-10-20", "rato", 3, [[0, 2, 2, 1]]).porModo.normal.pontuacao, 10);
+verificar("fantasma: 0 pontos não vira fantasma",
+    guardarFantasmaSeMelhor(null, "2026-10-20", "normal", 0, [[0, 2, 2, 1]]), null);
+verificar("fantasma: de ontem é trocado mesmo com menos pontos",
+    guardarFantasmaSeMelhor({ data: "2026-10-19", porModo: { normal: { pontuacao: 50, passos: [] } } }, "2026-10-20", "normal", 2, [[0, 2, 2, 1]]).porModo.normal.pontuacao, 2);
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";
