@@ -229,7 +229,7 @@ function desenharTabuleiro() {
     for (let linha = 0; linha < LINHAS; linha++) {
         for (let coluna = 0; coluna < COLUNAS; coluna++) {
             const ehClara = (linha + coluna) % 2 === 0;
-            desenharCelula(coluna, linha, ehClara ? CORES_TABULEIRO.claro : CORES_TABULEIRO.escuro);
+            desenharCelula(coluna, linha, ehClara ? temaDoTabuleiro().claro : temaDoTabuleiro().escuro);
         }
     }
 }

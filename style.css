@@ -1317,3 +1317,11 @@ canvas {
     background: var(--painel-claro);
     color: var(--destaque);
 }
+
+/* ==========================================
+   Tema do tabuleiro
+   ========================================== */
+/* mesmo botão das cores da cobra, só que quadradinho, como uma casa do tabuleiro */
+.amostra-tema {
+    border-radius: 8px;
+}

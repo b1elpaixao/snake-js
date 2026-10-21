@@ -12,6 +12,7 @@ const elementoFase = document.getElementById("indicadorFase");
 const PONTOS_POR_FASE = 10;
 let faseAtual = 1;
 let corDaCobraId = "azul"; // cor escolhida pro Jogador 1
+let temaDoTabuleiroId = "grama"; // tema escolhido pro tabuleiro
 let teclasDosJogadores = lerTeclasSalvas(); // [teclas do Jogador 1, teclas do Jogador 2]
 
 // Desafio do dia
@@ -134,7 +135,6 @@ const containersEfeitos = [
     document.getElementById("efeitosJogador1"),
     document.getElementById("efeitosJogador2"),
 ];
-const CORES_TABULEIRO = { claro: "#aad751", escuro: "#a2d149" };
 
 const telaInicial = document.getElementById("telaInicial");
 const telaComoJogar = document.getElementById("telaComoJogar");
@@ -476,6 +476,7 @@ function verificarConquistas(extra) {
     salvarNoArmazenamento("snakeConquistas", JSON.stringify(conquistasGanhas));
     mostrarConquistas();
     mostrarCoresDaCobra();
+    mostrarTemasDoTabuleiro();
     avisarConquistas(novas);
 }
 
@@ -620,6 +621,7 @@ function aplicarPreferenciasSalvas() {
     seletorDificuldade.value = preferencias.dificuldade;
     seletorNivelBot.value = limparNivelBot(salvas && salvas.nivelBot);
     corDaCobraId = limparCorDaCobra(salvas && salvas.corCobra, conquistasGanhas);
+    temaDoTabuleiroId = limparTemaDoTabuleiro(salvas && salvas.temaTabuleiro, conquistasGanhas);
     inputModoSemParedes.checked = preferencias.semParedes;
 }
 
@@ -631,6 +633,7 @@ function salvarPreferencias() {
         dificuldade: seletorDificuldade.value,
         nivelBot: seletorNivelBot.value,
         corCobra: corDaCobraId,
+        temaTabuleiro: temaDoTabuleiroId,
         semParedes: inputModoSemParedes.checked,
     }));
 }
@@ -688,11 +691,53 @@ function escolherCorDaCobra(id) {
     salvarPreferencias();
 }
 
+// ==========================================
+// Tema do tabuleiro
+// ==========================================
+function temaDoTabuleiro() {
+    return TEMAS_DO_TABULEIRO.find((tema) => tema.id === temaDoTabuleiroId) || TEMAS_DO_TABULEIRO[0];
+}
+
+function mostrarTemasDoTabuleiro() {
+    const caixa = document.getElementById("temasDoTabuleiro");
+    caixa.innerHTML = "";
+
+    for (const tema of TEMAS_DO_TABULEIRO) {
+        const liberado = corEstaLiberada(tema, conquistasGanhas);
+        const conquista = CONQUISTAS.find((item) => item.id === tema.conquista);
+        const botao = document.createElement("button");
+
+        botao.type = "button";
+        botao.className = "amostra-cor amostra-tema";
+        botao.style.setProperty("--cor-cabeca", tema.claro);
+        botao.style.setProperty("--cor-corpo", tema.escuro);
+        botao.disabled = !liberado;
+        botao.setAttribute("aria-pressed", String(tema.id === temaDoTabuleiroId));
+        botao.title = liberado ? tema.nome : `${tema.nome}: ganhe a conquista "${conquista.nome}"`;
+        botao.setAttribute("aria-label", botao.title);
+        botao.addEventListener("click", () => escolherTemaDoTabuleiro(tema.id));
+        caixa.append(botao);
+    }
+
+    document.getElementById("nomeTemaDoTabuleiro").textContent = `${temaDoTabuleiro().nome} · os apagados liberam com conquistas`;
+}
+
+function escolherTemaDoTabuleiro(id) {
+    const tema = TEMAS_DO_TABULEIRO.find((opcao) => opcao.id === id);
+
+    if (!tema || !corEstaLiberada(tema, conquistasGanhas)) return; // bloqueado: não muda nada
+
+    temaDoTabuleiroId = tema.id;
+    mostrarTemasDoTabuleiro();
+    salvarPreferencias();
+}
+
 aplicarPreferenciasSalvas(); // antes de mostrar os recordes, pra já abrir no modo salvo
 inputModoSemParedes.addEventListener("change", salvarPreferencias);
 
 aplicarCorDaCobra();
 mostrarCoresDaCobra();
+mostrarTemasDoTabuleiro();
 mostrarSimbolosNaLegenda();
 mostrarTeclas();
 mostrarRecordesDoModo(seletorModo.value);

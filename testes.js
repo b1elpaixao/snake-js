@@ -440,6 +440,14 @@ verificar("compartilhar: 2 juntos soma os pontos",
     textoDeCompartilhar("normal", "2026-10-21", [{ nome: "Ana", pontuacao: 12 }, { nome: "Beto", pontuacao: 8 }], "https://x", true).split("\n")[0],
     "🐍 Snake · Modo Normal: Ana + Beto fizeram 20 pontos juntos");
 
+// temas do tabuleiro
+verificar("temas: só a grama começa liberada",
+    TEMAS_DO_TABULEIRO.filter((tema) => corEstaLiberada(tema, [])).map((tema) => tema.id).join(","), "grama");
+verificar("limparTemaDoTabuleiro: tema bloqueado volta pra grama", limparTemaDoTabuleiro("neve", []), "grama");
+verificar("limparTemaDoTabuleiro: tema liberado fica", limparTemaDoTabuleiro("neve", ["colecionadora"]), "neve");
+verificar("temas: toda conquista pedida existe",
+    TEMAS_DO_TABULEIRO.every((tema) => tema.conquista === null || CONQUISTAS.some((conquista) => conquista.id === tema.conquista)), true);
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";
