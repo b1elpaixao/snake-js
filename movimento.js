@@ -245,7 +245,7 @@ function ativarEncolher(jogador) {
 }
 
 function motivoDaBatida(jogador) {
-    return motivoDaColisao(jogador, jogadores, obstaculos, COLUNAS, LINHAS);
+    return motivoDaColisao(jogador, jogadoresQueBatem(jogador), obstaculos, COLUNAS, LINHAS);
 }
 
 //  ==========================================

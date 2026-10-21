@@ -846,14 +846,22 @@ const NOMES_DOS_MODOS = {
 };
 
 // placar: [{ nome, pontuacao }] · data: "2026-10-20"
-function textoDeCompartilhar(modo, data, placar, link) {
+function textoDeCompartilhar(modo, data, placar, link, juntos = false) {
     const titulo = modo === "desafio"
         ? `Desafio de ${data.slice(8, 10)}/${data.slice(5, 7)}`
         : `Modo ${NOMES_DOS_MODOS[modo] || modo}`;
 
-    const resultado = placar.length === 1
-        ? `${placar[0].pontuacao} ${placar[0].pontuacao === 1 ? "ponto" : "pontos"}`
-        : placar.map((jogador) => `${jogador.nome} ${jogador.pontuacao}`).join(" x ");
+    const soma = placar.reduce((total, jogador) => total + jogador.pontuacao, 0);
+    const pontos = (n) => `${n} ${n === 1 ? "ponto" : "pontos"}`;
+    let resultado;
+
+    if (juntos) {
+        resultado = `${placar.map((jogador) => jogador.nome).join(" + ")} fizeram ${pontos(soma)} juntos`;
+    } else if (placar.length === 1) {
+        resultado = pontos(placar[0].pontuacao);
+    } else {
+        resultado = placar.map((jogador) => `${jogador.nome} ${jogador.pontuacao}`).join(" x ");
+    }
 
     const convite = modo === "desafio"
         ? "Hoje todo mundo joga o mesmo mapa. Consegue fazer mais?"

@@ -12,7 +12,7 @@ Testes: abrir `testes.html` no navegador; tem que dar todos passando (189 na úl
 - Teste antes de me entregar: monte numa cópia fora do projeto, rode os testes e simule o jogo.
 - Depois que eu colar, eu peço "verifique se tem algum erro": compare meus arquivos com a versão
   testada, linha por linha, e aponte cada diferença com o trecho certo.
-- **Commit e push só quando eu pedir** ("faz o commit", "faz o commit e o push").
+- **Depois de cada melhoria conferida, faça o commit e o push sozinho** (sem esperar eu pedir).
   Termine a mensagem do commit com a linha de coautoria do Claude.
 - Me responda em português, de forma direta.
 

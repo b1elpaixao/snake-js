@@ -31,6 +31,8 @@ const elementoPontuacaoFinal = document.getElementById("pontuacaoFinal");
 const elementoAvisoRecorde = document.getElementById("avisoRecorde");
 const botaoJogarDeNovo = document.getElementById("botaoJogarDeNovo");
 const botaoVoltarMenu = document.getElementById("botaoVoltarMenu");
+const placarJuntos = document.getElementById("placarJuntos");
+const elementoPontosJuntos = document.getElementById("scoreJuntos");
 const botaoCompartilhar = document.getElementById("botaoCompartilhar");
 const elementoTextoCompartilhar = document.getElementById("textoCompartilhar");
 const menuPausa = document.getElementById("menuPausa");
@@ -163,6 +165,8 @@ function criarJogador(config) {
         cobra: [{ x: config.x, y: config.y }],
         cobraAnterior : [{ x: config.x, y: config.y }],
         direcao: {...config.direcaoInicial },
+        inicio: { x: config.x, y: config.y }, // no 2 Juntos, quem bate volta pra cá
+        direcaoInicial: { ...config.direcaoInicial },
         filaDirecoes: [],
         pontuacao: 0,
         comboAtual: 0,
@@ -277,6 +281,7 @@ let pausado = false;
 let noMenu = true;
 let quantidadeJogadoresAtual = 2;
 let modoComBotAtivo = false;
+let modoCooperativo = false; // 2 Juntos: somam pontos e não batem um no outro
 let modoAtual = "normal";
 let semParedesNaPartida = false; // o "Sem paredes" que vale na partida atual (fica fixo até ela acabar)
 let recordesPorModo = lerRecordesSalvos();
@@ -836,7 +841,7 @@ function avisarNoBotao(texto) {
 
 async function compartilharResultado() {
     const placar = jogadores.map((jogador) => ({ nome: jogador.nome, pontuacao: jogador.pontuacao }));
-    const texto = textoDeCompartilhar(modoAtual, dataDeHoje(), placar, linkDoJogo());
+    const texto = textoDeCompartilhar(modoAtual, dataDeHoje(), placar, linkDoJogo(), modoCooperativo);
     const ehCelular = window.matchMedia("(pointer: coarse)").matches;
 
     try {
@@ -1012,6 +1017,11 @@ function loop() {
         batidas.forEach(({ jogador }) => penalizarBatida(jogador));
         tocarSomColisao();
         vibrar(80);
+    } else if (batidas.length > 0 && parceiroContinuaNoJogo(batidas)) {
+        // 2 Juntos: quem bateu volta pro começo; o jogo só acaba se os dois estiverem fora
+        batidas.forEach(({ jogador }) => voltarAoInicio(jogador));
+        tocarSomColisao();
+        vibrar(80);
     } else if (batidas.length > 0) {
         jogoAtivo = false;
         travarSemParedes(false);
@@ -1070,6 +1080,8 @@ function loop() {
             passarDeFase(fase);
         }
     }
+
+    atualizarPlacarJuntos();
 
     const meioPasso = velocidadeAtual / MEIOS_PASSOS_POR_PASSO;
     const proximoEhCompleto = (contadorMeiosPassos + 1) % MEIOS_PASSOS_POR_PASSO === 0;
@@ -1151,6 +1163,7 @@ function reiniciar() {
     }
     comida = gerarComida();
     criarRatosIniciais();
+    atualizarPlacarJuntos();
     contadorMeiosPassos = 0;
     contadorPassosPedras = 0;
     tempoDaPartidaMs = 0;
@@ -1181,7 +1194,7 @@ function aplicarDificuldade() {
     QUANTIDADE_PEDRAS_MOVEIS = modoAtual === "clássico" ? 0 : configuracao.pedrasMoveis;
 }
 
-function comecarJogo(quantidade, comBot = false) {
+function comecarJogo(quantidade, comBot = false, juntos = false) {
     obterContextoAudio();
     salvarPreferencias();
     modoAtual = seletorModo.value;
@@ -1189,6 +1202,7 @@ function comecarJogo(quantidade, comBot = false) {
     aplicarDificuldade();
     quantidadeJogadoresAtual = comBot ? 2 : quantidade;
     modoComBotAtivo = comBot;
+    modoCooperativo = juntos;
 
     const nome1 = inputNomeJogador1.value.trim() || "Jogador 1";
     const nome2 = comBot ? "Bot" : (inputNomeJogador2.value.trim() || "Jogador 2");
@@ -1210,6 +1224,7 @@ function comecarJogo(quantidade, comBot = false) {
 botaoJogar1.addEventListener("click", () => comecarJogo(1));
 botaoJogar2.addEventListener("click", () => comecarJogo(2));
 botaoJogarBot.addEventListener("click", () => comecarJogo(1, true));
+document.getElementById("botaoJogarJuntos").addEventListener("click", () => comecarJogo(2, false, true));
 
 // ==========================================
 // Instalar como app (PWA)

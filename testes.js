@@ -435,6 +435,11 @@ verificar("fantasma: 0 pontos não vira fantasma",
 verificar("fantasma: de ontem é trocado mesmo com menos pontos",
     guardarFantasmaSeMelhor({ data: "2026-10-19", porModo: { normal: { pontuacao: 50, passos: [] } } }, "2026-10-20", "normal", 2, [[0, 2, 2, 1]]).porModo.normal.pontuacao, 2);
 
+// 2 juntos
+verificar("compartilhar: 2 juntos soma os pontos",
+    textoDeCompartilhar("normal", "2026-10-21", [{ nome: "Ana", pontuacao: 12 }, { nome: "Beto", pontuacao: 8 }], "https://x", true).split("\n")[0],
+    "🐍 Snake · Modo Normal: Ana + Beto fizeram 20 pontos juntos");
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

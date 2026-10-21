@@ -421,7 +421,7 @@ canvas {
 
 .botoes-secundarios {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
 }
 
@@ -1306,4 +1306,14 @@ canvas {
     .overlay-game-over .dica {
         display: none;
     }
+}
+
+/* ==========================================
+   2 Juntos (cooperativo)
+   ========================================== */
+.placar-juntos {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--painel-claro);
+    color: var(--destaque);
 }

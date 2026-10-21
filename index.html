@@ -97,6 +97,10 @@
                             <span class="efeito" data-efeito="pontosDobradosAtivo" hidden>Pontos x2<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                         </span>
                     </span>
+                    <span id="placarJuntos" class="placar-jogador placar-juntos" hidden>
+                        Juntos
+                        <strong id="scoreJuntos">0</strong>
+                    </span>
                 </div>
                 <div class="placar-direita">
                     <span class="indicador-fase" id="indicadorFase" title="Fase atual" hidden>Fase 1</span>
@@ -178,6 +182,7 @@
                         <button id="botaoJogar1" class="botao-principal">1 Jogador</button>
                         <div class="botoes-secundarios">
                             <button id="botaoJogar2" class="botao-secundario">2 Jogadores</button>
+                            <button id="botaoJogarJuntos" class="botao-secundario">2 Juntos</button>
                             <button id="botaoJogarBot" class="botao-secundario">Contra o bot</button>
                         </div>
                     </div>
@@ -239,6 +244,7 @@
                             <li><b>Sem paredes:</b> opção no topo da página. A cobra atravessa a borda e sai do outro lado.</li>
                             <li><b>Dificuldade:</b> muda a velocidade e a quantidade de pedras. A cobra também acelera conforme você pontua. No Difícil, 3 pedras azuladas andam de um lado para o outro.</li>
                             <li><b>Fantasma do recorde:</b> jogando sozinho, uma cobra transparente refaz a sua melhor partida de hoje naquele modo. Faça mais pontos que ela e a sua partida vira o novo fantasma. Zera todo dia.</li>
+                            <li><b>2 Juntos:</b> cooperativo. Os dois somam pontos, e uma cobra passa por dentro da outra. Quem bater volta pro começo em 3 segundos; o jogo só acaba se os dois baterem ao mesmo tempo.</li>
                             <li><b>Desafio do dia:</b> o mesmo mapa e a mesma sequência de maçãs para todo mundo que jogar no mesmo dia. Velocidade sempre Normal e sem "Sem paredes", pra ser justo. O Top 5 do desafio zera todo dia.</li>
                         </ul>
                     </section>

@@ -46,6 +46,8 @@ function carregarFase(numero) {
         jogador.cobra = [{ x: inicio.x, y: inicio.y }];
         jogador.cobraAnterior = [{ x: inicio.x, y: inicio.y }];
         jogador.direcao = indice === 0 ? { x: 1, y: 0 } : { x: -1, y: 0};
+        jogador.inicio = { x: inicio.x, y: inicio.y }; // no 2 Juntos, quem bate volta pra cá
+        jogador.direcaoInicial = { ...jogador.direcao };
         jogador.filaDirecoes = [];
     });
 
@@ -64,4 +66,41 @@ function passarDeFase(numero) {
     pausado = true;
     pausadoDesde = performance.now();
     iniciarContagem(sairDaPausa, [`Fase ${numero}`, "3", "2", "1", "Vai!"]);
+}
+
+
+// ==========================================
+// 2 Juntos (cooperativo)
+// ==========================================
+const DURACAO_FORA_JUNTOS_MS = 3000;
+
+// no 2 Juntos uma cobra passa por dentro da outra: só conta bater em si mesma, pedra e parede
+function jogadoresQueBatem(jogador) {
+    return modoCooperativo ? [jogador] : jogadores;
+}
+
+// quem bateu volta pro começo, desde que o parceiro continue no jogo
+function parceiroContinuaNoJogo(batidas) {
+    if (!modoCooperativo) return false;
+
+    return jogadores.some((jogador) =>
+        !batidas.some((batida) => batida.jogador === jogador) && !estaAtordoado(jogador)
+    );
+}
+
+function voltarAoInicio(jogador) {
+    jogador.cobra = [{ ...jogador.inicio }];
+    jogador.cobraAnterior = [{ ...jogador.inicio }];
+    jogador.direcao = { ...jogador.direcaoInicial };
+    jogador.direcaoAndada = { ...jogador.direcaoInicial };
+    jogador.filaDirecoes = [];
+    jogador.comboAtual = 0;
+    jogador.bateu = false;
+    jogador.atordoadoAte = agoraDoJogo() + DURACAO_FORA_JUNTOS_MS; // pisca parada no começo e volta a andar
+    adicionarTextoFlutuante(jogador.inicio, "Volta em 3 s", "#ffffff");
+}
+
+function atualizarPlacarJuntos() {
+    placarJuntos.hidden = !modoCooperativo;
+    elementoPontosJuntos.textContent = jogadores.reduce((total, jogador) => total + jogador.pontuacao, 0);
 }

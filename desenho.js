@@ -113,7 +113,7 @@ function proximaCasaBloqueada(jogador) {
     const proxima = calcularNovaCabeca(jogador.cobra[0], jogador.direcao, semParedesNaPartida, COLUNAS, LINHAS);
     const corpo = vaiComerEm(proxima) ? jogador.cobra : jogador.cobra.slice(0, -1);
     const simulada = { ...jogador, cobra: [proxima, ...corpo] };
-    const todos = jogadores.map((outro) => (outro === jogador ? simulada : outro));
+    const todos = jogadoresQueBatem(jogador).map((outro) => (outro === jogador ? simulada : outro));
 
     return motivoDaColisao(simulada, todos, obstaculos, COLUNAS, LINHAS) !== null;
 }
@@ -570,7 +570,10 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
 
     guardarFantasmaDaPartida();
 
-    if (modoAtual === "tempo") {
+    if (modoCooperativo) {
+        const juntos = jogadores.reduce((total, jogador) => total + jogador.pontuacao, 0);
+        resultado = `Juntos: ${juntos} ${juntos === 1 ? "ponto" : "pontos"}`;
+    } else if (modoAtual === "tempo") {
         const vencedor = vencedorPorPontos(jogadores);
         resultado = jogadores.length === 1 ? "Tempo esgotado!" : vencedor ? `${vencedor.nome} venceu!` : "Empate!";
     } else if (jogadores.length === 1) {
