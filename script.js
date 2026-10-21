@@ -81,6 +81,11 @@ const DURACAO_INVENCIBILIDADE_MS = 5000;
 const DURACAO_VELOCIDADE_EXTRA_MS = 5000;
 const DURACAO_PONTOS_DOBRADOS_MS = 5000;
 const DURACAO_IMA_MS = 5000;
+const DURACAO_ESCUDO_MS = 10000;          // se não bater em 10 s, o escudo some
+const DURACAO_PORTAL_MS = 10000;
+const DURACAO_CAMERA_LENTA_MS = 5000;
+const FATOR_CAMERA_LENTA = 1.6;           // cada passo demora 60% a mais
+const DURACAO_SUSTO_ESCUDO_MS = 500;      // depois que o escudo segura a batida, fica meio segundo parada
 const MEIOS_PASSOS_POR_PASSO = 2; // com Turbo a cobra anda em todo meio passo (2x mais rápida)
 const QUANTIDADE_ENCOLHER = 3;
 
@@ -98,6 +103,9 @@ const CORES_POWERUP = {
     pontosDobrados: "#e879f9",
     encolher: "#f1f5f9",
     ima: "#fb923c",
+    escudo: "#4ade80",
+    portal: "#a5b4fc",
+    cameraLenta: "#cbd5e1",
 };
 // símbolo de cada power-up (pra não depender só da cor - ajuda quem é daltônico)
 // caminhos no formato SVG, numa caixa de 24x24; "cheio" = pintado por dentro, senão só o contorno
@@ -107,6 +115,9 @@ const SIMBOLOS_POWERUP = {
     pontosDobrados: { caminho: "M2 7 L9 17 M9 7 L2 17 M13 9.5 C13 5.5 21 5.5 21 9.5 C21 13 13 14 13 18 H21", cheio: false }, // x2
     ima: { caminho: "M6 3 V12 A6 6 0 0 0 18 12 V3 M3 7.5 H9 M15 7.5 H21", cheio: false }, // imã em U
     encolher: { caminho: "M1 12 H9 M5.5 8 L9.5 12 L5.5 16 M23 12 H15 M18.5 8 L14.5 12 L18.5 16", cheio: false }, // setas pra dentro
+    escudo: { caminho: "M12 2.5 A9.5 9.5 0 1 1 11.99 2.5 M7.5 11 A4.5 4.5 0 0 1 12 6.5", cheio: false }, // bolha
+    portal: { caminho: "M6 22 V10 A6 6 0 0 1 18 10 V22 M2 22 H22", cheio: false }, // arco
+    cameraLenta: { caminho: "M5 2 H19 L12 12 L19 22 H5 L12 12 Z", cheio: false }, // ampulheta
 };
 const COR_SIMBOLO_POWERUP = "#1f2937";
 const EFEITOS_COM_DURACAO = [
@@ -114,6 +125,9 @@ const EFEITOS_COM_DURACAO = [
     { ativo: "velocidadeExtraAtiva", ate: "velocidadeExtraAte", duracao: DURACAO_VELOCIDADE_EXTRA_MS },
     { ativo: "pontosDobradosAtivo", ate: "pontosDobradosAte", duracao: DURACAO_PONTOS_DOBRADOS_MS },
     { ativo: "imaAtivo", ate: "imaAte", duracao: DURACAO_IMA_MS },
+    { ativo: "escudoAtivo", ate: "escudoAte", duracao: DURACAO_ESCUDO_MS },
+    { ativo: "portalAtivo", ate: "portalAte", duracao: DURACAO_PORTAL_MS },
+    { ativo: "cameraLentaAtiva", ate: "cameraLentaAte", duracao: DURACAO_CAMERA_LENTA_MS },
 ];
 const TEMPO_AVISO_FIM_EFEITO_MS = 1500;
 const containersEfeitos = [
@@ -184,6 +198,12 @@ function criarJogador(config) {
         velocidadeExtraAte: 0,
         pontosDobradosAte: 0,
         imaAte: 0,
+        escudoAtivo: false,
+        escudoAte: 0,
+        portalAtivo: false,
+        portalAte: 0,
+        cameraLentaAtiva: false,
+        cameraLentaAte: 0,
         teclas: config.teclas,
         corCabeca: config.corCabeca,
         corCorpo: config.corCorpo,
@@ -964,7 +984,7 @@ function loop() {
     // o loop roda em meios passos: quem está com Turbo anda em todos,
     // os outros só nos passos completos (um sim, um não)
     contadorMeiosPassos++;
-    tempoDaPartidaMs += velocidadeAtual / MEIOS_PASSOS_POR_PASSO; // tempo jogado (não conta pausa)
+    tempoDaPartidaMs += duracaoDoMeioPasso(); // tempo jogado (não conta pausa)
     marcarTempoDoFantasma(velocidadeAtual / MEIOS_PASSOS_POR_PASSO);
 
     if (modoAtual === "tempo") {
@@ -980,7 +1000,7 @@ function loop() {
     // o quadro chega um pouquinho depois do horário do passo: conta sempre do horário combinado,
     // senão o atraso se acumula e a cobra "engasga" no fim de cada passo
     const agoraJogo = agoraDoJogo();
-    const horaDoPasso = Math.abs(agoraJogo - proximoLoopEm) < velocidadeAtual / MEIOS_PASSOS_POR_PASSO ? proximoLoopEm : agoraJogo;
+    const horaDoPasso = Math.abs(agoraJogo - proximoLoopEm) < duracaoDoMeioPasso() ? proximoLoopEm : agoraJogo;
 
     for (const jogador of jogadores) {
         atualizarEfeitos(jogador);
@@ -1008,7 +1028,8 @@ function loop() {
     // só quem andou pode ter batido
     const batidas = jogadoresQueAndam
         .map((jogador) => ({ jogador, motivo: motivoDaBatida(jogador) }))
-        .filter((batida) => batida.motivo !== null);
+        .filter((batida) => batida.motivo !== null)
+        .filter(({ jogador }) => !segurarComEscudo(jogador)); // com escudo, a batida não conta
 
     batidas.forEach(({ jogador }) => { jogador.bateu = true; }); // o desenho mostra a cabeça encostada
 
@@ -1083,7 +1104,7 @@ function loop() {
 
     atualizarPlacarJuntos();
 
-    const meioPasso = velocidadeAtual / MEIOS_PASSOS_POR_PASSO;
+    const meioPasso = duracaoDoMeioPasso();
     const proximoEhCompleto = (contadorMeiosPassos + 1) % MEIOS_PASSOS_POR_PASSO === 0;
     proximoLoopEm = horaDoPasso + meioPasso;
 
@@ -1095,7 +1116,16 @@ function loop() {
                 definirDirecaoJogador(jogador, decidirDirecaoBot(jogador));
             }
             aplicarProximaDirecao(jogador);
-        } else if (!(jogador.passoTerminaEm > horaDoPasso)) {
+        } else if (estaAtordoado(jogador)) {
+            // parada (bateu, escudo, voltando pro começo): já combina pra onde vai sair,
+            // senão ela sai de novo na mesma direção em que bateu
+            if (jogador.bot) {
+                definirDirecaoJogador(jogador, decidirDirecaoBot(jogador));
+            }
+            aplicarProximaDirecao(jogador);
+        }
+
+        if (!jogadoresQueAndam.includes(jogador) && !(jogador.passoTerminaEm > horaDoPasso)) {
             jogador.ultimoPassoEm = horaDoPasso; // estava parada (começo, atordoada): sai andando daqui
         }
 

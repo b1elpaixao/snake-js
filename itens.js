@@ -19,7 +19,7 @@ function gerarPosicaoLivre() {
 }
 
 function gerarTipoPowerUp() {
-    const tipos = ["invencibilidade", "velocidade", "pontosDobrados", "encolher", "ima"];
+    const tipos = ["invencibilidade", "velocidade", "pontosDobrados", "encolher", "ima", "escudo", "portal", "cameraLenta"];
     const indice = Math.floor(Math.random() * tipos.length);
     return tipos[indice];
 }

@@ -53,6 +53,6 @@ do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
 ## Melhorias pendentes (lista 4)
 
-Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 3 fantasma do recorde.
+Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 3 fantasma do recorde · 4 modo 2 Juntos (cooperativo) · 5 power-ups Escudo, Portal e Câmera lenta.
 Em andamento: 2 compartilhar resultado (feito numa branch na nuvem, falta juntar na `main`).
-A fazer: 4 modo cooperativo · 5 novos power-ups (Escudo, Fantasma, Câmera lenta) · 6 temas do tabuleiro · 7 editor de fases com link · 8 controle de videogame · 9 tutorial na primeira vez · 10 acessibilidade · 11 histórico com gráfico · 12 ícones PNG e conferir instalação · 13 terminar de dividir o `script.js` (`salvos.js`).
+A fazer: 6 temas do tabuleiro · 7 editor de fases com link · 8 controle de videogame · 9 tutorial na primeira vez · 10 acessibilidade · 11 histórico com gráfico · 12 ícones PNG e conferir instalação · 13 terminar de dividir o `script.js` (`salvos.js`).

@@ -3,8 +3,14 @@
 // ==========================================
 function moverJogador(jogador) {
     const novaCabeca = calcularNovaCabeca(
-        jogador.cobra[0], jogador.direcao, semParedesNaPartida, COLUNAS, LINHAS
+        jogador.cobra[0], jogador.direcao, atravessaParede(jogador), COLUNAS, LINHAS
     );
+    const deuAVolta = Math.abs(novaCabeca.x - jogador.cobra[0].x) > 1 || Math.abs(novaCabeca.y - jogador.cobra[0].y) > 1;
+
+    if (deuAVolta && !semParedesNaPartida) {
+        jogador.portalAtivo = false; // o portal vale uma vez só
+        adicionarTextoFlutuante(novaCabeca, "Portal!", CORES_POWERUP.portal);
+    }
     
     jogador.cobra.unshift(novaCabeca);
 
@@ -70,6 +76,15 @@ function moverJogador(jogador) {
             ativarEncolher(jogador);
         } else if (powerUp.tipo === "ima") {
             ativarIma(jogador);
+        } else if (powerUp.tipo === "escudo") {
+            jogador.escudoAtivo = true;
+            jogador.escudoAte = agoraDoJogo() + DURACAO_ESCUDO_MS;
+        } else if (powerUp.tipo === "portal") {
+            jogador.portalAtivo = true;
+            jogador.portalAte = agoraDoJogo() + DURACAO_PORTAL_MS;
+        } else if (powerUp.tipo === "cameraLenta") {
+            jogador.cameraLentaAtiva = true;
+            jogador.cameraLentaAte = agoraDoJogo() + DURACAO_CAMERA_LENTA_MS;
         }
 
         powerUp = null;
@@ -192,6 +207,43 @@ function atualizarEfeitos(jogador) {
     if (jogador.imaAtivo && agora >= jogador.imaAte) {
         jogador.imaAtivo = false;
     }
+    if (jogador.escudoAtivo && agora >= jogador.escudoAte) {
+        jogador.escudoAtivo = false;
+    }
+    if (jogador.portalAtivo && agora >= jogador.portalAte) {
+        jogador.portalAtivo = false;
+    }
+    if (jogador.cameraLentaAtiva && agora >= jogador.cameraLentaAte) {
+        jogador.cameraLentaAtiva = false;
+    }
+}
+
+// ==========================================
+// Escudo, Portal e Câmera lenta
+// ==========================================
+
+// escudo segura uma batida: a cobra volta pra casa de antes, perde o escudo e fica meio segundo parada
+function segurarComEscudo(jogador) {
+    if (!jogador.escudoAtivo) return false;
+
+    jogador.escudoAtivo = false;
+    jogador.cobra = jogador.cobraAnterior.map((segmento) => ({ ...segmento }));
+    jogador.filaDirecoes = [];
+    jogador.atordoadoAte = agoraDoJogo() + DURACAO_SUSTO_ESCUDO_MS;
+    adicionarTextoFlutuante(jogador.cobra[0], "Escudo!", CORES_POWERUP.escudo);
+    tocarSom(520, 0.12, "triangle");
+    return true;
+}
+
+// com Portal (ou "Sem paredes") a cobra sai do outro lado do tabuleiro
+function atravessaParede(jogador) {
+    return semParedesNaPartida || jogador.portalAtivo;
+}
+
+// com Câmera lenta de qualquer jogador, o jogo inteiro anda mais devagar
+function duracaoDoMeioPasso() {
+    const lento = jogadores.some((jogador) => jogador.cameraLentaAtiva);
+    return (velocidadeAtual / MEIOS_PASSOS_POR_PASSO) * (lento ? FATOR_CAMERA_LENTA : 1);
 }
 
 // com Imã ligado, maçã dourada e ratos andam uma casa em direção à cabeça mais perto (de quem tem imã)

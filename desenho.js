@@ -110,7 +110,7 @@ function vaiComerEm(casa) {
 
 // a próxima casa é parede, corpo ou pedra, então a cabeça só encosta, não entra
 function proximaCasaBloqueada(jogador) {
-    const proxima = calcularNovaCabeca(jogador.cobra[0], jogador.direcao, semParedesNaPartida, COLUNAS, LINHAS);
+    const proxima = calcularNovaCabeca(jogador.cobra[0], jogador.direcao, atravessaParede(jogador), COLUNAS, LINHAS);
     const corpo = vaiComerEm(proxima) ? jogador.cobra : jogador.cobra.slice(0, -1);
     const simulada = { ...jogador, cobra: [proxima, ...corpo] };
     const todos = jogadoresQueBatem(jogador).map((outro) => (outro === jogador ? simulada : outro));
@@ -133,7 +133,7 @@ function trilhaDaCobra(jogador) {
         direcao = jogador.direcaoAndada || jogador.direcao;
         andou = ENCOSTA_NA_BATIDA;
     } else if (jogoAtivo) {
-        const proxima = calcularNovaCabeca(celulas[0], direcao, semParedesNaPartida, COLUNAS, LINHAS);
+        const proxima = calcularNovaCabeca(celulas[0], direcao, atravessaParede(jogador), COLUNAS, LINHAS);
         crescendo = vaiComerEm(proxima);
         if (proximaCasaBloqueada(jogador)) {
             andou = Math.min(andou, ENCOSTA_NA_BATIDA);
