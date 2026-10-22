@@ -895,6 +895,25 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("blur", pausarAutomaticamente);
 
 document.addEventListener("keydown", mudarDirecao);
+
+// ==========================================
+// Controle de videogame (a leitura dos botões fica no controle.js)
+// ==========================================
+function mostrarControlesConectados() {
+    const quantidade = controlesConectados().length;
+    const aviso = document.getElementById("avisoControle");
+
+    aviso.hidden = quantidade === 0;
+    aviso.textContent = quantidade >= 2
+        ? "🎮 2 controles: o 1º é o Jogador 1, o 2º é o Jogador 2. A começa, Start pausa."
+        : "🎮 Controle conectado: setas ou analógico movem, A começa, Start pausa.";
+}
+
+window.addEventListener("gamepadconnected", mostrarControlesConectados);
+window.addEventListener("gamepaddisconnected", () => {
+    estadoAnteriorDosControles = [];
+    mostrarControlesConectados();
+});
 botaoJogarDeNovo.addEventListener("click", reiniciar);
 botaoVoltarMenu.addEventListener("click", voltarAoMenu);
 

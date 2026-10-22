@@ -1421,3 +1421,12 @@ canvas {
 .canvas-wrapper canvas {
     touch-action: none;
 }
+
+/* ==========================================
+   Controle de videogame
+   ========================================== */
+.aviso-controle {
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: var(--destaque);
+}

@@ -52,8 +52,9 @@ function tocarSomComidaDourada() {
 // vibra o celular (o botão "Efeitos" desliga a vibração também)
 // padrao: milissegundos de vibração, ou uma lista [vibra, pausa, vibra, ...]
 function vibrar(padrao) {
-    if (mudo || !navigator.vibrate) return;
-    navigator.vibrate(padrao);
+    if (mudo) return;
+    tremerControles(padrao); // controle de videogame treme junto
+    if (navigator.vibrate) navigator.vibrate(padrao);
 }
 
 function tocarNotaMusica(frequencia) {

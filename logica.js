@@ -1016,3 +1016,25 @@ function decodificarFase(codigo) {
 
     return paredes;
 }
+
+// ==========================================
+// Controle de videogame (função pura - testada em testes.js)
+// ==========================================
+const ZONA_MORTA_DO_ANALOGICO = 0.5; // analógico encostado de leve não conta
+
+// apertados: botões do controle (true/false) no padrão do navegador, onde 12 a 15 são as setas
+// eixos: analógico esquerdo (eixo 0 = esquerda/direita, eixo 1 = cima/baixo)
+function direcaoDoControle(apertados, eixos) {
+    if (apertados[12]) return { x: 0, y: -1 };
+    if (apertados[13]) return { x: 0, y: 1 };
+    if (apertados[14]) return { x: -1, y: 0 };
+    if (apertados[15]) return { x: 1, y: 0 };
+
+    const x = eixos[0] || 0;
+    const y = eixos[1] || 0;
+
+    if (Math.max(Math.abs(x), Math.abs(y)) < ZONA_MORTA_DO_ANALOGICO) return null;
+
+    // vale o lado pra onde o analógico está mais inclinado
+    return Math.abs(x) > Math.abs(y) ? { x: Math.sign(x), y: 0 } : { x: 0, y: Math.sign(y) };
+}

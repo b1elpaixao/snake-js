@@ -598,6 +598,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
 }
 
 function loopRenderizacao() {
+    lerControles(); // controle de videogame: o navegador só conta quando a gente pergunta
     // o jogo anda no mesmo compasso do desenho: o passo acontece no quadro em que a cobra chega na casa
     while (jogoAtivo && !pausado && !contagemAtiva && agoraDoJogo() >= proximoLoopEm) {
         loop();

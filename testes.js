@@ -469,6 +469,14 @@ verificar("compartilhar: fase criada convida pra jogar a fase",
     textoDeCompartilhar("personalizada", "2026-10-22", [{ nome: "Ana", pontuacao: 7 }], "https://x/#fase=abc").split("\n").slice(0, 2).join(" | "),
     "🐍 Snake · Modo Fase criada: 7 pontos | Fiz essa fase. Tenta passar: https://x/#fase=abc");
 
+// controle de videogame
+verificar("controle: seta pra cima", JSON.stringify(direcaoDoControle(Object.assign([], { 12: true }), [0, 0])), '{"x":0,"y":-1}');
+verificar("controle: seta pra direita", JSON.stringify(direcaoDoControle(Object.assign([], { 15: true }), [0, 0])), '{"x":1,"y":0}');
+verificar("controle: nada apertado", direcaoDoControle([], [0.1, -0.2]), null);
+verificar("controle: analógico pra esquerda", JSON.stringify(direcaoDoControle([], [-0.9, 0.3])), '{"x":-1,"y":0}');
+verificar("controle: analógico pra baixo", JSON.stringify(direcaoDoControle([], [0.4, 0.8])), '{"x":0,"y":1}');
+verificar("controle: seta ganha do analógico", JSON.stringify(direcaoDoControle(Object.assign([], { 14: true }), [0.9, 0])), '{"x":-1,"y":0}');
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";
