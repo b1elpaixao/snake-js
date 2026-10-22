@@ -54,6 +54,9 @@ function ajustarResolucaoCanvas() {
     const larguraNaTela = canvas.getBoundingClientRect().width || LARGURA_TABULEIRO;
     const escala = Math.max(1, (larguraNaTela / LARGURA_TABULEIRO) * (window.devicePixelRatio || 1));
 
+    // tabuleiro pequeno na tela (celular): cobra e itens 25% maiores dentro das casas
+    escalaDosItens = larguraNaTela < 440 ? 1.25 : 1;
+
     canvas.width = Math.round(LARGURA_TABULEIRO * escala);
     canvas.height = Math.round(ALTURA_TABULEIRO * escala);
     // desenha tudo em coordenadas de 400x400 e o canvas amplia sem borrar

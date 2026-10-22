@@ -1325,3 +1325,29 @@ canvas {
 .amostra-tema {
     border-radius: 8px;
 }
+
+/* ==========================================
+   Celular: tabuleiro de ponta a ponta
+   ========================================== */
+@media (pointer: coarse) and (max-width: 600px) {
+    /* a área do jogo encosta nas bordas da tela: o tabuleiro ganha a largura toda */
+    .jogo {
+        width: auto;
+        max-width: none;
+        margin-inline: -12px;
+        border-left: 0;
+        border-right: 0;
+        border-radius: 0;
+    }
+
+    .canvas-wrapper {
+        margin: 0 0 8px;
+        border-radius: 0;
+    }
+
+    /* tela cheia: largura toda, deixando espaço embaixo pras setas */
+    .jogo:fullscreen {
+        --lado: min(100vw, 100vh - 300px);
+        margin-inline: 0;
+    }
+}
