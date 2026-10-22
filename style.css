@@ -1376,3 +1376,48 @@ canvas {
         --lado: 100vw;
     }
 }
+/* ==========================================
+   Editor de fases
+   ========================================== */
+.menu-links {
+    display: flex;
+    gap: 14px;
+}
+
+.barra-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.barra-editor[hidden] {
+    display: none;
+}
+
+.barra-editor p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.barra-editor-botoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.barra-editor-botoes button {
+    flex: 1 1 auto;
+}
+
+/* celular: o tabuleiro vai de ponta a ponta, então a barra precisa de margem dos lados */
+@media (max-width: 600px) {
+    .barra-editor {
+        padding: 0 12px 12px;
+    }
+}
+
+/* pintando paredes com o dedo, a página não rola */
+.canvas-wrapper canvas {
+    touch-action: none;
+}

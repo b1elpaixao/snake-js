@@ -105,7 +105,7 @@ function moverPedras() {
 }
 
 function adicionarObstaculosSeNecessario() {
-    if (modoAtual === "clássico" || modoAtual === "fases" || modoAtual === "desafio") return;
+    if (modoAtual === "clássico" || modoAtual === "fases" || modoAtual === "desafio" || modoAtual === "personalizada") return;
 
     const maiorPontuacao = Math.max(...jogadores.map((j) => j.pontuacao));
     const quantidadeAlvo = QUANTIDADE_OBSTACULOS + Math.floor(maiorPontuacao / PONTOS_POR_NOVO_OBSTACULO);

@@ -275,7 +275,7 @@ function salvarNoArmazenamento(chave, valor) {
 }
 
 const MODOS_DE_JOGO = ["normal", "clássico", "rato", "tempo", "fases", "desafio"];
-const NOMES_MODOS = { normal: "Normal", "clássico": "Clássico", rato: "Rato", tempo: "Contra o tempo", fases: "Fases", desafio: "Desafio de hoje" };
+const NOMES_MODOS = { normal: "Normal", "clássico": "Clássico", rato: "Rato", tempo: "Contra o tempo", fases: "Fases", desafio: "Desafio de hoje", personalizada: "Fase criada" };
 
 function lerRecordesSalvos() {
     const porModo = { normal: [], "clássico": [], rato: [], tempo: [], fases: [], desafio: [] };
@@ -913,7 +913,8 @@ function avisarNoBotao(texto) {
 
 async function compartilharResultado() {
     const placar = jogadores.map((jogador) => ({ nome: jogador.nome, pontuacao: jogador.pontuacao }));
-    const texto = textoDeCompartilhar(modoAtual, dataDeHoje(), placar, linkDoJogo(), modoCooperativo);
+    const link = modoAtual === "personalizada" ? linkDaFaseCriada() : linkDoJogo();
+    const texto = textoDeCompartilhar(modoAtual, dataDeHoje(), placar, link, modoCooperativo);
     const ehCelular = window.matchMedia("(pointer: coarse)").matches;
 
     try {
@@ -961,6 +962,128 @@ document.addEventListener("keydown", (evento) => {
     if (evento.key === "Escape" && !telaComoJogar.hidden) {
         fecharComoJogar();
     }
+});
+
+// ==========================================
+// Editor de fases: desenha paredes num 20x20 e manda o link pros amigos
+// ==========================================
+const barraEditor = document.getElementById("barraEditor");
+const botaoCopiarFase = document.getElementById("botaoCopiarFase");
+let paredesDaFaseCriada = decodificarFase(lerDoArmazenamento("snakeFasePersonalizada")) || [];
+let editandoFase = false;
+let pintandoParede = null; // enquanto aperta: true = pondo paredes, false = tirando
+let ultimaCasaPintada = null;
+
+function abrirEditorDeFase() {
+    editandoFase = true;
+    modoAtual = "personalizada"; // tabuleiro 20x20 também no celular
+    telaInicial.hidden = true;
+    barraEditor.hidden = false;
+    aplicarTamanhoDoTabuleiro();
+}
+
+function fecharEditorDeFase() {
+    editandoFase = false;
+    pintandoParede = null;
+    barraEditor.hidden = true;
+}
+
+function salvarFaseCriada() {
+    salvarNoArmazenamento("snakeFasePersonalizada", codificarFase(paredesDaFaseCriada));
+}
+
+function linkDaFaseCriada() {
+    return `${linkDoJogo()}#fase=${codificarFase(paredesDaFaseCriada)}`;
+}
+
+function casaDoPonteiro(evento) {
+    const retangulo = canvas.getBoundingClientRect();
+
+    return {
+        x: Math.floor(((evento.clientX - retangulo.left) / retangulo.width) * COLUNAS),
+        y: Math.floor(((evento.clientY - retangulo.top) / retangulo.height) * LINHAS),
+    };
+}
+
+function pintarCasa(casa) {
+    if (casa.x < 0 || casa.y < 0 || casa.x >= COLUNAS || casa.y >= LINHAS || casaReservadaNaFase(casa)) return;
+
+    const indice = paredesDaFaseCriada.findIndex((parede) => mesmaPosicao(parede, casa));
+
+    if (pintandoParede && indice === -1) {
+        paredesDaFaseCriada.push(casa);
+    } else if (!pintandoParede && indice !== -1) {
+        paredesDaFaseCriada.splice(indice, 1);
+    }
+}
+
+// apertou numa casa vazia: arrastando põe paredes; apertou numa parede: arrastando tira
+canvas.addEventListener("pointerdown", (evento) => {
+    if (!editandoFase) return;
+
+    const casa = casaDoPonteiro(evento);
+    pintandoParede = !paredesDaFaseCriada.some((parede) => mesmaPosicao(parede, casa));
+    canvas.setPointerCapture(evento.pointerId);
+    pintarCasa(casa);
+    ultimaCasaPintada = casa;
+});
+
+// arrastando rápido o mouse pula casas: pinta todas do caminho entre a última e a de agora
+canvas.addEventListener("pointermove", (evento) => {
+    if (!editandoFase || pintandoParede === null) return;
+
+    const casa = casaDoPonteiro(evento);
+    const passos = Math.max(Math.abs(casa.x - ultimaCasaPintada.x), Math.abs(casa.y - ultimaCasaPintada.y));
+
+    for (let passo = 1; passo <= passos; passo++) {
+        pintarCasa({
+            x: Math.round(ultimaCasaPintada.x + ((casa.x - ultimaCasaPintada.x) * passo) / passos),
+            y: Math.round(ultimaCasaPintada.y + ((casa.y - ultimaCasaPintada.y) * passo) / passos),
+        });
+    }
+    ultimaCasaPintada = casa;
+});
+
+function pararDePintar() {
+    if (pintandoParede === null) return;
+    pintandoParede = null;
+    salvarFaseCriada();
+}
+canvas.addEventListener("pointerup", pararDePintar);
+canvas.addEventListener("pointercancel", pararDePintar);
+
+async function copiarLinkDaFase() {
+    const link = linkDaFaseCriada();
+    const ehCelular = window.matchMedia("(pointer: coarse)").matches;
+
+    try {
+        if (ehCelular && navigator.share) {
+            await navigator.share({ text: "Fiz uma fase no Snake. Tenta passar:", url: link });
+            return;
+        }
+        await navigator.clipboard.writeText(link);
+        botaoCopiarFase.textContent = "✓ Link copiado!";
+        setTimeout(() => { botaoCopiarFase.textContent = "Copiar link"; }, 2000);
+    } catch (erro) {
+        if (erro.name === "AbortError") return;
+        window.prompt("Copie o link da fase:", link); // não deu pra copiar sozinho
+    }
+}
+
+document.getElementById("botaoCriarFase").addEventListener("click", abrirEditorDeFase);
+botaoCopiarFase.addEventListener("click", copiarLinkDaFase);
+document.getElementById("botaoJogarFase").addEventListener("click", () => {
+    fecharEditorDeFase();
+    comecarJogo(1, false, false, "personalizada");
+});
+document.getElementById("botaoLimparFase").addEventListener("click", () => {
+    if (paredesDaFaseCriada.length > 0 && !confirm("Apagar todas as paredes?")) return;
+    paredesDaFaseCriada = [];
+    salvarFaseCriada();
+});
+document.getElementById("botaoSairEditor").addEventListener("click", () => {
+    fecharEditorDeFase();
+    telaInicial.hidden = false;
 });
 
 function voltarAoMenu() {
@@ -1253,9 +1376,13 @@ function reiniciar() {
     });
     obstaculos = gerarObstaculos();
     tornarPedrasMoveis();
-    elementoFase.hidden = modoAtual !== "fases" && modoAtual !== "desafio";
+    elementoFase.hidden = modoAtual !== "fases" && modoAtual !== "desafio" && modoAtual !== "personalizada";
     if (modoAtual === "fases") {
         carregarFase(1);
+    }
+    if (modoAtual === "personalizada") {
+        obstaculos = paredesDaFaseCriada.map((parede) => ({ x: parede.x, y: parede.y }));
+        elementoFase.textContent = "Fase criada";
     }
     desafioDoDia = null;
     if (modoAtual === "desafio") {
@@ -1312,10 +1439,10 @@ function aplicarTamanhoDoTabuleiro() {
     ajustarResolucaoCanvas();
 }
 
-function comecarJogo(quantidade, comBot = false, juntos = false) {
+function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorModo.value) {
     obterContextoAudio();
     salvarPreferencias();
-    modoAtual = seletorModo.value;
+    modoAtual = modo;
     mostrarRecordesDoModo(modoAtual);
     aplicarDificuldade();
     quantidadeJogadoresAtual = comBot ? 2 : quantidade;
@@ -1378,4 +1505,13 @@ window.addEventListener("appinstalled", () => {
 // ==========================================
 // Início
 // ==========================================
+// abriu um link de fase (...#fase=código): a fase aparece no editor, pronta pra jogar
+const faseDoLink = location.hash.startsWith("#fase=") ? decodificarFase(location.hash.slice(6)) : null;
+if (faseDoLink) {
+    paredesDaFaseCriada = faseDoLink;
+    salvarFaseCriada();
+    history.replaceState(null, "", location.pathname + location.search); // tira o código da barra de endereço
+    abrirEditorDeFase();
+}
+
 loopRenderizacao();

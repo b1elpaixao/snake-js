@@ -30,6 +30,11 @@ function desenharCelula(x, y, cor) {
 }
 
 function desenhar() {
+    if (editandoFase) {
+        desenharEditorDeFase();
+        return;
+    }
+
     ctx.clearRect(0, 0, LARGURA_TABULEIRO, ALTURA_TABULEIRO);
 
     // progresso da animação de morte (0 no começo, 1 no fim)
@@ -444,6 +449,26 @@ function desenharMacaDourada(item) {
     ctx.restore();
 }
 
+// editor de fases: o tabuleiro, as paredes e a faixa por onde as cobras saem
+function desenharEditorDeFase() {
+    ctx.clearRect(0, 0, LARGURA_TABULEIRO, ALTURA_TABULEIRO);
+    desenharTabuleiro();
+
+    // faixa da saída (não pode ter parede) com uma bolinha onde cada cobra começa
+    ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+    ctx.fillRect(3 * TAMANHO_CELULA, 10 * TAMANHO_CELULA, 15 * TAMANHO_CELULA, TAMANHO_CELULA);
+    for (const [x, cor] of [[6, corDaCobra().cabeca], [14, "#ff9a6b"]]) {
+        ctx.fillStyle = cor;
+        ctx.beginPath();
+        ctx.arc((x + 0.5) * TAMANHO_CELULA, 10.5 * TAMANHO_CELULA, TAMANHO_CELULA * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    for (const parede of paredesDaFaseCriada) {
+        desenharObstaculo(parede.x, parede.y);
+    }
+}
+
 function desenharObstaculo(x, y, movel = false) {
     const lado = (TAMANHO_CELULA - 4) * ESCALA_DAS_PEDRAS;
     const margem = (TAMANHO_CELULA - lado) / 2;
@@ -625,7 +650,7 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
 
      // compara com o Top 5 de antes, por isso vem antes de atualizarListaRecordes
     const pontuacoesHumanas = jogadores.filter((jogador) => !jogador.bot).map((jogador) => jogador.pontuacao);
-    mostrarConquista(tipoDeConquista(pontuacoesHumanas, recordesDoModo(modoAtual)));
+    mostrarConquista(modoAtual === "personalizada" ? null : tipoDeConquista(pontuacoesHumanas, recordesDoModo(modoAtual)));
 
     atualizarListaRecordes(
         jogadores

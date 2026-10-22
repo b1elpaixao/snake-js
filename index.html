@@ -148,7 +148,10 @@
                          <p class="rotulo">Novo jogo</p>
                          <h2>Quem vai jogar?</h2>
                     </div>
-                    <button id="botaoComoJogar" class="botao-link" type="button">Como jogar</button>
+                    <div class="menu-links">
+                        <button id="botaoCriarFase" class="botao-link" type="button">Criar fase</button>
+                        <button id="botaoComoJogar" class="botao-link" type="button">Como jogar</button>
+                    </div>
                     </div>
                     <div class="menu-nomes">
                         <label class="campo campo-1">
@@ -258,6 +261,7 @@
                             <li><b>Dificuldade:</b> muda a velocidade e a quantidade de pedras. A cobra também acelera conforme você pontua. No Difícil, 3 pedras azuladas andam de um lado para o outro.</li>
                             <li><b>Fantasma do recorde:</b> jogando sozinho, uma cobra transparente refaz a sua melhor partida de hoje naquele modo. Faça mais pontos que ela e a sua partida vira o novo fantasma. Zera todo dia.</li>
                             <li><b>2 Juntos:</b> cooperativo. Os dois somam pontos, e uma cobra passa por dentro da outra. Quem bater volta pro começo em 3 segundos; o jogo só acaba se os dois baterem ao mesmo tempo.</li>
+                            <li><b>Criar fase:</b> desenhe suas paredes e mande o link pros amigos jogarem a mesma fase. Sem Top 5, porque cada fase é diferente.</li>
                             <li><b>Desafio do dia:</b> o mesmo mapa e a mesma sequência de maçãs para todo mundo que jogar no mesmo dia. Velocidade sempre Normal e sem "Sem paredes", pra ser justo. O Top 5 do desafio zera todo dia.</li>
                         </ul>
                     </section>
@@ -283,6 +287,15 @@
                 </div>
 
                 <p id="avisoConquista" class="aviso-conquista" role="status" hidden></p>
+            </div>
+            <div id="barraEditor" class="barra-editor" hidden>
+                <p>Clique ou arraste nas casas para pôr e tirar paredes. A faixa clara é a saída das cobras.</p>
+                <div class="barra-editor-botoes">
+                    <button id="botaoJogarFase" class="botao-principal" type="button">Jogar</button>
+                    <button id="botaoCopiarFase" class="botao-secundario" type="button">Copiar link</button>
+                    <button id="botaoLimparFase" class="botao-secundario" type="button">Limpar</button>
+                    <button id="botaoSairEditor" class="botao-secundario" type="button">Voltar</button>
+                </div>
             </div>
             <div class="controles-toque">
                 <button id="botaoCima" class="botao-direcao seta-cima" aria-label="Cima">▲</button>

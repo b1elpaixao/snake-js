@@ -843,6 +843,7 @@ const NOMES_DOS_MODOS = {
     tempo: "Contra o tempo",
     fases: "Fases",
     desafio: "Desafio do dia",
+    personalizada: "Fase criada",
 };
 
 // placar: [{ nome, pontuacao }] · data: "2026-10-20"
@@ -863,9 +864,9 @@ function textoDeCompartilhar(modo, data, placar, link, juntos = false) {
         resultado = placar.map((jogador) => `${jogador.nome} ${jogador.pontuacao}`).join(" x ");
     }
 
-    const convite = modo === "desafio"
-        ? "Hoje todo mundo joga o mesmo mapa. Consegue fazer mais?"
-        : "Joga também:";
+    let convite = "Joga também:";
+    if (modo === "desafio") convite = "Hoje todo mundo joga o mesmo mapa. Consegue fazer mais?";
+    if (modo === "personalizada") convite = "Fiz essa fase. Tenta passar:";
 
     return `🐍 Snake · ${titulo}: ${resultado}\n${convite} ${link}`;
 }
@@ -959,9 +960,9 @@ function limparTemaDoTabuleiro(id, conquistasGanhas) {
 const COLUNAS_NO_CELULAR = 15;
 
 // celular em pé: menos colunas (casas maiores) e quantas linhas couberem na altura da tela.
-// Fases e Desafio do dia continuam 20x20: os mapas e o desafio são iguais pra todo mundo.
+// Fases, Desafio do dia e Fase criada continuam 20x20: os mapas são iguais pra todo mundo.
 function tamanhoDoTabuleiro(celularEmPe, larguraTela, alturaTela, modo) {
-    if (!celularEmPe || modo === "fases" || modo === "desafio") {
+    if (!celularEmPe || modo === "fases" || modo === "desafio" || modo === "personalizada") {
         return { colunas: 20, linhas: 20 };
     }
     
@@ -969,4 +970,49 @@ function tamanhoDoTabuleiro(celularEmPe, larguraTela, alturaTela, modo) {
     const linhas = Math.floor((alturaTela - 90) / casaNaTela); // 90: placar e margens
 
     return { colunas: COLUNAS_NO_CELULAR, linhas: Math.max(15, Math.min(26, linhas)) };
+}
+
+// ==========================================
+// Fase criada no editor (funções puras - testadas em testes.js)
+// ==========================================
+const LADO_DA_FASE_CRIADA = 20;
+
+// a linha do meio fica sempre livre: é por onde as cobras saem
+function casaReservadaNaFase(casa) {
+    return casa.y === 10 && casa.x >= 3 && casa.x <= 17;
+}
+
+// cada casa vira 1 bit (400 casas = 50 bytes) e os bytes viram um texto curto que cabe no link
+function codificarFase(paredes) {
+    const bytes = new Array(50).fill(0);
+
+    for (const parede of paredes) {
+        const indice = parede.y * LADO_DA_FASE_CRIADA + parede.x;
+        bytes[Math.floor(indice / 8)] |= 1 << (indice % 8);
+    }
+
+    // base64 sem os caracteres que atrapalham num link (+ / =)
+    return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+// o contrário do codificarFase; devolve null se o código estiver quebrado
+function decodificarFase(codigo) {
+    if (typeof codigo !== "string" || !/^[A-Za-z0-9_-]{67}$/.test(codigo)) return null;
+
+    let bytes;
+    try {
+        bytes = atob(codigo.replace(/-/g, "+").replace(/_/g, "/") + "=");
+    } catch {
+        return null;
+    }
+
+    const paredes = [];
+    for (let indice = 0; indice < LADO_DA_FASE_CRIADA * LADO_DA_FASE_CRIADA; indice++) {
+        if (bytes.charCodeAt(Math.floor(indice / 8)) & (1 << (indice % 8))) {
+            const casa = { x: indice % LADO_DA_FASE_CRIADA, y: Math.floor(indice / LADO_DA_FASE_CRIADA) };
+            if (!casaReservadaNaFase(casa)) paredes.push(casa);
+        }
+    }
+
+    return paredes;
 }

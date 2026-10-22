@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (198 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (207 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -53,5 +53,5 @@ do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
 ## Melhorias pendentes (lista 4)
 
-Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 3 fantasma do recorde · 4 modo 2 Juntos (cooperativo) · 5 power-ups Escudo, Portal e Câmera lenta · 6 temas do tabuleiro (Grama, Deserto, Neve, Noite) · celular: cobra, itens e tabuleiro maiores · celular sem setas (só deslizar), tabuleiro em pé 15 colunas, tudo maior.
-A fazer: 7 editor de fases com link · 8 controle de videogame · 9 tutorial na primeira vez · 10 acessibilidade · 11 histórico com gráfico · 12 ícones PNG e conferir instalação · 13 terminar de dividir o `script.js` (`salvos.js`).
+Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 3 fantasma do recorde · 4 modo 2 Juntos (cooperativo) · 5 power-ups Escudo, Portal e Câmera lenta · 6 temas do tabuleiro (Grama, Deserto, Neve, Noite) · celular: cobra, itens e tabuleiro maiores · celular sem setas (só deslizar), tabuleiro em pé 15 colunas, tudo maior · 7 editor de fases com link (botão "Criar fase", modo `"personalizada"`, link `#fase=`).
+A fazer: 8 controle de videogame · 9 tutorial na primeira vez · 10 acessibilidade · 11 histórico com gráfico · 12 ícones PNG e conferir instalação · 13 terminar de dividir o `script.js` (`salvos.js`).

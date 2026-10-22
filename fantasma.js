@@ -25,7 +25,7 @@ function prepararFantasma() {
     fantasma = null;
     tempoDoUltimoMeioPasso = { em: null, duracao: 0 };
 
-    if (jogadores.length !== 1) return;
+    if (jogadores.length !== 1 || modoAtual === "personalizada") return; // fase criada: cada mapa é diferente
 
     // começa com o corpo inicial (do rabo pra cabeça), no tempo 0
     const cobra = jogadores[0].cobra;

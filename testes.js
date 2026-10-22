@@ -454,6 +454,21 @@ verificar("tabuleiro: celular em pé fica com 15 colunas e mais linhas", JSON.st
 verificar("tabuleiro: celular comprido tem no máximo 26 linhas", tamanhoDoTabuleiro(true, 360, 900, "rato").linhas, 26);
 verificar("tabuleiro: Fases e Desafio continuam 20x20 no celular", tamanhoDoTabuleiro(true, 360, 740, "fases").colunas + tamanhoDoTabuleiro(true, 360, 740, "desafio").linhas, 40);
 
+// fase criada no editor
+const paredesDeTeste = [{ x: 0, y: 0 }, { x: 19, y: 19 }, { x: 5, y: 3 }, { x: 10, y: 15 }];
+verificar("fase criada: o código cabe num link", codificarFase(paredesDeTeste).length, 67);
+verificar("fase criada: vai e volta igual",
+    JSON.stringify(decodificarFase(codificarFase(paredesDeTeste))), '[{"x":0,"y":0},{"x":5,"y":3},{"x":10,"y":15},{"x":19,"y":19}]');
+verificar("fase criada: sem paredes também funciona", JSON.stringify(decodificarFase(codificarFase([]))), "[]");
+verificar("fase criada: parede na saída das cobras é ignorada", decodificarFase(codificarFase([{ x: 6, y: 10 }, { x: 2, y: 10 }])).length, 1);
+verificar("fase criada: código quebrado devolve null", decodificarFase("abc"), null);
+verificar("fase criada: nada salvo devolve null", decodificarFase(null), null);
+verificar("fase criada: casas reservadas", [casaReservadaNaFase({ x: 3, y: 10 }), casaReservadaNaFase({ x: 18, y: 10 }), casaReservadaNaFase({ x: 6, y: 9 })].join(), "true,false,false");
+verificar("fase criada: continua 20x20 no celular", tamanhoDoTabuleiro(true, 360, 740, "personalizada").colunas, 20);
+verificar("compartilhar: fase criada convida pra jogar a fase",
+    textoDeCompartilhar("personalizada", "2026-10-22", [{ nome: "Ana", pontuacao: 7 }], "https://x/#fase=abc").split("\n").slice(0, 2).join(" | "),
+    "🐍 Snake · Modo Fase criada: 7 pontos | Fiz essa fase. Tenta passar: https://x/#fase=abc");
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

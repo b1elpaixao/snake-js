@@ -158,6 +158,8 @@ function desenharListaRecordes() {
 }
 
 function atualizarListaRecordes(novosRegistros) {
+    if (modoAtual === "personalizada") return; // cada fase criada é um mapa diferente: não tem Top 5
+
     const registros = modoAtual === "desafio"
         ? novosRegistros.map((registro) => ({ ...registro, data: dataDeHoje() }))
         : novosRegistros;
