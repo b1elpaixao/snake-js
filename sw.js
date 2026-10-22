@@ -1,5 +1,5 @@
 // Service worker: guarda uma cópia do jogo pra ele abrir sem internet (e poder ser instalado como app)
-const NOME_DO_CACHE = "snake-v3";
+const NOME_DO_CACHE = "snake-v4";
 const ARQUIVOS =["./", "index.html", "style.css", "logica.js", "itens.js", "desenho.js", "som.js", "movimento.js", "modos.js", "fantasma.js", "script.js", "manifest.webmanifest", "icone.svg"];
 
 self.addEventListener("install", (evento) => {
@@ -23,7 +23,7 @@ self.addEventListener("fetch", (evento) => {
     if (pedido.method !== "GET" || !pedido.url.startsWith("http")) return;
 
     evento.respondWith(
-        fetch(pedido)
+        fetch(pedido, { cache: "no-cache" }) // pergunta pro site se mudou: atualização aparece na hora
             .then((resposta) => {
                 if (resposta.ok || resposta.type === "opaque") {
                     const copia = resposta.clone();

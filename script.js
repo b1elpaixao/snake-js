@@ -45,17 +45,15 @@ const botaoTelaCheia = document.getElementById("botaoTelaCheia");
 const areaDoJogo = document.querySelector(".jogo");
 
 const TAMANHO_CELULA = 20;
-const LARGURA_TABULEIRO = canvas.width; // 400 tamanho usado nos desenhos
-const ALTURA_TABULEIRO = canvas.height;
-const COLUNAS = LARGURA_TABULEIRO / TAMANHO_CELULA;
-const LINHAS = ALTURA_TABULEIRO / TAMANHO_CELULA;
+// o tamanho do tabuleiro muda no celular (em pé, casas maiores): veja aplicarTamanhoDoTabuleiro
+let COLUNAS = 20;
+let LINHAS = 20;
+let LARGURA_TABULEIRO = COLUNAS * TAMANHO_CELULA; // tamanho usado nos desenhos (20 x 20 casas = 400)
+let ALTURA_TABULEIRO = LINHAS * TAMANHO_CELULA;
 
 function ajustarResolucaoCanvas() {
     const larguraNaTela = canvas.getBoundingClientRect().width || LARGURA_TABULEIRO;
     const escala = Math.max(1, (larguraNaTela / LARGURA_TABULEIRO) * (window.devicePixelRatio || 1));
-
-    // tabuleiro pequeno na tela (celular): cobra e itens 25% maiores dentro das casas
-    escalaDosItens = larguraNaTela < 440 ? 1.25 : 1;
 
     canvas.width = Math.round(LARGURA_TABULEIRO * escala);
     canvas.height = Math.round(ALTURA_TABULEIRO * escala);
@@ -217,8 +215,8 @@ function criarJogador(config) {
 function criarJogadores(quantidade = 2, nomes = ["Jogador 1", "Jogador 2"]) {
     const todosOsJogadores = [
         criarJogador({
-            x: 6,
-            y: 10,
+            x: Math.round(COLUNAS * 0.3),
+            y: Math.round(LINHAS / 2),
             direcaoInicial: { x: 1, y: 0 },
             teclas: teclasDosJogadores[0],
             corCabeca: corDaCobra().cabeca,
@@ -227,8 +225,8 @@ function criarJogadores(quantidade = 2, nomes = ["Jogador 1", "Jogador 2"]) {
             elementoPontuacao: document.getElementById("score1"),
         }),
         criarJogador({
-            x: 14,
-            y: 10,
+            x: COLUNAS - Math.round(COLUNAS * 0.3),
+            y: Math.floor(LINHAS / 2),
             direcaoInicial: { x: -1, y: 0 },
             teclas: teclasDosJogadores[1],
             corCabeca: "#ff9a6b",
@@ -867,6 +865,12 @@ botaoPausa.addEventListener("click", () => {
     alternarPausa();
 });
 
+document.getElementById("botaoPausaToque").addEventListener("click", (evento) => {
+    evento.currentTarget.blur();
+    if (noMenu || !jogoAtivo || contagemAtiva || pausado) return;
+    alternarPausa();
+});
+
 // pausa sozinho se o jogador sair da aba/janela (e não despausa sozinho ao voltar)
 function pausarAutomaticamente() {
     if (noMenu || !jogoAtivo) return;
@@ -971,14 +975,35 @@ function voltarAoMenu() {
 let toqueInicioX = 0;
 let toqueInicioY = 0;
 
+let deslizouNesteToque = false;
+
 canvas.addEventListener("touchstart", (evento) => {
     const toque = evento.touches[0];
     toqueInicioX = toque.clientX;
     toqueInicioY = toque.clientY;
+    deslizouNesteToque = false;
 });
 
+// vira assim que o dedo anda um pouco (sem esperar soltar), e dá pra emendar outra virada sem tirar o dedo
 canvas.addEventListener("touchmove", (evento) => {
     evento.preventDefault();
+    if (noMenu || animacaoMorte || !jogoAtivo || pausado) return;
+
+    const toque = evento.touches[0];
+    const deltaX = toque.clientX - toqueInicioX;
+    const deltaY = toque.clientY - toqueInicioY;
+
+    if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < DISTANCIA_MINIMA_SWIPE) return;
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        definirDirecaoJogador(jogadores[0], deltaX > 0 ? { x: 1, y: 0 } : { x: -1, y: 0 });
+    } else {
+        definirDirecaoJogador(jogadores[0], deltaY > 0 ? { x: 0, y: 1} : { x: 0, y: -1 });
+    }
+
+    toqueInicioX = toque.clientX;
+    toqueInicioY = toque.clientY;
+    deslizouNesteToque = true;
 }, {passive: false});
 
 canvas.addEventListener("touchend", (evento) => {
@@ -988,7 +1013,8 @@ canvas.addEventListener("touchend", (evento) => {
         return;
     }
 
-    
+    if (deslizouNesteToque) return; // já virou durante o movimento
+
     const toque = evento.changedTouches[0];
     const deltaX = toque.clientX - toqueInicioX;
     const deltaY = toque.clientY - toqueInicioY;
@@ -1272,6 +1298,20 @@ function aplicarDificuldade() {
     QUANTIDADE_PEDRAS_MOVEIS = modoAtual === "clássico" ? 0 : configuracao.pedrasMoveis;
 }
 
+// celular em pé: tabuleiro com casas maiores (menos colunas, mais linhas); o computador continua 20x20
+function aplicarTamanhoDoTabuleiro() {
+    const celularEmPe = window.matchMedia("(pointer: coarse)").matches &&
+        window.innerWidth < 600 && window.innerHeight > window.innerWidth;
+    const tamanho = tamanhoDoTabuleiro(celularEmPe, window.innerWidth, window.innerHeight, modoAtual);
+
+    COLUNAS = tamanho.colunas;
+    LINHAS = tamanho.linhas;
+    LARGURA_TABULEIRO = COLUNAS * TAMANHO_CELULA;
+    ALTURA_TABULEIRO = LINHAS * TAMANHO_CELULA;
+    canvas.style.aspectRatio = `${COLUNAS} / ${LINHAS}`;
+    ajustarResolucaoCanvas();
+}
+
 function comecarJogo(quantidade, comBot = false, juntos = false) {
     obterContextoAudio();
     salvarPreferencias();
@@ -1291,9 +1331,10 @@ function comecarJogo(quantidade, comBot = false, juntos = false) {
     placarJogador2.hidden = quantidadeJogadoresAtual === 1;
     noMenu = false;
     telaInicial.hidden= true;
+    aplicarTamanhoDoTabuleiro();
     reiniciar();
 
-    // no celular, rola a página pra deixar o tabuleiro e as setas na tela
+    // no celular, rola a página pra deixar o tabuleiro na tela
     if (window.matchMedia("(pointer: coarse)").matches) {
         document.querySelector(".jogo").scrollIntoView({ behavior: "smooth", block: "start" });
     }

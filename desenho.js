@@ -2,15 +2,16 @@
 // Desenho
 // ==========================================
 
-// tela pequena (celular): a cobra e os itens são desenhados maiores dentro da casa, pra ficar fácil de ver.
-// O tamanho das casas e o jogo não mudam. O valor é calculado no ajustarResolucaoCanvas.
-let escalaDosItens = 1;
+// tamanho dos desenhos dentro da casa (1 = tamanho antigo). O tamanho das casas e o jogo não mudam.
+const ESCALA_DOS_ITEMS = 1.35; // maçã, maçã dourada, power-ups e ratos
+const ESCALA_DA_COBRA = 1.2;   // corpo e cabeça (mais que isso, o corpo dobrado gruda)
+const ESCALA_DAS_PEDRAS = 1.12;
 
 // desenha algo ampliado em volta do centro da casa
 function comItensMaiores(centroX, centroY, desenhoDoItem) {
     ctx.save();
     ctx.translate(centroX, centroY);
-    ctx.scale(escalaDosItens, escalaDosItens);
+    ctx.scale(ESCALA_DOS_ITEMS, ESCALA_DOS_ITEMS);
     ctx.translate(-centroX, -centroY);
     desenhoDoItem();
     ctx.restore();
@@ -286,7 +287,7 @@ function desenharRato(rato, progresso) {
     const centroX = (interpolarEixo(rato.anterior.x, rato.x, progresso) + 0.5) * TAMANHO_CELULA;
     const centroY = (interpolarEixo(rato.anterior.y, rato.y, progresso) + 0.5) * TAMANHO_CELULA;
     const angulo = Math.atan2(rato.direcao.y, rato.direcao.x);
-    const escala = (TAMANHO_CELULA / 20) * escalaDosItens; // desenho feito pra uma casa de 20px
+    const escala = (TAMANHO_CELULA / 20) * ESCALA_DOS_ITEMS; // desenho feito pra uma casa de 20px
 
     ctx.save();
     ctx.translate(centroX, centroY);
@@ -444,8 +445,8 @@ function desenharMacaDourada(item) {
 }
 
 function desenharObstaculo(x, y, movel = false) {
-    const margem = 2;
-    const lado = TAMANHO_CELULA - margem * 2;
+    const lado = (TAMANHO_CELULA - 4) * ESCALA_DAS_PEDRAS;
+    const margem = (TAMANHO_CELULA - lado) / 2;
 
     ctx.fillStyle = movel ? "#4f5d75" : "#6d6d6d"; // as que andam são azuladas
     ctx.beginPath();
@@ -493,7 +494,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
 
     const corCauda = jogador.invencivel ? "#d4a800" : jogador.corCorpo;
     const corCabeca = jogador.invencivel ? "#fff27a" : jogador.corCabeca;
-    const larguraBase = TAMANHO_CELULA * 0.7 * escalaDosItens;
+    const larguraBase = TAMANHO_CELULA * 0.7 * ESCALA_DA_COBRA;
     const pedacoMaximo = TAMANHO_CELULA / 4; // desenha em pedacinhos pra cor e largura mudarem aos poucos
 
     // comprimento total, pra saber onde cada pedacinho fica no corpo (1 = cabeça, 0 = rabo)
@@ -551,7 +552,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
         while (proximaPinta <= percorrido + tamanho && proximaPinta < total - TAMANHO_CELULA * 0.5) {
             const t = (proximaPinta - percorrido) / tamanho;
             ctx.beginPath();
-            ctx.arc(de.x + (ate.x - de.x) * t, de.y + (ate.y - de.y) * t, TAMANHO_CELULA * 0.09 * escalaDosItens, 0, Math.PI * 2);
+            ctx.arc(de.x + (ate.x - de.x) * t, de.y + (ate.y - de.y) * t, TAMANHO_CELULA * 0.09 * ESCALA_DOS_ITEMS, 0, Math.PI * 2);
             ctx.fill();
             proximaPinta += TAMANHO_CELULA * 2;
     }
@@ -561,7 +562,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
 
     // a cabeça sempre olha pra onde está indo
     const angulo = Math.atan2(direcao.y, direcao.x);
-    const escala = (TAMANHO_CELULA / 26) * escalaDosItens;
+    const escala = (TAMANHO_CELULA / 26) * ESCALA_DA_COBRA;
 
     ctx.save();
     ctx.translate(pontos[0].x, pontos[0].y);

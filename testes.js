@@ -448,6 +448,12 @@ verificar("limparTemaDoTabuleiro: tema liberado fica", limparTemaDoTabuleiro("ne
 verificar("temas: toda conquista pedida existe",
     TEMAS_DO_TABULEIRO.every((tema) => tema.conquista === null || CONQUISTAS.some((conquista) => conquista.id === tema.conquista)), true);
 
+// tabuleiro no celular
+verificar("tabuleiro: computador continua 20x20", JSON.stringify(tamanhoDoTabuleiro(false, 1280, 720, "normal")), '{"colunas":20,"linhas":20}');
+verificar("tabuleiro: celular em pé fica com 15 colunas e mais linhas", JSON.stringify(tamanhoDoTabuleiro(true, 360, 640, "normal")), '{"colunas":15,"linhas":22}');
+verificar("tabuleiro: celular comprido tem no máximo 26 linhas", tamanhoDoTabuleiro(true, 360, 900, "rato").linhas, 26);
+verificar("tabuleiro: Fases e Desafio continuam 20x20 no celular", tamanhoDoTabuleiro(true, 360, 740, "fases").colunas + tamanhoDoTabuleiro(true, 360, 740, "desafio").linhas, 40);
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

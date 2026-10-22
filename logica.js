@@ -952,3 +952,21 @@ function limparTemaDoTabuleiro(id, conquistasGanhas) {
     const tema = TEMAS_DO_TABULEIRO.find((opcao) => opcao.id === id);
     return tema && corEstaLiberada(tema, conquistasGanhas) ? tema.id : "grama";
 }
+
+// ==========================================
+// Tabuleiros no celular (função pura - testada em testes.js)
+// ==========================================
+const COLUNAS_NO_CELULAR = 15;
+
+// celular em pé: menos colunas (casas maiores) e quantas linhas couberem na altura da tela.
+// Fases e Desafio do dia continuam 20x20: os mapas e o desafio são iguais pra todo mundo.
+function tamanhoDoTabuleiro(celularEmPe, larguraTela, alturaTela, modo) {
+    if (!celularEmPe || modo === "fases" || modo === "desafio") {
+        return { colunas: 20, linhas: 20 };
+    }
+    
+    const casaNaTela = larguraTela / COLUNAS_NO_CELULAR;
+    const linhas = Math.floor((alturaTela - 90) / casaNaTela); // 90: placar e margens
+
+    return { colunas: COLUNAS_NO_CELULAR, linhas: Math.max(15, Math.min(26, linhas)) };
+}

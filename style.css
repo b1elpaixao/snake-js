@@ -1351,3 +1351,28 @@ canvas {
         margin-inline: 0;
     }
 }
+
+/* ==========================================
+   Celular: só deslizar (sem setas) e pausa no placar
+   ========================================== */
+.botao-pausa-toque {
+    display: none;
+}
+
+@media (pointer: coarse) {
+    /* sem as setas: o tabuleiro (com casas maiores) ocupa o espaço */
+    .controles-toque {
+        display: none;
+    }
+
+    .botao-pausa-toque {
+        display: inline-flex;
+    }
+}
+
+@media (pointer: coarse) and (max-width: 600px) {
+    /* tela cheia: o tabuleiro pode usar a largura toda, já que não tem mais setas embaixo */
+    .jogo:fullscreen {
+        --lado: 100vw;
+    }
+}
