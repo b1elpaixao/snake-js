@@ -1532,3 +1532,64 @@ body.menos-movimento *::after {
     transition: none !important;
     scroll-behavior: auto !important;
 }
+
+/* ==========================================
+   Histórico com gráfico
+   ========================================== */
+.historico-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.historico-topo .rotulo {
+    margin: 0;
+}
+
+.historico-topo select {
+    max-width: 55%;
+    padding: 4px 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.25);
+    color: inherit;
+    font: inherit;
+    font-size: 12px;
+}
+
+.grafico-historico {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-top: 10px;
+}
+
+.grafico-linha {
+    fill: none;
+    stroke: var(--destaque);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.grafico-ponto {
+    fill: var(--destaque);
+}
+
+.grafico-media {
+    stroke: rgba(255, 255, 255, 0.35);
+    stroke-width: 1;
+    stroke-dasharray: 4 4;
+}
+
+.grafico-texto {
+    fill: rgba(255, 255, 255, 0.5);
+    font-size: 11px;
+}
+
+.resumo-historico {
+    margin: 6px 0 0;
+    font-size: 13px;
+    opacity: 0.8;
+}

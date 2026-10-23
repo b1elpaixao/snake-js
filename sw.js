@@ -1,6 +1,6 @@
 // Service worker: guarda uma cópia do jogo pra ele abrir sem internet (e poder ser instalado como app)
-const NOME_DO_CACHE = "snake-v7";
-const ARQUIVOS =["./", "index.html", "style.css", "logica.js", "itens.js", "desenho.js", "som.js", "movimento.js", "modos.js", "fantasma.js", "controle.js", "tutorial.js", "acessibilidade.js", "script.js", "manifest.webmanifest", "icone.svg"];
+const NOME_DO_CACHE = "snake-v8";
+const ARQUIVOS =["./", "index.html", "style.css", "logica.js", "itens.js", "desenho.js", "som.js", "movimento.js", "modos.js", "fantasma.js", "controle.js", "tutorial.js", "acessibilidade.js", "historico.js", "script.js", "manifest.webmanifest", "icone.svg"];
 
 self.addEventListener("install", (evento) => {
     evento.waitUntil(caches.open(NOME_DO_CACHE).then((cache) => cache.addAll(ARQUIVOS)));

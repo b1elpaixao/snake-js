@@ -1099,3 +1099,63 @@ function limparAcessibilidade(salvas) {
         menosMovimento: opcoes.menosMovimento === true,
     };
 }
+
+// ==========================================
+// Histórico (funções puras - testadas em testes.js)
+// ==========================================
+const LIMITE_DO_HISTORICO = 200; // guarda só as últimas partidas
+
+// só passa partida com tudo certo (dado estranho no armazenamento é jogado fora)
+function limparHistorico(salvo) {
+    if (!Array.isArray(salvo)) return [];
+
+    return salvo
+        .filter((partida) => partida && typeof partida === "object" &&
+            typeof partida.data === "string" && /^\d{4}-\d{2}-\d{2}$/.test(partida.data) &&
+            typeof partida.modo === "string" &&
+            Number.isInteger(partida.pontos) && partida.pontos >= 0 &&
+            Number.isFinite(partida.ms) && partida.ms >= 0)
+        .map((partida) => ({ data: partida.data, modo: partida.modo, pontos: partida.pontos, ms: partida.ms }))
+        .slice(-LIMITE_DO_HISTORICO);
+}
+
+function adicionarAoHistorico(historico, partida) {
+    return historico.concat([partida]).slice(-LIMITE_DO_HISTORICO);
+}
+
+// melhor, média (1 casa) e tendência: as 5 últimas partidas comparadas com as 5 de antes
+function resumoDoHistorico(partidas) {
+    const pontos = partidas.map((partida) => partida.pontos);
+    const media = (lista) => lista.reduce((soma, valor) => soma + valor, 0) / lista.length;
+
+    let tendencia = null;
+    if (pontos.length >= 10) {
+        const diferenca = media(pontos.slice(-5)) - media(pontos.slice(-10, -5));
+        tendencia = diferenca >= 1 ? "subindo" : diferenca <= -1 ? "caindo" : "estavel";
+    }
+
+    return {
+        melhor: Math.max(...pontos),
+        media: Math.round(media(pontos) * 10) / 10,
+        tendencia,
+    };
+}
+
+// altura no desenho: 0 ponto fica embaixo, o maior fica em cima
+function yNoGrafico(valor, maximo, altura, margem) {
+    return Math.round((altura - margem - (valor / maximo) * (altura - margem * 2)) * 10) / 10;
+}
+
+// onde cada partida fica no gráfico (da esquerda pra direita, da mais antiga pra mais nova)
+function pontosDoGrafico(valores, largura, altura, margem) {
+    const maximo = Math.max(1, ...valores);
+    const passo = valores.length > 1 ? (largura - margem * 2) / (valores.length - 1) : 0;
+
+    return {
+        maximo,
+        pontos: valores.map((valor, indice) => ({
+            x: valores.length > 1 ? Math.round((margem + passo * indice) * 10) / 10 : largura / 2,
+            y: yNoGrafico(valor, maximo, altura, margem),
+        })),
+    };
+}

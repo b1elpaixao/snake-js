@@ -420,6 +420,7 @@ function registrarFimDePartida(batidas) {
 
     salvarEstatisticas();
     mostrarEstatisticas();
+    registrarNoHistorico();
 
     const bot = jogadores.find((jogador) => jogador.bot);
     const humano = humanos[0];
@@ -431,10 +432,12 @@ function registrarFimDePartida(batidas) {
 }
 
 document.getElementById("botaoZerarEstatisticas").addEventListener("click", () => {
-    if (confirm("Apagar todas as estatisticas? Isso não dá pra desfazer.")) {
+    if (confirm("Apagar todas as estatísticas e o histórico? Isso não dá pra desfazer.")) {
         estatisticas = estatisticasVazias();
         salvarEstatisticas();
         mostrarEstatisticas();
+        salvarNoArmazenamento("snakeHistorico", "[]");
+        mostrarHistorico();
     }
 });
 
@@ -978,6 +981,21 @@ function fecharComoJogar() {
 }
 
 botaoComoJogar.addEventListener("click", abrirComoJogar);
+
+// ==========================================
+// Histórico (o gráfico fica no historico.js)
+// ==========================================
+const filtroHistorico = document.getElementById("filtroHistorico");
+
+for (const [modo, nome] of Object.entries(NOMES_MODOS)) {
+    const opcao = document.createElement("option");
+    opcao.value = modo;
+    opcao.textContent = nome;
+    filtroHistorico.appendChild(opcao);
+}
+
+filtroHistorico.addEventListener("change", mostrarHistorico);
+mostrarHistorico();
 
 // ==========================================
 // Acessibilidade (as funções ficam no acessibilidade.js)

@@ -338,6 +338,17 @@
             </div>
 
             <div class="cartao">
+                <div class="historico-topo">
+                    <p class="rotulo">Histórico</p>
+                    <select id="filtroHistorico" aria-label="Modo mostrado no gráfico">
+                        <option value="todos">Todos</option>
+                    </select>
+                </div>
+                <svg id="graficoHistorico" class="grafico-historico" viewBox="0 0 300 120" role="img" aria-label="Gráfico dos pontos das últimas partidas"></svg>
+                <p id="resumoHistorico" class="resumo-historico"></p>
+            </div>
+
+            <div class="cartao">
                 <p class="rotulo">Conquistas · <span id="contadorConquistas">0/0</span></p>
                 <ul id="listaConquistas" class="lista-conquistas"></ul>
             </div>
@@ -396,6 +407,7 @@
     <script src="controle.js"></script>
     <script src="tutorial.js"></script>
     <script src="acessibilidade.js"></script>
+    <script src="historico.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

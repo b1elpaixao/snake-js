@@ -494,9 +494,28 @@ JSON.stringify(limparAcessibilidade(null)), '{"altoContraste":false,"menosMovime
 verificar("acessibilidade: guarda o que foi ligado", JSON.stringify(limparAcessibilidade({
 "altoContraste":true, menosMovimento: false })), '{"altoContraste":true,"menosMovimento":false}');
 verificar("acessibilidade: dado estranho vira desligado", JSON.stringify(limparAcessibilidade({
-altoContraste: "sim", menosMovimento: 1 })), '{"altoContraste":false,"menosMovimento":false}');~
+altoContraste: "sim", menosMovimento: 1 })), '{"altoContraste":false,"menosMovimento":false}');
 verificar("acessibilidade: todo power-up tem nome falado",
 Object.keys(NOMES_DOS_POWERUPS).length, 8);
+
+// histórico
+const partidaDeTeste = (pontos) => ({ data: "2026-10-23", modo: "normal", pontos, ms: 30000 });
+verificar("histórico: nada salvo vira lista vazia", limparHistorico(null).length, 0);
+verificar("histórico: joga fora partida estragada",
+    limparHistorico([partidaDeTeste(5), { data: "ontem", modo: "normal", pontos: 3, ms: 1 }, { ...partidaDeTeste(2), pontos: -1 }, "lixo"]).length, 1);
+verificar("histórico: guarda no máximo 200 partidas",
+    adicionarAoHistorico(Array.from({ length: 200 }, () => partidaDeTeste(1)), partidaDeTeste(9)).length, 200);
+verificar("histórico: a partida nova fica no fim",
+    adicionarAoHistorico([partidaDeTeste(1)], partidaDeTeste(9))[1].pontos, 9);
+verificar("histórico: melhor e média",
+    JSON.stringify(resumoDoHistorico([partidaDeTeste(4), partidaDeTeste(10), partidaDeTeste(5)])), '{"melhor":10,"media":6.3,"tendencia":null}');
+verificar("histórico: tendência subindo",
+    resumoDoHistorico([1, 1, 1, 1, 1, 5, 5, 5, 5, 5].map(partidaDeTeste)).tendencia, "subindo");
+verificar("histórico: tendência estável",
+    resumoDoHistorico([3, 3, 3, 3, 3, 3, 4, 3, 3, 3].map(partidaDeTeste)).tendencia, "estavel");
+verificar("gráfico: pontos da esquerda pra direita, maior em cima",
+    JSON.stringify(pontosDoGrafico([0, 10, 5], 300, 120, 12).pontos), '[{"x":12,"y":108},{"x":150,"y":12},{"x":288,"y":60}]');
+verificar("gráfico: uma partida fica no meio", pontosDoGrafico([3], 300, 120, 12).pontos[0].x, 150);
 
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
