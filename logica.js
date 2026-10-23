@@ -1038,3 +1038,36 @@ function direcaoDoControle(apertados, eixos) {
     // vale o lado pra onde o analógico está mais inclinado
     return Math.abs(x) > Math.abs(y) ? { x: Math.sign(x), y: 0 } : { x: 0, y: Math.sign(y) };
 }
+
+// ==========================================
+// Tutorial (funções puras - testadas em testes.js)
+// ==========================================
+const PASSOS_DO_TUTORIAL = ["virar", "comer", "cuidado", "pausar"];
+const TEMPO_DE_LEITURA_MS = 4500; // dicas que só explicam ficam esse tempo na tela
+
+// situacao: { virou, comeu, tempoNoPassoMs } desde que o passo começou
+function passoDoTutorialCumprido(passo, situacao) {
+    if (passo === "virar") return situacao.virou;
+    if (passo === "comer") return situacao.comeu;
+    return situacao.tempoNoPassoMs >= TEMPO_DE_LEITURA_MS;
+}
+
+// entrada: "teclado", "toque" (celular) ou "controle" (videogame)
+function textoDoTutorial(passo, entrada, modo) {
+    if (passo === "virar") {
+        if (entrada === "toque") return "Deslize o dedo no tabuleiro pra virar a cobra.";
+        if (entrada === "controle") return "Use as setas ou o analógico do controle pra virar a cobra.";
+        return "Use as setas do teclado pra virar a cobra.";
+    }
+    if (passo === "comer") {
+        return modo === "rato"
+            ? "Agora pegue um rato 🐭 pra crescer e ganhar pontos."
+            : "Agora coma a maçã 🍎 pra crescer e ganhar pontos.";
+    }
+    if (passo === "cuidado") {
+        return "Boa! Não bata nas paredes, nas pedras nem no próprio corpo.";
+    }
+
+    const comoPausar =  { toque: "O botão ⏸ pausa o jogo.", controle: "Start pausa o jogo.", teclado: "Espaço ou Esc pausa o jogo." };
+    return `Itens especiais dão poderes por alguns segundos. ${comoPausar[entrada]}`;
+}

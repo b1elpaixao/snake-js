@@ -608,6 +608,7 @@ function loopRenderizacao() {
 
     desenharContagem();
     atualizarBarrasEfeitos();
+    atualizarTutorial();
 
     requestAnimationFrame(loopRenderizacao);
 }

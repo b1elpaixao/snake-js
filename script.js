@@ -975,6 +975,19 @@ function fecharComoJogar() {
 }
 
 botaoComoJogar.addEventListener("click", abrirComoJogar);
+
+// ==========================================
+// Tutorial (as dicas ficam no tutorial.js)
+// ==========================================
+document.getElementById("botaoPularTutorial").addEventListener("click", (evento) => {
+    evento.currentTarget.blur(); // senão o Espaço apertaria o botão de novo em vez de pausar
+    terminarTutorial();
+});
+
+document.getElementById("botaoRefazerTutorial").addEventListener("click", (evento) => {
+    salvarNoArmazenamento("snakeTutorialVisto", "");
+    evento.currentTarget.textContent = "✓ O tutorial aparece na próxima partida";
+});
 botaoFecharComoJogar.addEventListener("click", fecharComoJogar);
 
 document.addEventListener("keydown", (evento) => {
@@ -1479,6 +1492,7 @@ function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorM
     telaInicial.hidden= true;
     aplicarTamanhoDoTabuleiro();
     reiniciar();
+    prepararTutorial();
 
     // no celular, rola a página pra deixar o tabuleiro na tela
     if (window.matchMedia("(pointer: coarse)").matches) {

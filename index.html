@@ -234,6 +234,8 @@
                         <button id="botaoFecharComoJogar" class="botao-secundario" type="button">Voltar</button>
                     </div>
 
+                    <button id="botaoRefazerTutorial" class="botao-link" type="button">Ver o tutorial de novo</button>
+
                     <section>
                         <h3>Objetivo</h3>
                         <p>Coma para crescer e fazer pontos. Não bata na parede, nas pedras, no próprio corpo nem na outra cobra.</p>
@@ -290,6 +292,11 @@
                 </div>
 
                 <p id="avisoConquista" class="aviso-conquista" role="status" hidden></p>
+
+                <div id="dicaTutorial" class="dica-tutorial" role="status" hidden>
+                    <p id="textoTutorial"></p>
+                    <button id="botaoPularTutorial" class="botao-link" type="button">Pular</button>
+                </div>
             </div>
             <div id="barraEditor" class="barra-editor" hidden>
                 <p>Clique ou arraste nas casas para pôr e tirar paredes. A faixa clara é a saída das cobras.</p>
@@ -373,6 +380,7 @@
     <script src="modos.js"></script>
     <script src="fantasma.js"></script>
     <script src="controle.js"></script>
+    <script src="tutorial.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

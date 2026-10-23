@@ -477,6 +477,17 @@ verificar("controle: analógico pra esquerda", JSON.stringify(direcaoDoControle(
 verificar("controle: analógico pra baixo", JSON.stringify(direcaoDoControle([], [0.4, 0.8])), '{"x":0,"y":1}');
 verificar("controle: seta ganha do analógico", JSON.stringify(direcaoDoControle(Object.assign([], { 14: true }), [0.9, 0])), '{"x":-1,"y":0}');
 
+// tutorial
+verificar("tutorial: virar só passa quando vira",
+    [passoDoTutorialCumprido("virar", { virou: false, comeu: true, tempoNoPassoMs: 99999 }), passoDoTutorialCumprido("virar", { virou: true, comeu: false, tempoNoPassoMs: 0 })].join(), "false,true");
+verificar("tutorial: comer só pausa quando come",
+    [passoDoTutorialCumprido("comer", { virou: true, comeu: false, tempoNoPassoMs: 99999 }), passoDoTutorialCumprido("comer", { virou: false, comeu: true, tempoNoPassoMs: 0 })].join(), "false,true");
+verificar("tutorial: dica de ler passa com o tempo",
+    [passoDoTutorialCumprido("cuidado", { virou: false, comeu: false, tempoNoPassoMs: 1000 }), passoDoTutorialCumprido("pausar", { virou: false, comeu: false, tempoNoPassoMs: TEMPO_DE_LEITURA_MS })].join(), "false,true");
+verificar("tutorial: no celular fala de deslizar", textoDoTutorial("virar", "toque", "normal"), "Deslize o dedo no tabuleiro pra virar a cobra.");
+verificar("tutorial: modo rato fala do rato", textoDoTutorial("comer", "teclado", "rato").includes("rato"), true);
+verificar("tutorial: controle pausa com Start", textoDoTutorial("pausar", "controle", "normal").endsWith("Start pausa o jogo."), true);
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";
