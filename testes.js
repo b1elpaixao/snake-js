@@ -488,6 +488,16 @@ verificar("tutorial: no celular fala de deslizar", textoDoTutorial("virar", "toq
 verificar("tutorial: modo rato fala do rato", textoDoTutorial("comer", "teclado", "rato").includes("rato"), true);
 verificar("tutorial: controle pausa com Start", textoDoTutorial("pausar", "controle", "normal").endsWith("Start pausa o jogo."), true);
 
+// acessibilidade
+verificar("acessibilidade: nada salvo começa desligado",
+JSON.stringify(limparAcessibilidade(null)), '{"altoContraste":false,"menosMovimento":false}');
+verificar("acessibilidade: guarda o que foi ligado", JSON.stringify(limparAcessibilidade({
+"altoContraste":true, menosMovimento: false })), '{"altoContraste":true,"menosMovimento":false}');
+verificar("acessibilidade: dado estranho vira desligado", JSON.stringify(limparAcessibilidade({
+altoContraste: "sim", menosMovimento: 1 })), '{"altoContraste":false,"menosMovimento":false}');~
+verificar("acessibilidade: todo power-up tem nome falado",
+Object.keys(NOMES_DOS_POWERUPS).length, 8);
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

@@ -252,7 +252,8 @@ let contadorPassosPedras = 0;
 const DURACAO_ANIMACAO_MORTE_MS = 900;
 let animacaoMorte = null; // { inicio, batidos } enquanto está animando, ou null
 let temporizadorAnimacaoMorte =  null;
-const reduzirMovimento = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const movimentoReduzidoNoSistema = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let reduzirMovimento = movimentoReduzidoNoSistema; // também liga pela opção "Menos movimento"
 let textosFlutuantes = []; // os "=3" que sobem ao comer
 const DURACAO_TEXTO_FLUTUANTE_MS = 800;
 // ==========================================
@@ -696,6 +697,7 @@ function escolherCorDaCobra(id) {
 // Tema do tabuleiro
 // ==========================================
 function temaDoTabuleiro() {
+    if (opcoesDeAcessibilidade.altoContraste) return TEMA_ALTO_CONTRASTE; // a opção de acessibilidade ganha do tema
     return TEMAS_DO_TABULEIRO.find((tema) => tema.id === temaDoTabuleiroId) || TEMAS_DO_TABULEIRO[0];
 }
 
@@ -770,6 +772,7 @@ function alternarPausa() {
 }
 
 function entrarNaPausa() {
+    anunciar("Jogo pausado");
     pausado = true;
     pausadoDesde = performance.now();
     botaoPausa.textContent = "Continuar";
@@ -826,7 +829,7 @@ function mudarDirecao(evento) {
             return;
         }
         // Enter/Espaço num botão já disparam o clique dele; evita reiniciar duas vezes
-        if (evento.target.tagName === "BUTTON") return;
+        if (evento.target.tagName === "BUTTON" && (evento.key === "Enter" || evento.key === " ")) return;
         if (evento.key.toLowerCase() === "f") return; // F é só a tela cheia
 
         reiniciar();
@@ -975,6 +978,29 @@ function fecharComoJogar() {
 }
 
 botaoComoJogar.addEventListener("click", abrirComoJogar);
+
+// ==========================================
+// Acessibilidade (as funções ficam no acessibilidade.js)
+// ==========================================
+try {
+    opcoesDeAcessibilidade =
+limparAcessibilidade(JSON.parse(lerDoArmazenamento("snakeAcessibilidade")));
+} catch {
+    // dado corrompido: fica tudo desligado
+}
+aplicarAcessibilidade();
+
+document.getElementById("opcaoAltoContraste").addEventListener("change", (evento) => {
+    opcoesDeAcessibilidade.altoContraste = evento.target.checked;
+    salvarAcessibilidade();
+    aplicarAcessibilidade();
+});
+
+document.getElementById("opcaoMenosMovimento").addEventListener("change", (evento) => {
+    opcoesDeAcessibilidade.menosMovimento = evento.target.checked;
+    salvarAcessibilidade();
+    aplicarAcessibilidade();
+});
 
 // ==========================================
 // Tutorial (as dicas ficam no tutorial.js)
@@ -1496,7 +1522,7 @@ function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorM
 
     // no celular, rola a página pra deixar o tabuleiro na tela
     if (window.matchMedia("(pointer: coarse)").matches) {
-        document.querySelector(".jogo").scrollIntoView({ behavior: "smooth", block: "start" });
+        document.querySelector(".jogo").scrollIntoView({ behavior: reduzirMovimento ? "auto" : "smooth", block: "start" });
     }
 }
 

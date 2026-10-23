@@ -61,6 +61,7 @@ function moverJogador(jogador) {
 
     if (pegouPowerUp) {
         if (!jogador.bot) {
+            anunciar(`Pegou ${NOMES_DOS_POWERUPS[powerUp.tipo]}`);
             estatisticas.powerUps++;
             partidaAtual.powerUps++;
             vibrar(50);
@@ -112,6 +113,9 @@ function comerAlimento(jogador, pontosBase) {
 
     atualizarRecordeSeNecessario(jogador.pontuacao);
     adicionarObstaculosSeNecessario();
+    if (!jogador.bot) {
+        anunciar(`${jogadores.length > 1 ? jogador.nome + ": " : ""}${jogador.pontuacao} ${jogador.pontuacao === 1 ? "ponto" : "pontos"}`);
+    }
     tocarSomComer();
 
     if (!jogador.bot) {

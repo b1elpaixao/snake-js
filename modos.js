@@ -56,6 +56,7 @@ function carregarFase(numero) {
 
 function passarDeFase(numero) {
     carregarFase(numero);
+    anunciar(elementoFase.textContent);
     verificarConquistas();
     comida = gerarComida();
     powerUp = null;

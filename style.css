@@ -1464,3 +1464,71 @@ canvas {
     flex-shrink: 0;
     min-height: 0;
 }
+
+/* ==========================================
+   Acessibilidade
+   ========================================== */
+.opcao-acessibilidade {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.opcao-acessibilidade input {
+    width: 18px;
+    height: 18px;
+    margin: 2px 0 0;
+    flex-shrink: 0;
+    accent-color: var(--destaque);
+}
+
+.opcao-acessibilidade span {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+.opcao-acessibilidade b {
+    font-size: 14px;
+    opacity: 1;
+}
+
+.dica-acessibilidade {
+    margin: 4px 0 0;
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+/* contorno bem vísivel em quem está selecionado pelo teclado (Tab) */
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+.botao-contorno:focus-within {
+    outline: 3px solid var(--destaque);
+    outline-offset: 2px;
+}
+
+/* só o leitor de tela "vê" (fica fora da tela) */
+.so-leitor {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* opção "Menos movimento": desliga as animações da página */
+body.menos-movimento *,
+body.menos-movimento *::before,
+body.menos-movimento *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+}

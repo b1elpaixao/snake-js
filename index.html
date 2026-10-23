@@ -142,7 +142,8 @@
             </div>
 
             <div class="canvas-wrapper">
-                <canvas id="gameCanvas" width="400" height="400"></canvas>
+                <canvas id="gameCanvas" width="400" height="400" role="img" aria-label="Tabuleiro do jogo da cobrinha"></canvas>
+                <p id="anuncioLeitor" class="so-leitor" aria-live="polite"></p>
 
                 <div id="telaInicial" class="overlay overlay-menu">
                     <div class="menu-cabecalho">
@@ -354,6 +355,19 @@
             </div>
 
             <div class="cartao">
+                <p class="rotulo">Acessibilidade</p>
+                <label class="opcao-acessibilidade">
+                    <input type="checkbox" id="opcaoAltoContraste" />
+                    <span><b>Alto contraste</b>Tabuleiro escuro e pedras com borda branca</span>
+                </label>
+                <label class="opcao-acessibilidade">
+                    <input type="checkbox" id="opcaoMenosMovimento" />
+                    <span><b>Menos movimento</b>A tela não treme e os avisos não se mexem</span>
+                </label>
+                <p class="dica-acessibilidade">Com leitor de tela, o jogo fala os pontos, os power-ups, a pausa e o fim da partida.</p>
+                </div>
+
+                <div class="cartao">
                 <p class="rotulo">Itens no mapa</p>
                 <ul class="itens">
                     <li><span class="item-icone" data-powerup="invencibilidade"></span><div><b>Invencível</b><span>Atravessa corpos e pedras por 5 s</span></div></li>
@@ -381,6 +395,7 @@
     <script src="fantasma.js"></script>
     <script src="controle.js"></script>
     <script src="tutorial.js"></script>
+    <script src="acessibilidade.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

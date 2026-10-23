@@ -478,6 +478,12 @@ function desenharObstaculo(x, y, movel = false) {
     ctx.roundRect(x * TAMANHO_CELULA + margem, y * TAMANHO_CELULA + margem, lado, lado, 5);
     ctx.fill();
 
+    if (opcoesDeAcessibilidade.altoContraste) {
+        ctx.strokeStyle = "#ffffff"; // borda branca: a pedra não some no tabuleiro escuro
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
     ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
     ctx.beginPath();
     ctx.roundRect(x * TAMANHO_CELULA + margem + 2, y * TAMANHO_CELULA + margem + 2, lado / 2, lado / 3, 2);
@@ -660,6 +666,8 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
             .map((jogador) => ({nome: jogador.nome, pontuacao: jogador.pontuacao }))
     );
     telaGameOver.hidden = false;
+    anunciar(`${resultado}. ${textoPontuacao}`);
+    botaoJogarDeNovo.focus({ preventScroll: true }); // dá pra jogar de novo só com Enter
     registrarFimDePartida(batidas);
 }
 

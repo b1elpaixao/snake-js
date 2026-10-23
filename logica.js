@@ -1071,3 +1071,31 @@ function textoDoTutorial(passo, entrada, modo) {
     const comoPausar =  { toque: "O botão ⏸ pausa o jogo.", controle: "Start pausa o jogo.", teclado: "Espaço ou Esc pausa o jogo." };
     return `Itens especiais dão poderes por alguns segundos. ${comoPausar[entrada]}`;
 }
+
+// ==========================================
+// Acessibilidade (funções puras - testadas em testes.js)
+// ==========================================
+// tabuleiro quase preto: a cobra, a maçã e as pedras (com borda branca) aparecem bem
+const TEMA_ALTO_CONTRASTE = { id: "contraste", nome: "Alto Contraste", claro: "#000000", escuro: "#141414" };
+
+// nomes falados pelo leitor de tela quando pega um power-up
+const NOMES_DOS_POWERUPS = {
+    invencibilidade: "Invencível",
+    velocidade: "Turbo",
+    pontosDobrados: "Pontos x2",
+    ima: "Imã",
+    encolher: "Encolher",
+    escudo: "Escudo",
+    portal: "Portal",
+    cameraLenta: "Câmera lenta",
+};
+
+// opções salvas: só true conta como ligado (dado estranho = desligado)
+function limparAcessibilidade(salvas) {
+    const opcoes = salvas && typeof salvas === "object" ? salvas : {};
+
+    return {
+        altoContraste: opcoes.altoContraste === true,
+        menosMovimento: opcoes.menosMovimento === true,
+    };
+}
