@@ -256,48 +256,9 @@ const movimentoReduzidoNoSistema = window.matchMedia && window.matchMedia("(pref
 let reduzirMovimento = movimentoReduzidoNoSistema; // também liga pela opção "Menos movimento"
 let textosFlutuantes = []; // os "=3" que sobem ao comer
 const DURACAO_TEXTO_FLUTUANTE_MS = 800;
-// ==========================================
-// Armazenamento (localStorage) - nunca deixa o jogo quebrar
-// ==========================================
-function lerDoArmazenamento(chave) {
-    try {
-        return localStorage.getItem(chave);
-    } catch {
-        return null; // navegador bloqueou o armazenamento
-    }
-}
-
-function salvarNoArmazenamento(chave, valor) {
-    try {
-        localStorage.setItem(chave, valor);
-    } catch {
-        // sem armazenamento: o jogo segue funcionando, só não salva
-    }
-}
-
 const MODOS_DE_JOGO = ["normal", "clássico", "rato", "tempo", "fases", "desafio"];
 const NOMES_MODOS = { normal: "Normal", "clássico": "Clássico", rato: "Rato", tempo: "Contra o tempo", fases: "Fases", desafio: "Desafio de hoje", personalizada: "Fase criada" };
 
-function lerRecordesSalvos() {
-    const porModo = { normal: [], "clássico": [], rato: [], tempo: [], fases: [], desafio: [] };
-
-    try {
-        const salvos = JSON.parse(lerDoArmazenamento("snakeRecordesPorModo"));
-
-        if (salvos && typeof salvos === "object") {
-            for (const modo of MODOS_DE_JOGO) {
-                porModo[modo] = limparRecordes(salvos[modo]);
-            }
-        } else {
-            // primeira vez com recordes por modo: os recordes antigos vão pro Normal
-            porModo.normal = limparRecordes(JSON.parse(lerDoArmazenamento("snakeRecordes")));
-        }
-    } catch {
-        // dado corrompido: começa com as listas vazias
-    }
-
-    return porModo;
-}
 let jogoAtivo = false; // só fica true quando a partida começa ( o loopRenderizacao anda o jogo sempre que for true)
 let pausado = false;
 let noMenu = true;
@@ -380,18 +341,6 @@ document.addEventListener("keydown", (evento) => {
 // ==========================================
 const NOMES_MORTES = { parede: "Parede", proprioCorpo: "Próprio corpo", pedra: "Pedra", outroJogador: "Outra cobra" };
 
-function lerEstatisticas() {
-    try {
-        return limparEstatisticas(JSON.parse(lerDoArmazenamento("snakeEstatisticas")));
-    } catch {
-        return estatisticasVazias(); // dado corrompido: começa do zero
-    }
-}
-
-function salvarEstatisticas() {
-    salvarNoArmazenamento("snakeEstatisticas", JSON.stringify(estatisticas));
-}
-
 function mostrarEstatisticas() {
     const morte = morteMaisComum(estatisticas.mortes);
 
@@ -446,14 +395,6 @@ mostrarEstatisticas();
 // ========================================== 
 // Conquistas
 // ========================================== 
-function lerConquistas() {
-    try {
-        return limparConquistas(JSON.parse(lerDoArmazenamento("snakeConquistas")));
-    } catch {
-        return []; // dado corrompido: começa sem conquistas
-    }
-}
-
 // junta o que as conquistas precisam saber: estatísticas de sempre + a partida de agora
 function contextoDasConquistas(extra = {}) {
     const humanos = jogadores.filter((jogador) => !jogador.bot);
@@ -532,22 +473,6 @@ mostrarConquistas();
 // ==========================================
 let teclaSendoTrocada = null; // { jogador, direcao } enquanto espera a pessoa apertar a nova tecla
 
-function lerTeclasSalvas() {
-    try {
-        return limparTeclas(JSON.parse(lerDoArmazenamento("snakeTeclas")));
-    } catch {
-        return limparTeclas(null);
-    }
-}
-
-function guardarTeclas(novas) {
-    teclasDosJogadores = novas;
-    salvarNoArmazenamento("snakeTeclas", JSON.stringify(teclasDosJogadores));
-    jogadores.forEach((jogador, indice) => {
-        jogador.teclas = teclasDosJogadores[indice]; // vale na hora, até no meio da partida
-    });
-}
-
 function mostrarTeclas() {
     for (const caixa of document.querySelectorAll(".teclas[data-jogador]")) {
         const jogador = Number(caixa.dataset.jogador);
@@ -605,43 +530,6 @@ document.getElementById("botaoTeclasPadrao").addEventListener("click", () => {
     guardarTeclas(copiarTeclasPadrao());
     mostrarTeclas();
 });
-
-// ==========================================
-// Preferências: nomes, modo, dificuldade e "Sem paredes" ficam salvos
-// ==========================================
-function aplicarPreferenciasSalvas() {
-    let salvas = null;
-
-    try {
-        salvas = JSON.parse(lerDoArmazenamento("snakePreferencias"));
-    } catch {
-        salvas = null; // dado corrompido: usa o padrão
-    }
-
-    const preferencias = limparPreferencias(salvas, MODOS_DE_JOGO, Object.keys(CONFIGURACAO_DIFICULDADE));
-
-    inputNomeJogador1.value = preferencias.nome1;
-    inputNomeJogador2.value = preferencias.nome2;
-    seletorModo.value = preferencias.modo;
-    seletorDificuldade.value = preferencias.dificuldade;
-    seletorNivelBot.value = limparNivelBot(salvas && salvas.nivelBot);
-    corDaCobraId = limparCorDaCobra(salvas && salvas.corCobra, conquistasGanhas);
-    temaDoTabuleiroId = limparTemaDoTabuleiro(salvas && salvas.temaTabuleiro, conquistasGanhas);
-    inputModoSemParedes.checked = preferencias.semParedes;
-}
-
-function salvarPreferencias() {
-    salvarNoArmazenamento("snakePreferencias", JSON.stringify({
-        nome1: inputNomeJogador1.value.trim(),
-        nome2: inputNomeJogador2.value.trim(),
-        modo: seletorModo.value,
-        dificuldade: seletorDificuldade.value,
-        nivelBot: seletorNivelBot.value,
-        corCobra: corDaCobraId,
-        temaTabuleiro: temaDoTabuleiroId,
-        semParedes: inputModoSemParedes.checked,
-    }));
-}
 
 // ==========================================
 // Cor da cobra
