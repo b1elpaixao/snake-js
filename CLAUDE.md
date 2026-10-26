@@ -34,7 +34,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 12. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último)
 
 Os arquivos 2 a 11 só tem funções e valores fixos; o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-v8`), `manifest.webmanifest`, `icone.svg`.
+Outros: `style.css`, `sw.js` (service worker, cache `snake-v9`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
 **Ao criar um arquivo .js novo:** incluir no `index.html` antes do `script.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
@@ -57,5 +57,5 @@ do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
 ## Melhorias pendentes (lista 4)
 
-Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 3 fantasma do recorde · 4 modo 2 Juntos (cooperativo) · 5 power-ups Escudo, Portal e Câmera lenta · 6 temas do tabuleiro (Grama, Deserto, Neve, Noite) · celular: cobra, itens e tabuleiro maiores · celular sem setas (só deslizar), tabuleiro em pé 15 colunas, tudo maior · 7 editor de fases com link (botão "Criar fase", modo `"personalizada"`, link `#fase=`) · 8 controle de videogame (`controle.js`) · 9 tutorial na primeira vez (`tutorial.js`) · 10 acessibilidade (`acessibilidade.js`) · 11 histórico com gráfico (`historico.js`).
-A fazer: 12 ícones PNG e conferir instalação · 13 terminar de dividir o `script.js` (`salvos.js`).
+Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 3 fantasma do recorde · 4 modo 2 Juntos (cooperativo) · 5 power-ups Escudo, Portal e Câmera lenta · 6 temas do tabuleiro (Grama, Deserto, Neve, Noite) · celular: cobra, itens e tabuleiro maiores · celular sem setas (só deslizar), tabuleiro em pé 15 colunas, tudo maior · 7 editor de fases com link (botão "Criar fase", modo `"personalizada"`, link `#fase=`) · 8 controle de videogame (`controle.js`) · 9 tutorial na primeira vez (`tutorial.js`) · 10 acessibilidade (`acessibilidade.js`) · 11 histórico com gráfico (`historico.js`) · 12 ícones PNG.
+A fazer: 13 terminar de dividir o `script.js` (`salvos.js`).
