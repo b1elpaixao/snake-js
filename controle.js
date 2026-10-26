@@ -43,6 +43,7 @@ function moverPeloControle(indice, direcao) {
 
 // A: começa no menu, joga de novo no fim de jogo, continua na pausa
 function apertouA() {
+    if (!document.getElementById("telaLoja").hidden) return;
     if (noMenu) {
         if (!telaInicial.hidden && telaComoJogar.hidden && !editandoFase) {
             comecarJogo(controlesConectados().length >= 2 ? 2 : 1);

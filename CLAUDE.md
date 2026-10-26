@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (250 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (265 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -32,13 +32,18 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 10. `acessibilidade.js` - alto contraste, menos movimento e `anunciar()` (avisos pro leitor de tela)
 11. `historico.js` - histórico das partidas (`snakeHistorico`, até 200) e o gráfico SVG das últimas 30
 12. `missoes.js` - missões diárias: 3 por dia sorteadas pela data (`snakeMissoes`), sequência de dias (`snakeSequenciaMissoes`)
-13. `salvos.js` - tudo que é guardado no navegador: `lerDoArmazenamento`/`salvarNoArmazenamento`, recordes, estatísticas, conquistas, teclas e preferências
-14. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último)
+13. `loja.js` - moedas (`snakeCarteira`: moedas, comprados, equipados), tela da loja com abas, desenho dos chapéus e das comidas
+14. `salvos.js` - tudo que é guardado no navegador: `lerDoArmazenamento`/`salvarNoArmazenamento`, recordes, estatísticas, conquistas, teclas e preferências
+15. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último)
 
-Os arquivos 2 a 13 só tem funções e valores fixos; o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-v11`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
+Os arquivos 2 a 14 só tem funções e valores fixos; o que executa ao carregar fica no `script.js`.
+Outros: `style.css`, `sw.js` (service worker, cache `snake-v12`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
 **Ao criar um arquivo .js novo:** incluir no `index.html` antes do `script.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
+
+## Economia da loja (combinado com o usuário)
+
+Conquistas dão itens exclusivos (nunca vendidos); a loja vende só itens próprios. Moedas: 1 a cada 2 pontos, 15 por missão, +30 com as 3 do dia, +5 por dia de sequência (até +50); ~150-200 moedas em 30 min/dia. Preços: simples 100-200, legal 300-500, especial 700-1000. Tudo em `ITENS_DA_LOJA` e nas constantes `MOEDAS_*` do `logica.js`.
 
 ## Nomes do meu jeito (funcionam, não "corrija")
 
@@ -63,5 +68,5 @@ Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 
 
 ## Melhorias pendentes (lista 5)
 
-Feito: 1 missões diárias (`missoes.js`).
-A fazer: 2 moedas e loja · 3 modo Arena (zona que fecha) · 4 cobra inimiga / chefão · 5 power-ups Congelar, Bomba e Fantasma · 6 até 4 jogadores · 7 skins da cobra · 8 efeitos ao comer (partículas, rastro) · 9 temas de época · 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP · 13 idiomas.
+Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, parte 1 (`loja.js`: chapéus e comidas; itens 🏆 só por conquista).
+A fazer: 2 loja parte 2 (padrões do corpo, rastros, tabuleiros novos, efeitos ao comer; exclusivos: zebra=Glutona, Lava=Saí do labirinto, conquistas novas Combo x8=rastro de fogo e 7 dias de missões=corpo dourado) · 3 modo Arena (zona que fecha) · 4 cobra inimiga / chefão · 5 power-ups Congelar, Bomba e Fantasma · 6 até 4 jogadores · 9 temas de época · 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP · 13 idiomas.

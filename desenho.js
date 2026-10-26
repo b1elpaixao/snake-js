@@ -69,7 +69,7 @@ function desenhar() {
 
     if (modoAtual !== "rato") {
         const centro = centroDaCasa(comida);
-        comItensMaiores(centro.x, centro.y, () => desenharMaca(comida.x, comida.y));
+        comItensMaiores(centro.x, centro.y, () => desenharComidaEquipada(comida)); // a maçã ou a comida da loja
     }
 
     for (const rato of ratos) {
@@ -492,27 +492,28 @@ function desenharObstaculo(x, y, movel = false) {
 
 const SUBDIVISOES_CORPO = 4;
 
-function desenharCabecaCobra(corCabeca) {
-    ctx.fillStyle = corCabeca;
-    ctx.beginPath();
-    ctx.ellipse(4, 0, 15, 14, 0, 0, Math.PI * 2);
-    ctx.fill();
+// c: onde desenhar (o tabuleiro, ou a prévia da loja)
+function desenharCabecaCobra(corCabeca, c = ctx) {
+    c.fillStyle = corCabeca;
+    c.beginPath();
+    c.ellipse(4, 0, 15, 14, 0, 0, Math.PI * 2);
+    c.fill();
 
     for (const lado of [-1, 1]) {
-        ctx.fillStyle = "#ffe066";
-        ctx.beginPath();
-        ctx.arc(-3, lado * 11, 6.6, 0, Math.PI * 2);
-        ctx.fill();
+        c.fillStyle = "#ffe066";
+        c.beginPath();
+        c.arc(-3, lado * 11, 6.6, 0, Math.PI * 2);
+        c.fill();
 
-        ctx.fillStyle = "#2a1200";
-        ctx.beginPath();
-        ctx.ellipse(-1, lado * 11, 1.5, 4.2, 0, 0, Math.PI * 2);
-        ctx.fill();
+        c.fillStyle = "#2a1200";
+        c.beginPath();
+        c.ellipse(-1, lado * 11, 1.5, 4.2, 0, 0, Math.PI * 2);
+        c.fill();
 
-        ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-        ctx.beginPath();
-        ctx.arc(14, lado * 3, 1.5, 0, Math.PI * 2);
-        ctx.fill();
+        c.fillStyle = "rgba(0, 0, 0, 0.45)";
+        c.beginPath();
+        c.arc(14, lado * 3, 1.5, 0, Math.PI * 2);
+        c.fill();
     }
 }
 
@@ -600,6 +601,9 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
     ctx.rotate(angulo);
     ctx.scale(escala, escala);
     desenharCabecaCobra(corCabeca);
+    if (jogador === jogadores[0] && !jogador.bot) {
+        desenharChapeu(ctx, carteira.equipados.chapeu, agoraDoJogo()); // chapéu da loja: só no Jogador 1
+    }
     ctx.restore();
 }
 

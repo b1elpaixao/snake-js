@@ -724,6 +724,7 @@ const CONQUISTAS = [
     { id: "ouro", nome: "Ouro!", descricao: "Comer 10 maçãs douradas", condicao: (c) => c.estatisticas.macasDouradas >= 10 },
     { id: "colecionadora", nome: "Colecionadora", descricao: "Pegar 3 power-ups numa partida", condicao: (c) => c.partida.powerUps >= 3 },
     { id: "cinquenta", nome: "50 pontos", descricao: "Fazer 50 pontos numa partida", condicao: (c) => c.partida.pontos >= 50 },
+    { id: "lendaria", nome: "Lendária", descricao: "Fazer 100 pontos numa partida", condicao: (c) => c.partida.pontos >= 100 },
     { id: "contraORelogio", nome: "Contra o relógio", descricao: "Fazer 30 pontos no Contra o tempo", condicao: (c) => c.partida.modo === "tempo" && c.partida.pontos >= 30 },
     { id: "labirinto", nome: "Saí do labirinto", descricao: "Chegar à fase 4 no modo Fases", condicao: (c) => c.partida.modo === "fases" && c.partida.fase >= 4 },
     { id: "venceuBot", nome: "Mais esperta que o bot", descricao: "Vencer o bot no nível Difícil", condicao: (c) => c.partida.venceuBotDificil === true },
@@ -1261,4 +1262,81 @@ function atualizarSequencia(sequencia, data) {
 // quantos dias seguidos valem hoje: se pulou um dia, a sequência zerou
 function sequenciaValendo(sequencia, data) {
     return sequencia.ultimoDia === data || sequencia.ultimoDia === diaAnterior(data) ? sequencia.dias : 0;
+}
+
+// ==========================================
+// Moedas e loja (funções puras - testadas em testes.js)
+// ==========================================
+// preço = moedas na loja; conquista = só ganha com ela (nunca é vendido)
+// Faixas: simples 100-200 (~1 dia jogando), legal 300-500 (2-3 dias), especial 700-1000 (~1 semana)
+const ITENS_DA_LOJA = [
+    { id: "bone", nome: "Boné", tipo: "chapeu", preco: 120 },
+    { id: "laco", nome: "Laço", tipo: "chapeu", preco: 150 },
+    { id: "flor", nome: "Flor", tipo: "chapeu", preco: 200 },
+    { id: "oculos", nome: "Óculos escuros", tipo: "chapeu", preco: 350 },
+    { id: "fone", nome: "Fone de ouvido", tipo: "chapeu", preco: 450 },
+    { id: "helice", nome: "Gorro de hélice", tipo: "chapeu", preco: 750 },
+    { id: "pirata", nome: "Bandana de pirata", tipo: "chapeu", conquista: "maratona" },
+    { id: "visor", nome: "Visor de vilã", tipo: "chapeu", conquista: "venceuBot" },
+    { id: "coroa", nome: "Coroa", tipo: "chapeu", conquista: "lendaria" },
+    { id: "morango", nome: "Morango", tipo: "comida", preco: 100 },
+    { id: "cereja", nome: "Cereja", tipo: "comida", preco: 150 },
+    { id: "melancia", nome: "Melancia", tipo: "comida", preco: 250 },
+    { id: "donut", nome: "Donut", tipo: "comida", preco: 350 },
+    { id: "pizza", nome: "Pizza", tipo: "comida", preco: 450 },
+];
+const TIPOS_DA_LOJA = ["chapeu", "comida"];
+
+const MOEDAS_POR_MISSAO = 15;
+const MOEDAS_DIA_COMPLETO = 30;         // bônus por fazer as 3 missões do dia
+const MOEDAS_POR_DIA_SEGUIDO = 5;       // + 5 por dia de sequência...
+const MOEDAS_MAXIMAS_DA_SEQUENCIA = 50; // ...até 50
+
+function moedasDaPartida(pontos) {
+    return Math.floor(pontos / 2); // 1 moeda a cada 2 pontos
+}
+
+function moedasDasMissoes(quantasCumpridas, completouODia, diasSeguidos) {
+    const bonusDoDia = completouODia
+        ? MOEDAS_DIA_COMPLETO + Math.min(MOEDAS_MAXIMAS_DA_SEQUENCIA, diasSeguidos * MOEDAS_POR_DIA_SEGUIDO)
+        : 0;
+    return quantasCumpridas * MOEDAS_POR_MISSAO + bonusDoDia;
+}
+
+// item de conquista: tem se ganhou a conquista; item de loja: tem se comprou
+function itemDisponivel(item, conquistasGanhas, comprados) {
+    return item.conquista ? conquistasGanhas.includes(item.conquista) : comprados.includes(item.id);
+}
+
+// carteira salva: moedas, o que comprou e o que está usando (dado estranho é jogado fora)
+function limparCarteira(salva, conquistasGanhas) {
+    const carteira = salva && typeof salva === "object" ? salva : {};
+    const idsAVenda = ITENS_DA_LOJA.filter((item) => item.preco).map((item) => item.id);
+    const comprados = Array.isArray(carteira.comprados) ? [...new Set(carteira.comprados.filter((id) => idsAVenda.includes(id)))] : [];
+    const equipados = {};
+
+    for (const tipo of TIPOS_DA_LOJA) {
+        const id = carteira.equipados && carteira.equipados[tipo];
+        const item = ITENS_DA_LOJA.find((opcao) => opcao.id === id && opcao.tipo === tipo);
+        equipados[tipo] = item && itemDisponivel(item, conquistasGanhas, comprados) ? item.id : null;
+    }
+
+    return {
+        moedas: Number.isInteger(carteira.moedas) && carteira.moedas > 0 ? carteira.moedas : 0,
+        comprados,
+        equipados,
+    };
+}
+
+// devolve a carteira depois da compra, ou null se não der (de conquista, já tem ou faltam moedas)
+function comprarItem(carteira, item) {
+    if (!item.preco || carteira.comprados.includes(item.id) || carteira.moedas < item.preco) return null;
+    return { ...carteira, moedas: carteira.moedas - item.preco, comprados: [...carteira.comprados, item.id] };
+}
+
+// usar um item (ou tirar, se já estava usando); null se ainda não tem o item
+function equiparItem(carteira, item, conquistasGanhas) {
+    if (!itemDisponivel(item, conquistasGanhas, carteira.comprados)) return null;
+    const jaUsando = carteira.equipados[item.tipo] === item.id;
+    return { ...carteira, equipados: { ...carteira.equipados, [item.tipo]: jaUsando ? null : item.id } };
 }

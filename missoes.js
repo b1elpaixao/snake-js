@@ -45,8 +45,12 @@ function registrarMissoesDaPartida() {
         completouODia = true;
     }
 
+    const diasSeguidos = sequenciaValendo(lerSequenciaDeMissoes(), estado.data);
+    const moedas = moedasDasMissoes(novas.length, completouODia, diasSeguidos);
+    ganharMoedas(moedas);
+
     mostrarMissoes();
-    if (novas.length > 0) avisarMissoes(novas, completouODia);
+    if (novas.length > 0) avisarMissoes(novas, completouODia, moedas);
 }
 
 function mostrarMissoes() {
@@ -85,11 +89,11 @@ function mostrarMissoes() {
 }
 
 // usa o mesmo aviso das conquistas (em cima do tabuleiro); se tiver uma conquista na tela, espera ela sair
-function avisarMissoes(novas, completouODia) {
+function avisarMissoes(novas, completouODia, moedas) {
     const aviso = document.getElementById("avisoConquista");
-    const texto = completouODia
+    const texto = (completouODia
         ? "Missões do dia completas! 🔥"
-        : `Missão cumprida: ${novas.map((missao) => missao.texto).join(" · ")}`;
+        : `Missão cumprida: ${novas.map((missao) => missao.texto).join(" · ")}`) + ` +${moedas} 🪙`;
 
     const mostrar = () => {
         aviso.textContent = texto;

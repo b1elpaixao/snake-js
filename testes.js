@@ -557,6 +557,33 @@ verificar("sequência: pulou um dia, recomeça", atualizarSequencia({ dias: 5, u
 verificar("sequência: mostra 0 se ontem não completou", sequenciaValendo({ dias: 5, ultimoDia: "2026-10-20" }, "2026-10-26"), 0);
 verificar("sequência: nada salvo", JSON.stringify(limparSequencia("lixo")), '{"dias":0,"ultimoDia":null}');
 
+// moedas e loja
+const itemDaLoja = (id) => ITENS_DA_LOJA.find((item) => item.id === id);
+verificar("moedas: 1 a cada 2 pontos", [moedasDaPartida(0), moedasDaPartida(1), moedasDaPartida(7), moedasDaPartida(20)].join(), "0,0,3,10");
+verificar("moedas: missões, bônus do dia e sequência (até +50)",
+    [moedasDasMissoes(1, false, 3), moedasDasMissoes(1, true, 1), moedasDasMissoes(3, true, 4), moedasDasMissoes(1, true, 30)].join(), "15,50,95,95");
+verificar("loja: ids únicos", new Set(ITENS_DA_LOJA.map((item) => item.id)).size, ITENS_DA_LOJA.length);
+verificar("loja: todo item tem preço ou conquista (nunca os dois)",
+    ITENS_DA_LOJA.every((item) => Boolean(item.preco) !== Boolean(item.conquista)), true);
+verificar("loja: toda conquista de item existe", ITENS_DA_LOJA.filter((item) => item.conquista).every((item) => CONQUISTAS.some((c) => c.id === item.conquista)), true);
+verificar("loja: carteira vazia", JSON.stringify(limparCarteira(null, [])), '{"moedas":0,"comprados":[],"equipados":{"chapeu":null,"comida":null}}');
+verificar("loja: carteira estranha é limpa",
+    JSON.stringify(limparCarteira({ moedas: -5, comprados: ["bone", "bone", "coroa", "inventado"], equipados: { chapeu: "coroa", comida: "bone" } }, [])),
+    '{"moedas":0,"comprados":["bone"],"equipados":{"chapeu":null,"comida":null}}');
+verificar("loja: item de conquista vale depois de ganhar",
+    limparCarteira({ equipados: { chapeu: "coroa" } }, ["lendaria"]).equipados.chapeu, "coroa");
+const carteiraDeTeste = limparCarteira({ moedas: 200 }, []);
+verificar("loja: comprar desconta e guarda", JSON.stringify(comprarItem(carteiraDeTeste, itemDaLoja("bone"))),
+    '{"moedas":80,"comprados":["bone"],"equipados":{"chapeu":null,"comida":null}}');
+verificar("loja: sem moedas não compra", comprarItem(carteiraDeTeste, itemDaLoja("helice")), null);
+verificar("loja: item de conquista não se compra", comprarItem({ ...carteiraDeTeste, moedas: 99999 }, itemDaLoja("coroa")), null);
+verificar("loja: não compra duas vezes", comprarItem({ ...carteiraDeTeste, comprados: ["bone"] }, itemDaLoja("bone")), null);
+const comBone = comprarItem(carteiraDeTeste, itemDaLoja("bone"));
+verificar("loja: usar e tirar", [equiparItem(comBone, itemDaLoja("bone"), []).equipados.chapeu,
+    equiparItem(equiparItem(comBone, itemDaLoja("bone"), []), itemDaLoja("bone"), []).equipados.chapeu].join(), "bone,");
+verificar("loja: não usa o que não tem", equiparItem(carteiraDeTeste, itemDaLoja("laco"), []), null);
+verificar("conquista: Lendária com 100 pontos", conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 100, tamanho: 1, powerUps: 0 } }).some((c) => c.id === "lendaria"), true);
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

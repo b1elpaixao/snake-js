@@ -150,6 +150,7 @@
                     </div>
                     <div class="menu-links">
                         <button id="botaoCriarFase" class="botao-link" type="button">Criar fase</button>
+                        <button id="botaoLoja" class="botao-link" type="button">Loja</button>
                         <button id="botaoComoJogar" class="botao-link" type="button">Como jogar</button>
                     </div>
                     </div>
@@ -210,6 +211,7 @@
                     <p id="resultadoFinal" class="resultado">Game Over</p>
                     <P id="causaMorte" class="causa-morte"></P>
                     <p id="pontuacaoFinal" class="pontuacao-final">Pontuação: 0</p>
+                    <p id="moedasGanhas" class="moedas-ganhas" hidden></p>
                     <button id="botaoJogarDeNovo" class="botao-principal">Jogar de novo</button>
                     <button id="botaoCompartilhar" class="botao-secundario" type="button">Compartilhar resultado</button>
                     <p id="textoCompartilhar" class="texto-compartilhar" hidden></p>
@@ -245,6 +247,7 @@
                             <li><b>Jogador 1:</b> setas do teclado. No celular, deslize o dedo no tabuleiro (dá pra emendar viradas sem tirar o dedo).</li>
                             <li><b>Jogador 2:</b> W, A, S, D.</li>
                             <li><b>Controle de videogame:</b> ligue o controle (com fio ou Bluetooth) e aperte qualquer botão. Setas ou analógico movem, A começa e joga de novo, Start pausa. Com 2 controles, o segundo é o Jogador 2.</li>
+                            <li><b>Moedas e loja:</b> cada partida dá 1 moeda a cada 2 pontos, e cada missão do dia dá 15 (mais um bônus se fizer as 3). Na Loja você compra chapéus e comidas novas. Alguns itens (🏆) só saem ganhando conquistas difíceis.</li>
                             <li><b>Trocar teclas:</b> clique numa tecla no painel Controles e aperte a nova. Elas ficam salvas.</li>
                             <li><b>Espaço ou Esc:</b> pausa e abre o menu (Continuar, Reiniciar, Voltar ao menu). O jogo também pausa sozinho se você trocar de aba.</li>
                             <li><b>Esc:</b> no fim de jogo, volta ao menu.</li>
@@ -289,6 +292,19 @@
                     </section>
                 </div>
 
+                <div id="telaLoja" class="overlay overlay-como-jogar" role="dialog" aria-labelledby="tituloLoja" hidden>
+                    <div class="como-jogar-topo">
+                        <h2 id="tituloLoja">Loja <span id="saldoLoja" class="saldo-loja">🪙 0</span></h2>
+                        <button id="botaoFecharLoja" class="botao-secundario" type="button">Voltar</button>
+                    </div>
+                    <div class="abas-loja">
+                        <button class="aba-loja" data-aba="chapeu" type="button">Chapéus</button>
+                        <button class="aba-loja" data-aba="comida" type="button">Comidas</button>
+                    </div>
+                    <ul id="itensLoja" class="itens-loja"></ul>
+                    <p class="dica-loja">1 moeda a cada 2 pontos · 15 por missão · +30 se fizer as 3 do dia, e mais 5 por dia seguido 🔥. Os itens com 🏆 só saem ganhando a conquista.</p>
+                </div>
+
                 <p id="avisoConquista" class="aviso-conquista" role="status" hidden></p>
 
                 <div id="dicaTutorial" class="dica-tutorial" role="status" hidden>
@@ -317,6 +333,12 @@
             <div class="cartao">
                 <p class="rotulo">Missões de hoje <span id="sequenciaMissoes"></span></p>
                 <ul id="listaMissoes" class="lista-missoes"></ul>
+            </div>
+
+            <div class="cartao">
+                <p class="rotulo">Loja · <span id="saldoMoedas">🪙 0</span></p>
+                <p class="dica-loja">Chapéus e comidas novas pra sua cobra. Ganhe moedas jogando e cumprindo as missões.</p>
+                <button id="botaoAbrirLoja" class="botao-secundario" type="button">Abrir loja</button>
             </div>
 
             <div class="cartao recordes">
@@ -411,6 +433,7 @@
     <script src="acessibilidade.js"></script>
     <script src="historico.js"></script>
     <script src="missoes.js"></script>
+    <script src="loja.js"></script>
     <script src="salvos.js"></script>
     <script src="script.js"></script>
 </body>

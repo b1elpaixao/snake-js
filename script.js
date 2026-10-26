@@ -275,6 +275,7 @@ let velocidadeAtual = VELOCIDADE_INICIAL_MS;
 let temporizadorDestaqueVelocidade = null;
 let estatisticas = lerEstatisticas();
 let conquistasGanhas = lerConquistas();
+let carteira = lerCarteira(); // { moedas, comprados, equipados } (loja.js)
 let partidaAtual = { powerUps: 0, comidas: 0, douradas: 0, maiorCombo: 0 }; // contadores só desta partida (pras conquistas e missões)
 let temporizadorAvisoConquista = null;
 let tempoDaPartidaMs = 0;
@@ -379,6 +380,7 @@ function registrarFimDePartida(batidas) {
 
     verificarConquistas({ venceuBotDificil: venceuOBot && seletorNivelBot.value === "dificil"});
     registrarMissoesDaPartida(); // depois das conquistas: o aviso da missão espera o da conquista sair
+    darMoedasDaPartida();
 }
 
 document.getElementById("botaoZerarEstatisticas").addEventListener("click", () => {
@@ -440,7 +442,8 @@ function mostrarConquistas() {
 
         item.className = ganhou ? "ganhou" : "bloqueada";
         nome.textContent = conquista.nome;
-        descricao.textContent = conquista.descricao;
+        const premio = premioDaConquista(conquista.id);
+        descricao.textContent = premio ? `${conquista.descricao} · Prêmio: ${premio}` : conquista.descricao;
         textos.append(nome, descricao);
         item.append(textos);
         lista.append(item);
@@ -893,6 +896,28 @@ mostrarMissoes();
 document.addEventListener("visibilitychange", () => {
     if (!document.hidden) mostrarMissoes(); // virou o dia com o jogo aberto: mostra as missões novas
 });
+
+// ==========================================
+// Loja (fica no loja.js)
+// ==========================================
+mostrarSaldo();
+document.getElementById("botaoLoja").addEventListener("click", abrirLoja);
+document.getElementById("botaoAbrirLoja").addEventListener("click", abrirLoja);
+document.getElementById("botaoFecharLoja").addEventListener("click", fecharLoja);
+
+for (const aba of document.querySelectorAll(".aba-loja")) {
+    aba.addEventListener("click", () => {
+        abaDaLoja = aba.dataset.aba;
+        mostrarLoja();
+    });
+}
+
+// com a loja aberta, as teclas não mexem no jogo (no fim de jogo, qualquer tecla recomeçaria)
+window.addEventListener("keydown", (evento) => {
+    if (document.getElementById("telaLoja").hidden) return;
+    evento.stopPropagation();
+    if (evento.key === "Escape") fecharLoja();
+}, true);
 
 // ==========================================
 // Acessibilidade (as funções ficam no acessibilidade.js)
