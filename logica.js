@@ -1159,3 +1159,106 @@ function pontosDoGrafico(valores, largura, altura, margem) {
         })),
     };
 }
+
+// ==========================================
+// Missões diárias (funções puras - testadas em testes.js)
+// ==========================================
+const MISSOES_POR_DIA = 3;
+
+// "soma": vai somando em todas as partidas do dia. "partida": tem que conseguir numa partida só.
+// modo: a missão só conta jogando nesse modo
+const MISSOES = [
+    { id: "comer30", texto: "Comer 30 maçãs hoje", tipo: "soma", campo: "comidas", alvo: 30 },
+    { id: "partidas5", texto: "Jogar 5 partidas", tipo: "soma", campo: "partidas", alvo: 5 },
+    { id: "powerups3", texto: "Pegar 3 power-ups", tipo: "soma", campo: "powerUps", alvo: 3 },
+    { id: "douradas2", texto: "Comer 2 maçãs douradas", tipo: "soma", campo: "douradas", alvo: 2 },
+    { id: "jogar5min", texto: "Jogar 5 minutos", tipo: "soma", campo: "segundos", alvo: 300 },
+    { id: "pontos15", texto: "Fazer 15 pontos numa partida", tipo: "partida", campo: "pontos", alvo: 15 },
+    { id: "combo4", texto: "Fazer um combo x4", tipo: "partida", campo: "maiorCombo", alvo: 4 },
+    { id: "tamanho15", texto: "Chegar a 15 pedaços", tipo: "partida", campo: "tamanho", alvo: 15 },
+    { id: "durar90", texto: "Durar 90 segundos numa partida", tipo: "partida", campo: "segundos", alvo: 90 },
+    { id: "rato10", texto: "Fazer 10 pontos no modo Rato", tipo: "partida", campo: "pontos", alvo: 10, modo: "rato" },
+    { id: "classico12", texto: "Fazer 12 pontos no Clássico", tipo: "partida", campo: "pontos", alvo: 12, modo: "clássico" },
+    { id: "fase2", texto: "Chegar na fase 2 do modo Fases", tipo: "partida", campo: "fase", alvo: 2, modo: "fases" },
+];
+
+// as 3 do dia: 1 de somar e 2 de partida (no máximo 1 de modo específico), sorteadas pela data (iguais pra todo mundo)
+function missoesDoDia(data) {
+    const sortear = criarSorteador(sementeDoTexto("missoes " + data));
+    const embaralhar = (lista) => lista
+        .map((missao) => ({ missao, ordem: sortear() }))
+        .sort((a, b) => a.ordem - b.ordem)
+        .map((item) => item.missao);
+
+    const deSomar = embaralhar(MISSOES.filter((missao) => missao.tipo === "soma"));
+    const dePartida = embaralhar(MISSOES.filter((missao) => missao.tipo === "partida"));
+
+    const segunda = dePartida.slice(1).find((missao) => !(dePartida[0].modo && missao.modo));
+
+    return [deSomar[0], dePartida[0], segunda];
+}
+
+// progresso salvo: se for de outro dia (ou estiver estragado), começa o dia do zero
+function limparMissoes(salvo, data) {
+    const vazio = { data, progresso: {}, feitas: [] };
+    if (!salvo || typeof salvo !== "object" || salvo.data !== data) return vazio;
+
+    const ids = MISSOES.map((missao) => missao.id);
+    const progresso = {};
+
+    for (const id of ids) {
+        const valor = salvo.progresso && salvo.progresso[id];
+        if (Number.isFinite(valor) && valor > 0) progresso[id] = valor;
+    }
+
+    const feitas = Array.isArray(salvo.feitas) ? salvo.feitas.filter((id) => ids.includes(id)) : [];
+    return { data, progresso, feitas: [...new Set(feitas)] };
+}
+
+// soma a partida no progresso do dia; devolve o estado novo e as missões que acabaram de ser cumpridas
+function registrarPartidaNasMissoes(estado, partida) {
+    const novo = { data: estado.data, progresso: { ...estado.progresso }, feitas: [...estado.feitas] };
+    const novas = [];
+
+    for (const missao of missoesDoDia(estado.data)) {
+        if (novo.feitas.includes(missao.id)) continue;
+        if (missao.modo && missao.modo !== partida.modo) continue;
+
+        const daPartida = missao.campo === "partidas" ? 1 : partida[missao.campo] || 0;
+        const anterior = novo.progresso[missao.id] || 0;
+        const valor = missao.tipo === "soma" ? anterior + daPartida : Math.max(anterior, daPartida);
+
+        novo.progresso[missao.id] = Math.min(valor, missao.alvo);
+
+        if (valor >= missao.alvo) {
+            novo.feitas.push(missao.id);
+            novas.push(missao);
+        }
+    }
+
+    return { estado: novo, novas };
+}
+
+// dia anterior no mesmo formato de dataDeHoje ("2026-10-26" -> "2026-10-25")
+function diaAnterior(data) {
+    const [ano, mes, dia] = data.split("-").map(Number);
+    return dataDeHoje(new Date(ano, mes - 1, dia - 1));
+}
+
+// sequência de dias com as 3 missões feitas
+function limparSequencia(salva) {
+    const valida = salva && typeof salva === "object" && Number.isInteger(salva.dias) && salva.dias > 0 &&
+        typeof salva.ultimoDia === "string" && /^\d{4}-\d{2}-\d{2}$/.test(salva.ultimoDia);
+    return valida ? { dias: salva.dias, ultimoDia: salva.ultimoDia } : { dias: 0, ultimoDia: null };
+}
+
+function atualizarSequencia(sequencia, data) {
+    if (sequencia.ultimoDia === data) return sequencia;
+    const continua = sequencia.ultimoDia === diaAnterior(data);
+    return { dias: continua ? sequencia.dias + 1 : 1, ultimoDia: data };
+}
+
+// quantos dias seguidos valem hoje: se pulou um dia, a sequência zerou
+function sequenciaValendo(sequencia, data) {
+    return sequencia.ultimoDia === data || sequencia.ultimoDia === diaAnterior(data) ? sequencia.dias : 0;
+}

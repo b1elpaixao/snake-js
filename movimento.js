@@ -47,6 +47,7 @@ function moverJogador(jogador) {
 
         if (!jogador.bot) {
             estatisticas.macasDouradas++;
+            partidaAtual.douradas++;
             vibrar([30, 40, 30]);
         }
 
@@ -121,6 +122,8 @@ function comerAlimento(jogador, pontosBase) {
     if (!jogador.bot) {
         estatisticas.comidas++;
         estatisticas.maiorCombo = Math.max(estatisticas.maiorCombo, jogador.comboAtual);
+        partidaAtual.comidas++;
+        partidaAtual.maiorCombo = Math.max(partidaAtual.maiorCombo, jogador.comboAtual);
         vibrar(30);
         verificarConquistas();
     }

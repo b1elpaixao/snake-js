@@ -275,7 +275,7 @@ let velocidadeAtual = VELOCIDADE_INICIAL_MS;
 let temporizadorDestaqueVelocidade = null;
 let estatisticas = lerEstatisticas();
 let conquistasGanhas = lerConquistas();
-let partidaAtual = { powerUps: 0 }; // contadores só desta partida (pras conquistas)
+let partidaAtual = { powerUps: 0, comidas: 0, douradas: 0, maiorCombo: 0 }; // contadores só desta partida (pras conquistas e missões)
 let temporizadorAvisoConquista = null;
 let tempoDaPartidaMs = 0;
 let velocidadeMostrada = null;  
@@ -378,6 +378,7 @@ function registrarFimDePartida(batidas) {
         : batidas.some((batida) => batida.jogador === bot) && !batidas.some((batida) => batida.jogador === humano));
 
     verificarConquistas({ venceuBotDificil: venceuOBot && seletorNivelBot.value === "dificil"});
+    registrarMissoesDaPartida(); // depois das conquistas: o aviso da missão espera o da conquista sair
 }
 
 document.getElementById("botaoZerarEstatisticas").addEventListener("click", () => {
@@ -886,6 +887,14 @@ filtroHistorico.addEventListener("change", mostrarHistorico);
 mostrarHistorico();
 
 // ==========================================
+// Missões diárias (ficam no missoes.js)
+// ==========================================
+mostrarMissoes();
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) mostrarMissoes(); // virou o dia com o jogo aberto: mostra as missões novas
+});
+
+// ==========================================
 // Acessibilidade (as funções ficam no acessibilidade.js)
 // ==========================================
 try {
@@ -1362,7 +1371,7 @@ function reiniciar() {
     contadorMeiosPassos = 0;
     contadorPassosPedras = 0;
     tempoDaPartidaMs = 0;
-    partidaAtual = { powerUps: 0 };
+    partidaAtual = { powerUps: 0, comidas: 0, douradas: 0, maiorCombo: 0 };
     elementoRelogio.hidden = modoAtual !== "tempo";
     atualizarRelogio();
     velocidadeAtual = VELOCIDADE_INICIAL_MS; // antes, o 1° passo usava a velocidade na partida anterior

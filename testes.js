@@ -517,6 +517,46 @@ verificar("gráfico: pontos da esquerda pra direita, maior em cima",
     JSON.stringify(pontosDoGrafico([0, 10, 5], 300, 120, 12).pontos), '[{"x":12,"y":108},{"x":150,"y":12},{"x":288,"y":60}]');
 verificar("gráfico: uma partida fica no meio", pontosDoGrafico([3], 300, 120, 12).pontos[0].x, 150);
 
+// missões diárias
+const missoesTeste = missoesDoDia("2026-10-26");
+verificar("missões: 3 por dia, 1 de somar e 2 de partida",
+    missoesTeste.map((missao) => missao.tipo).join(), "soma,partida,partida");
+verificar("missões: mesmo dia, mesmas missões", JSON.stringify(missoesDoDia("2026-10-26")), JSON.stringify(missoesTeste));
+verificar("missões: no máximo 1 de modo específico por dia",
+    Array.from({ length: 365 }, (_, i) => missoesDoDia(dataDeHoje(new Date(2026, 0, 1 + i)))).every((dia) => dia.filter((missao) => missao.modo).length <= 1), true);
+verificar("missões: sem repetir no mesmo dia", new Set(missoesTeste.map((missao) => missao.id)).size, 3);
+verificar("missões: muda de um dia pro outro",
+    ["2026-10-27", "2026-10-28", "2026-10-29"].some((data) => JSON.stringify(missoesDoDia(data)) !== JSON.stringify(missoesTeste)), true);
+verificar("missões: progresso de ontem zera hoje",
+    JSON.stringify(limparMissoes({ data: "2026-10-25", progresso: { comer30: 10 }, feitas: ["comer30"] }, "2026-10-26")), '{"data":"2026-10-26","progresso":{},"feitas":[]}');
+verificar("missões: dado estranho é jogado fora",
+    JSON.stringify(limparMissoes({ data: "2026-10-26", progresso: { comer30: "muito", inventada: 3, combo4: 2 }, feitas: ["combo4", "x"] }, "2026-10-26")),
+    '{"data":"2026-10-26","progresso":{"combo4":2},"feitas":["combo4"]}');
+
+// missões de teste fixas: um dia em que as 3 são conhecidas
+const diaDeTeste = Array.from({ length: 365 }, (_, i) => dataDeHoje(new Date(2026, 0, 1 + i)))
+    .find((data) => missoesDoDia(data)[0].id === "comer30" && !missoesDoDia(data).some((missao) => missao.modo)) || null;
+verificar("missões: achou um dia de teste", diaDeTeste !== null, true);
+const partidaDeMissao = (extra) => ({ modo: "normal", pontos: 0, comidas: 0, powerUps: 0, douradas: 0, maiorCombo: 0, tamanho: 1, segundos: 10, fase: 1, ...extra });
+const vazioTeste = limparMissoes(null, diaDeTeste);
+const depoisDe20 = registrarPartidaNasMissoes(vazioTeste, partidaDeMissao({ comidas: 20 })).estado;
+verificar("missões: a de somar vai juntando", depoisDe20.progresso.comer30, 20);
+const depoisDe40 = registrarPartidaNasMissoes(depoisDe20, partidaDeMissao({ comidas: 20 }));
+verificar("missões: completa e não passa do alvo", [depoisDe40.estado.progresso.comer30, depoisDe40.novas.map((missao) => missao.id).join()].join(), "30,comer30");
+verificar("missões: missão feita não é avisada de novo",
+    registrarPartidaNasMissoes(depoisDe40.estado, partidaDeMissao({ comidas: 50 })).novas.length, 0);
+verificar("missões: a de partida guarda o melhor, não soma",
+    registrarPartidaNasMissoes(registrarPartidaNasMissoes(vazioTeste, partidaDeMissao({ pontos: 9, maiorCombo: 3, tamanho: 9, segundos: 60 })).estado,
+        partidaDeMissao({ pontos: 5, maiorCombo: 2, tamanho: 5, segundos: 20 })).estado.progresso[missoesDoDia(diaDeTeste)[1].id] > 0, true);
+verificar("missões: missão de modo só conta no modo certo",
+    registrarPartidaNasMissoes({ data: "x", progresso: {}, feitas: [] }, partidaDeMissao({ pontos: 99 })).novas.every((missao) => !missao.modo), true);
+
+verificar("sequência: dia anterior", diaAnterior("2026-11-01"), "2026-10-31");
+verificar("sequência: dia seguido soma", atualizarSequencia({ dias: 2, ultimoDia: "2026-10-25" }, "2026-10-26").dias, 3);
+verificar("sequência: pulou um dia, recomeça", atualizarSequencia({ dias: 5, ultimoDia: "2026-10-20" }, "2026-10-26").dias, 1);
+verificar("sequência: mostra 0 se ontem não completou", sequenciaValendo({ dias: 5, ultimoDia: "2026-10-20" }, "2026-10-26"), 0);
+verificar("sequência: nada salvo", JSON.stringify(limparSequencia("lixo")), '{"dias":0,"ultimoDia":null}');
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

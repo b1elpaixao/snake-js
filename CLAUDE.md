@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (232 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (250 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -31,11 +31,12 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 9. `tutorial.js` - tutorial na primeira vez: dicas que avançam quando a pessoa vira, come etc. (`snakeTutorialVisto`)
 10. `acessibilidade.js` - alto contraste, menos movimento e `anunciar()` (avisos pro leitor de tela)
 11. `historico.js` - histórico das partidas (`snakeHistorico`, até 200) e o gráfico SVG das últimas 30
-12. `salvos.js` - tudo que é guardado no navegador: `lerDoArmazenamento`/`salvarNoArmazenamento`, recordes, estatísticas, conquistas, teclas e preferências
-13. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último)
+12. `missoes.js` - missões diárias: 3 por dia sorteadas pela data (`snakeMissoes`), sequência de dias (`snakeSequenciaMissoes`)
+13. `salvos.js` - tudo que é guardado no navegador: `lerDoArmazenamento`/`salvarNoArmazenamento`, recordes, estatísticas, conquistas, teclas e preferências
+14. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último)
 
-Os arquivos 2 a 12 só tem funções e valores fixos; o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-v10`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
+Os arquivos 2 a 13 só tem funções e valores fixos; o que executa ao carregar fica no `script.js`.
+Outros: `style.css`, `sw.js` (service worker, cache `snake-v11`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
 **Ao criar um arquivo .js novo:** incluir no `index.html` antes do `script.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
@@ -56,7 +57,11 @@ do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 - Movimento e animação: não confiar só em números ou simulação com relógio perfeito. Conferir quadro a quadro (tira de imagens) e com o tempo real do navegador.
 - Conferir que todo `getElementById("x")` tem `id="x"` no HTML.
 
-## Melhorias pendentes (lista 4)
+## Melhorias (lista 4 concluída)
 
 Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 3 fantasma do recorde · 4 modo 2 Juntos (cooperativo) · 5 power-ups Escudo, Portal e Câmera lenta · 6 temas do tabuleiro (Grama, Deserto, Neve, Noite) · celular: cobra, itens e tabuleiro maiores · celular sem setas (só deslizar), tabuleiro em pé 15 colunas, tudo maior · 7 editor de fases com link (botão "Criar fase", modo `"personalizada"`, link `#fase=`) · 8 controle de videogame (`controle.js`) · 9 tutorial na primeira vez (`tutorial.js`) · 10 acessibilidade (`acessibilidade.js`) · 11 histórico com gráfico (`historico.js`) · 12 ícones PNG · 13 `salvos.js` (script.js dividido).
-A fazer: (lista 4 concluída)
+
+## Melhorias pendentes (lista 5)
+
+Feito: 1 missões diárias (`missoes.js`).
+A fazer: 2 moedas e loja · 3 modo Arena (zona que fecha) · 4 cobra inimiga / chefão · 5 power-ups Congelar, Bomba e Fantasma · 6 até 4 jogadores · 7 skins da cobra · 8 efeitos ao comer (partículas, rastro) · 9 temas de época · 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP · 13 idiomas.

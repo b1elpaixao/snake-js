@@ -1589,3 +1589,56 @@ body.menos-movimento *::after {
     font-size: 13px;
     opacity: 0.8;
 }
+
+/* ==========================================
+   Missões diárias
+   ========================================== */
+.lista-missoes {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.missao {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 10px;
+    font-size: 14px;
+}
+
+.missao-numero {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+.missao-barra {
+    grid-column: 1 / -1;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.missao-barra::before {
+    content: "";
+    display: block;
+    width: var(--progresso);
+    height: 100%;
+    border-radius: inherit;
+    background: var(--destaque);
+}
+
+.missao.feita .missao-texto {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.missao.feita .missao-numero {
+    color: var(--destaque);
+    opacity: 1;
+    font-weight: 700;
+}
