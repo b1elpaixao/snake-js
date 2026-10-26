@@ -85,14 +85,10 @@ button {
 }
 
 .logo {
+    display: block;
     width: 40px;
     height: 40px;
     border-radius: 12px;
-    background: var(--destaque);
-    color: var(--fundo);
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .marca-nome {
