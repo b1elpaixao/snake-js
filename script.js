@@ -184,6 +184,7 @@ function criarJogador(config) {
         filaDirecoes: [],
         pontuacao: 0,
         comidas: 0, // quanto comeu na partida: é isso que acelera o jogo
+        espadaAte: 0, // modo Chefão: até quando está com a espada
         comboAtual: 0,
         ultimoComerEm: null,
         nome: config.nome,
@@ -256,8 +257,8 @@ const movimentoReduzidoNoSistema = window.matchMedia && window.matchMedia("(pref
 let reduzirMovimento = movimentoReduzidoNoSistema; // também liga pela opção "Menos movimento"
 let textosFlutuantes = []; // os "=3" que sobem ao comer
 const DURACAO_TEXTO_FLUTUANTE_MS = 800;
-const MODOS_DE_JOGO = ["normal", "clássico", "rato", "tempo", "arena", "fases", "desafio"];
-const NOMES_MODOS = { normal: "Normal", "clássico": "Clássico", rato: "Rato", tempo: "Contra o tempo", arena: "Arena", fases: "Fases", desafio: "Desafio de hoje", personalizada: "Fase criada" };
+const MODOS_DE_JOGO = ["normal", "clássico", "rato", "tempo", "arena", "chefao", "fases", "desafio"];
+const NOMES_MODOS = { normal: "Normal", "clássico": "Clássico", rato: "Rato", tempo: "Contra o tempo", arena: "Arena", chefao: "Chefão", fases: "Fases", desafio: "Desafio de hoje", personalizada: "Fase criada" };
 
 let jogoAtivo = false; // só fica true quando a partida começa ( o loopRenderizacao anda o jogo sempre que for true)
 let pausado = false;
@@ -594,6 +595,7 @@ function escolherCorDaCobra(id) {
 // ==========================================
 function temaDoTabuleiro() {
     if (opcoesDeAcessibilidade.altoContraste) return TEMA_ALTO_CONTRASTE; // a opção de acessibilidade ganha do tema
+    if (chefao) return TEMA_DO_ABISMO; // o Chefão é sempre no abismo escuro
     const daLoja = tabuleiroDaLoja();
     if (daLoja) return daLoja; // tabuleiro comprado na loja
     return TEMAS_DO_TABULEIRO.find((tema) => tema.id === temaDoTabuleiroId) || TEMAS_DO_TABULEIRO[0];
@@ -1223,16 +1225,18 @@ function loop() {
         jogador.direcaoAndada = jogador.direcao;
         jogador.ultimoPassoEm = horaDoPasso; // contado horário certo do passo (o quadro pode ter chegado um pouco depois)
     }
+    if (chefao) atualizarChefao(); // espada e golpes no chefão
 
     if (comidaDourada && agoraDoJogo() >= comidaDourada.expiraEm) {
         comidaDourada = null;
     }
     
     // só quem andou pode ter batido (ou quem ficou fora da zona da Arena que acabou de fechar)
-    const batidas = (fechouAZona ? jogadores : jogadoresQueAndam)
+    let batidas = (fechouAZona ? jogadores : jogadoresQueAndam)
         .map((jogador) => ({ jogador, motivo: motivoDaBatida(jogador) }))
         .filter((batida) => batida.motivo !== null)
         .filter(({ jogador }) => !segurarComEscudo(jogador)); // com escudo, a batida não conta
+    if (chefao) batidas = tratarBatidasDoChefao(batidas); // o chefão não morre de uma batida: perde vida
 
     batidas.forEach(({ jogador }) => { jogador.bateu = true; }); // o desenho mostra a cabeça encostada
 
@@ -1399,6 +1403,7 @@ function reiniciar() {
     }
     comida = gerarComida();
     criarRatosIniciais();
+    prepararChefao(); // no modo Chefão, o Jogador 2 vira o chefão
     atualizarPlacarJuntos();
     contadorMeiosPassos = 0;
     contadorPassosPedras = 0;
@@ -1451,12 +1456,13 @@ function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorM
     modoAtual = modo;
     mostrarRecordesDoModo(modoAtual);
     aplicarDificuldade();
-    quantidadeJogadoresAtual = comBot ? 2 : quantidade;
-    modoComBotAtivo = comBot;
-    modoCooperativo = juntos;
+    const comChefao = modo === "chefao"; // qualquer botão joga você contra o chefão
+    quantidadeJogadoresAtual = comBot || comChefao ? 2 : quantidade;
+    modoComBotAtivo = comBot && !comChefao;
+    modoCooperativo = juntos && !comChefao;
 
     const nome1 = inputNomeJogador1.value.trim() || "Jogador 1";
-    const nome2 = comBot ? "Bot" : (inputNomeJogador2.value.trim() || "Jogador 2");
+    const nome2 = comChefao ? "Os olhos que emergem" : comBot ? "Bot" : (inputNomeJogador2.value.trim() || "Jogador 2");
     nomesJogadoresAtuais = [nome1, nome2];
 
     elementoNomeExibido1.textContent = nome1;

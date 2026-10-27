@@ -1,6 +1,7 @@
 // ==========================================
 // Moedas e loja: ganha jogando e cumprindo missões; compra chapéus e comidas novas.
-// Os itens de conquista não são vendidos: só ganhando a conquista.
+// Os itens de conquista (🏆) não são vendidos: só ganhando a conquista.
+// Alguns itens à venda (🔒) só liberam pra comprar depois de uma conquista (liberaCom).
 // ==========================================
 let abaDaLoja = "chapeu";
 let telaAntesDaLoja = null; // a tela que estava aberta (menu ou fim de jogo), pra voltar pra ela
@@ -152,6 +153,12 @@ function mostrarLoja() {
             botao.disabled = true;
             botao.textContent = `🏆 ${conquista.nome}`;
             botao.title = `Só ganhando a conquista: ${conquista.descricao}`;
+        } else if (item.liberaCom && !conquistasGanhas.includes(item.liberaCom)) {
+            const liberacao = CONQUISTAS.find((opcao) => opcao.id === item.liberaCom);
+            botao.className = "botao-conquista";
+            botao.disabled = true;
+            botao.textContent = `🔒 ${liberacao.nome}`;
+            botao.title = `Libera pra comprar com a conquista: ${liberacao.descricao}`;
         } else {
             botao.className = "botao-comprar";
             botao.textContent = `🪙 ${item.preco}`;
@@ -166,8 +173,8 @@ function mostrarLoja() {
 }
 
 function comprarNaLoja(item) {
-    const nova = comprarItem(carteira, item);
-    if (!nova) return; // sem moedas, já comprado ou é de conquista
+    const nova = comprarItem(carteira, item, conquistasGanhas);
+    if (!nova) return; // sem moedas, já comprado, é de conquista ou ainda não liberou
     if (!confirm(`Comprar ${item.nome} por ${item.preco} moedas?`)) return;
 
     carteira = equiparItem(nova, item, conquistasGanhas) || nova; // já sai usando
@@ -192,5 +199,7 @@ function usarItem(item) {
 // conquistas com prêmio mostram o que dão
 function premioDaConquista(conquistaId) {
     const item = ITENS_DA_LOJA.find((opcao) => opcao.conquista === conquistaId);
-    return item ? item.nome : null;
+    if (item) return item.nome;
+    const liberado = ITENS_DA_LOJA.find((opcao) => opcao.liberaCom === conquistaId);
+    return liberado ? `libera ${liberado.nome} na loja` : null;
 }

@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (289 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (300 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -26,25 +26,26 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 4. `som.js` - efeitos, música, vibração
 5. `movimento.js` - mover, colisão, recordes, power-ups, bot, pausa
 6. `modos.js` - Contra o tempo, Fases, 2 Juntos e Arena (zona que fecha a cada 15 s: `zonaArena`, `atualizarZonaDaArena`)
-7. `fantasma.js` - fantasma do recorde: com 1 jogador, uma cobra transparente refaz a melhor partida de hoje
-8. `controle.js` - controle de videogame: lê os botões a cada quadro (setas/analógico, A, Start) e treme junto com a vibração
-9. `tutorial.js` - tutorial na primeira vez: dicas que avançam quando a pessoa vira, come etc. (`snakeTutorialVisto`)
-10. `acessibilidade.js` - alto contraste, menos movimento e `anunciar()` (avisos pro leitor de tela)
-11. `historico.js` - histórico das partidas (`snakeHistorico`, até 200) e o gráfico SVG das últimas 30
-12. `missoes.js` - missões diárias: 3 por dia sorteadas pela data (`snakeMissoes`), sequência de dias (`snakeSequenciaMissoes`)
-13. `enfeites.js` - desenho dos itens da loja: chapéus, comidas, padrões do corpo, rastros e efeitos (partículas), tabuleiros com enfeites e as prévias
-14. `loja.js` - moedas (`snakeCarteira`: moedas, comprados, equipados), tela da loja com abas, desenho dos chapéus e das comidas
-15. `salvos.js` - tudo que é guardado no navegador: `lerDoArmazenamento`/`salvarNoArmazenamento`, recordes, estatísticas, conquistas, teclas e preferências
-16. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último)
+7. `chefao.js` - modo Chefão: "os olhos que emergem" (o Jogador 2 vira o chefão, `chefao`), espada, golpes, vida no placar, pulsos de luz; tabuleiro `TEMA_DO_ABISMO`
+8. `fantasma.js` - fantasma do recorde: com 1 jogador, uma cobra transparente refaz a melhor partida de hoje
+9. `controle.js` - controle de videogame: lê os botões a cada quadro (setas/analógico, A, Start) e treme junto com a vibração
+10. `tutorial.js` - tutorial na primeira vez: dicas que avançam quando a pessoa vira, come etc. (`snakeTutorialVisto`)
+11. `acessibilidade.js` - alto contraste, menos movimento e `anunciar()` (avisos pro leitor de tela)
+12. `historico.js` - histórico das partidas (`snakeHistorico`, até 200) e o gráfico SVG das últimas 30
+13. `missoes.js` - missões diárias: 3 por dia sorteadas pela data (`snakeMissoes`), sequência de dias (`snakeSequenciaMissoes`)
+14. `enfeites.js` - desenho dos itens da loja: chapéus, comidas, padrões do corpo, rastros e efeitos (partículas), tabuleiros com enfeites, as prévias e o estilo "aura" (`desenharSombraViva`: chefão e skin Espectro)
+15. `loja.js` - moedas (`snakeCarteira`: moedas, comprados, equipados), tela da loja com abas, desenho dos chapéus e das comidas
+16. `salvos.js` - tudo que é guardado no navegador: `lerDoArmazenamento`/`salvarNoArmazenamento`, recordes, estatísticas, conquistas, teclas e preferências
+17. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último)
 
-Os arquivos 2 a 15 só tem funções e valores fixos; o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-v13`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
+Os arquivos 2 a 16 só tem funções e valores fixos; o que executa ao carregar fica no `script.js`.
+Outros: `style.css`, `sw.js` (service worker, cache `snake-v14`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
 **Ao criar um arquivo .js novo:** incluir no `index.html` antes do `script.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
 ## Economia da loja (combinado com o usuário)
 
-Conquistas dão itens exclusivos (nunca vendidos); a loja vende só itens próprios. Moedas: 1 a cada 2 pontos, 15 por missão, +30 com as 3 do dia, +5 por dia de sequência (até +50); ~150-200 moedas em 30 min/dia. Preços: simples 100-200, legal 300-500, especial 700-1000. Tudo em `ITENS_DA_LOJA` e nas constantes `MOEDAS_*` do `logica.js`.
+Conquistas dão itens exclusivos 🏆 (nunca vendidos); a loja vende só itens próprios. Itens 🔒 (`liberaCom`): à venda, mas só depois de uma conquista (ex.: Espectro, 800, libera com "Encarou o abismo"). Moedas: 1 a cada 2 pontos, 15 por missão, +30 com as 3 do dia, +5 por dia de sequência (até +50); ~150-200 moedas em 30 min/dia. Preços: simples 100-200, legal 300-500, especial 700-1000. Tudo em `ITENS_DA_LOJA` e nas constantes `MOEDAS_*` do `logica.js`.
 
 ## Nomes do meu jeito (funcionam, não "corrija")
 
@@ -70,5 +71,5 @@ Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 
 
 ## Melhorias pendentes (lista 5)
 
-Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loja.js` + `enfeites.js`: chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer; itens 🏆 só por conquista: Zebra=Glutona, Lava=Saí do labirinto, Fogo=Combo x8, Dourada=Fiel) · 3 modo Arena (zona que fecha, conquista Sobrevivente = corpo exclusivo Cobra de magma).
-A fazer: 4 cobra inimiga / chefão · 5 power-ups Congelar, Bomba e Fantasma · 6 até 4 jogadores · 9 temas de época · 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP · 13 idiomas.
+Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loja.js` + `enfeites.js`: chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer; itens 🏆 só por conquista: Zebra=Glutona, Lava=Saí do labirinto, Fogo=Combo x8, Dourada=Fiel) · 3 modo Arena (zona que fecha, conquista Sobrevivente = corpo exclusivo Cobra de magma). · 4 modo Chefão (`chefao.js`: "os olhos que emergem", estilo aura no abismo; espada; skin Espectro liberada por conquista).
+A fazer: 5 power-ups Congelar, Bomba e Fantasma · 6 até 4 jogadores · 9 temas de época · 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP · 13 idiomas.

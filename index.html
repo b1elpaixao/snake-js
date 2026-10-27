@@ -174,6 +174,7 @@
                                 <option value="rato">Rato (caçada)</option>
                                 <option value="tempo">Contra o tempo (2 min)</option>
                                 <option value="arena">Arena (zona que fecha)</option>
+                                <option value="chefao">Chefão (os olhos que emergem)</option>
                                 <option value="fases">Fases(mapas)</option>
                                 <option value="desafio">Desafio do dia</option>
                             </select>
@@ -248,7 +249,7 @@
                             <li><b>Jogador 1:</b> setas do teclado. No celular, deslize o dedo no tabuleiro (dá pra emendar viradas sem tirar o dedo).</li>
                             <li><b>Jogador 2:</b> W, A, S, D.</li>
                             <li><b>Controle de videogame:</b> ligue o controle (com fio ou Bluetooth) e aperte qualquer botão. Setas ou analógico movem, A começa e joga de novo, Start pausa. Com 2 controles, o segundo é o Jogador 2.</li>
-                            <li><b>Moedas e loja:</b> cada partida dá 1 moeda a cada 2 pontos, e cada missão do dia dá 15 (mais um bônus se fizer as 3). Na Loja você compra chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer. Alguns itens (🏆) só saem ganhando conquistas difíceis.</li>
+                            <li><b>Moedas e loja:</b> cada partida dá 1 moeda a cada 2 pontos, e cada missão do dia dá 15 (mais um bônus se fizer as 3). Na Loja você compra chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer. Alguns itens (🏆) só saem ganhando conquistas difíceis, e outros (🔒) liberam pra comprar depois de uma conquista.</li>
                             <li><b>Trocar teclas:</b> clique numa tecla no painel Controles e aperte a nova. Elas ficam salvas.</li>
                             <li><b>Espaço ou Esc:</b> pausa e abre o menu (Continuar, Reiniciar, Voltar ao menu). O jogo também pausa sozinho se você trocar de aba.</li>
                             <li><b>Esc:</b> no fim de jogo, volta ao menu.</li>
@@ -264,6 +265,7 @@
                             <li><b>Rato:</b> no lugar de maçã, ratos. O cinza fica parado e vale 1 ponto; o marrom foge quando você chega perto e vale 3.</li>
                             <li><b>Contra o tempo:</b>2 minutos para fazer o máximo de pontos. Bater não acaba o jogo: a cobra perde 3 pedaços e fica 1 segundo parada.</li>
                             <li><b>Arena:</b> a cada 15 segundos a borda fecha uma volta e vira fogo. A faixa que vai fechar pisca 3 segundos antes, e o placar mostra quanto falta. Ficar fora da zona acaba o jogo, e o pedaço do corpo que estiver fora queima. Sempre com paredes e sem Portal.</li>
+                            <li><b>Chefão:</b> no abismo, os olhos que emergem caçam você: uma sombra com aura vermelha e dois olhos brancos. Encostar nela acaba o jogo. Pra derrotar: pegue a espada ⚔ que aparece no tabuleiro e, enquanto você brilhar em azul, acerte o corpo dela (com a espada ela foge de você). Fazer a sombra bater (em você, na parede ou numa pedra) também tira vida. Cada vez que você derrota, ganha pontos e eles voltam mais fortes. A primeira vitória libera a skin Espectro na loja.</li>
                             <li><b>Fases:</b> em vez de pedras soltas, mapas com paredes desenhadas. A cada 10 pontos você passa de fase, e a cobra volta pequena para o começo do mapa novo.</li>
                             <li><b>Sem paredes:</b> opção no topo da página. A cobra atravessa a borda e sai do outro lado.</li>
                             <li><b>Dificuldade:</b> muda a velocidade e a quantidade de pedras. A cobra também acelera conforme come, cada vez menos, até no máximo 1,6x no Fácil, 2x no Normal e 2,4x no Difícil. No Difícil, 3 pedras azuladas andam de um lado para o outro.</li>
@@ -433,6 +435,7 @@
     <script src="som.js"></script>
     <script src="movimento.js"></script>
     <script src="modos.js"></script>
+    <script src="chefao.js"></script>
     <script src="fantasma.js"></script>
     <script src="controle.js"></script>
     <script src="tutorial.js"></script>

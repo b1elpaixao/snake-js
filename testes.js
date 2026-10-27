@@ -621,6 +621,22 @@ verificar("velocidade: nunca passa do limite da dificuldade", [duracaoDoPasso(25
 verificar("velocidade: cada comida acelera menos que a anterior",
     (duracaoDoPasso(250, 0, 2) - duracaoDoPasso(250, 1, 2)) > (duracaoDoPasso(250, 40, 2) - duracaoDoPasso(250, 41, 2)), true);
 
+// modo Chefão
+verificar("chefão: o 1º tem 3 de vida e 8 de tamanho", JSON.stringify([nivelDoChefao(1).vida, nivelDoChefao(1).tamanho]), "[3,8]");
+verificar("chefão: cada um é mais forte (vida, tamanho e erra menos)",
+    [1, 2, 3].every((n) => nivelDoChefao(n + 1).vida >= nivelDoChefao(n).vida && nivelDoChefao(n + 1).tamanho > nivelDoChefao(n).tamanho && nivelDoChefao(n + 1).chanceDeErro < nivelDoChefao(n).chanceDeErro), true);
+verificar("chefão: tem limite de vida e tamanho", JSON.stringify([nivelDoChefao(50).vida, nivelDoChefao(50).tamanho, nivelDoChefao(50).chanceDeErro]), "[6,16,0.02]");
+verificar("chefão: longe, vai na comida", JSON.stringify(alvoDoChefao({ x: 0, y: 0 }, { x: 15, y: 15 }, { x: 1, y: 0 }, { x: 3, y: 4 }, false, 20, 20)), JSON.stringify({ x: 3, y: 4 }));
+verificar("chefão: perto, corta a frente da sua cabeça", JSON.stringify(alvoDoChefao({ x: 8, y: 10 }, { x: 10, y: 5 }, { x: 1, y: 0 }, { x: 0, y: 0 }, false, 20, 20)), JSON.stringify({ x: 13, y: 5 }));
+verificar("chefão: com a sua espada, foge pro lado contrário", JSON.stringify(alvoDoChefao({ x: 10, y: 10 }, { x: 7, y: 9 }, { x: 1, y: 0 }, { x: 0, y: 0 }, true, 20, 20)), JSON.stringify({ x: 13, y: 11 }));
+verificar("chefão: o alvo nunca sai do tabuleiro", JSON.stringify(alvoDoChefao({ x: 18, y: 1 }, { x: 10, y: 9 }, { x: 1, y: 0 }, { x: 0, y: 0 }, true, 20, 20)), JSON.stringify({ x: 19, y: 0 }));
+verificar("conquista: Encarou o abismo com 1 e Caçadora do abismo com 3",
+    [1, 3].map((chefoes) => conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 0, tamanho: 1, powerUps: 0, chefoes } }).filter((c) => c.id === "encarouOAbismo" || c.id === "cacadora").length).join(), "1,2");
+verificar("loja: toda liberação aponta pra uma conquista que existe", ITENS_DA_LOJA.filter((item) => item.liberaCom).every((item) => item.preco && CONQUISTAS.some((c) => c.id === item.liberaCom)), true);
+verificar("loja: Espectro não compra antes de Encarou o abismo", comprarItem({ moedas: 5000, comprados: [], equipados: {} }, ITENS_DA_LOJA.find((item) => item.id === "espectro"), []), null);
+verificar("loja: Espectro compra depois de Encarou o abismo",
+    JSON.stringify(comprarItem({ moedas: 5000, comprados: [], equipados: {} }, ITENS_DA_LOJA.find((item) => item.id === "espectro"), ["encarouOAbismo"]).comprados), JSON.stringify(["espectro"]));
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

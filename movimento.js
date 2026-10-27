@@ -15,7 +15,7 @@ function moverJogador(jogador) {
     jogador.cobra.unshift(novaCabeca);
 
     const comeuComida = modoAtual !== "rato" && mesmaPosicao(novaCabeca, comida);
-    const comeuComidaDourada = comidaDourada && novaCabeca.x === comidaDourada.x && novaCabeca.y === comidaDourada.y;
+    const comeuComidaDourada = comidaDourada && !jogador.chefao && novaCabeca.x === comidaDourada.x && novaCabeca.y === comidaDourada.y;
 
     const indiceRato = ratos.findIndex((rato) => mesmaPosicao(rato, novaCabeca));
     const comeuRato= indiceRato !== -1;
@@ -58,7 +58,7 @@ function moverJogador(jogador) {
         jogador.cobra.pop();
     }
     
-    const pegouPowerUp = powerUp && novaCabeca.x === powerUp.x && novaCabeca.y === powerUp.y;
+    const pegouPowerUp = powerUp && !jogador.chefao && novaCabeca.x === powerUp.x && novaCabeca.y === powerUp.y; // o chefão não pega power-up
 
     if (pegouPowerUp) {
         if (!jogador.bot) {
@@ -100,7 +100,7 @@ function comerAlimento(jogador, pontosBase) {
 
     jogador.comboAtual = dentroDoCombo ? jogador.comboAtual + 1 : 1;
     jogador.ultimoComerEm = agora;
-    jogador.comidas++;
+    if (!jogador.chefao) jogador.comidas++; // o chefão comendo não acelera o jogo
 
     const pontosGanhos = pontosBase * jogador.comboAtual * (jogador.pontosDobradosAtivo ? 2 : 1);
 
@@ -338,7 +338,7 @@ function decidirDirecaoBot(jogador) {
         !(zonaDoBot && foraDaZona(posicao, zonaDoBot));
     const cabeca = jogador.cobra[0];
 
-    const nivel = NIVEIS_DO_BOT[limparNivelBot(seletorNivelBot.value)];
+    const nivel = jogador.chefao ? jogador.nivel : NIVEIS_DO_BOT[limparNivelBot(seletorNivelBot.value)];
 
     // de vez em quando (mais no fácil) ele se distrai e vira pra um lado qualquer
     if (Math.random() < nivel.chanceDeErro) {
@@ -348,5 +348,8 @@ function decidirDirecaoBot(jogador) {
     // quando mais cuidadoso, mais espaço ele exige à frente pra não entrar em beco
     const espaçoNecessario = espacoQueOBotExige(jogador.cobra.length, nivel.cuidado);
 
-    return escolherDirecaoBot(cabeca, jogador.direcao, escolherAlvoBot(cabeca), andar, casaLivre, espaçoNecessario);
+    const alvo = jogador.chefao
+        ? alvoDoChefao(cabeca, jogadores[0].cobra[0], jogadores[0].direcao, comida, temEspada(jogadores[0]), COLUNAS, LINHAS)
+        : escolherAlvoBot(cabeca);
+    return escolherDirecaoBot(cabeca, jogador.direcao, alvo, andar, casaLivre, espaçoNecessario);
 }

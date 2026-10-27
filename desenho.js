@@ -87,6 +87,7 @@ function desenhar() {
     }
 
     desenharZonaDaArena();
+    desenharEspadaNoChao();
     atualizarRastro();
     desenharParticulas(); // rastro e efeito ao comer da loja
     desenharFantasma(); // por baixo das cobras de verdade
@@ -108,6 +109,7 @@ function desenhar() {
         ctx.restore();
     }
 
+    desenharPulsos(); // pulsos de luz do Chefão, por cima das cobras
     desenharTextosFlutuantes();
 
     if (animacaoMorte) {
@@ -305,6 +307,9 @@ function desenharZonaDaArena() {
 }
 
 function desenharTabuleiro() {
+    // fundo inteiro na cor escura: com zoom, sobra um fiozinho entre as casas e aparecia a página por trás
+    ctx.fillStyle = temaDoTabuleiro().escuro;
+    ctx.fillRect(0, 0, LARGURA_TABULEIRO, ALTURA_TABULEIRO);
     for (let linha = 0; linha < LINHAS; linha++) {
         for (let coluna = 0; coluna < COLUNAS; coluna++) {
             const ehClara = (linha + coluna) % 2 === 0;
@@ -582,7 +587,9 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
     const corCabeca = jogador.invencivel ? "#fff27a" : jogador.corCabeca;
     const padrao = padraoDoCorpo(jogador); // padrão do corpo comprado na loja (só Jogador 1)
     const tempo = agoraDoJogo();
-    const larguraBase = TAMANHO_CELULA * 0.7 * ESCALA_DA_COBRA;
+    const tamanhoDaCobra = jogador.chefao ? 1.2 : 1; // o chefão é mais grosso
+    const larguraBase = TAMANHO_CELULA * 0.7 * ESCALA_DA_COBRA * tamanhoDaCobra;
+
     const pedacoMaximo = TAMANHO_CELULA / 4; // desenha em pedacinhos pra cor e largura mudarem aos poucos
 
     // comprimento total, pra saber onde cada pedacinho fica no corpo (1 = cabeça, 0 = rabo)
@@ -592,8 +599,16 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
         if (d <= TAMANHO_CELULA * 1.5) total += d;
     }
 
+    // estilo "aura" (o chefão e o corpo "Espectro" da loja): desenho próprio, sem o corpo de cobra
+    if (jogador.chefao || padrao === "espectro") {
+        desenharBrilhoDaEspada(ctx, jogador, pontos, larguraBase);
+        desenharSombraViva(ctx, pontos, direcao, larguraBase, tempo, jogador.chefao ? PALETA_DO_CHEFAO : PALETA_DA_SOMBRA);
+        return;
+    }
+
     ctx.lineCap = "round";
     if (padrao === "neon") desenharContornoNeon(ctx, pontos, larguraBase);
+    desenharBrilhoDaEspada(ctx, jogador, pontos, larguraBase);
     if (padrao === "magma") {
         desenharContornoNeon(ctx, pontos, larguraBase, "#ff5a14"); // a lava brilhando em volta
         soltarFagulhasDeMagma(pontos);
@@ -658,7 +673,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
 
     // a cabeça sempre olha pra onde está indo
     const angulo = Math.atan2(direcao.y, direcao.x);
-    const escala = (TAMANHO_CELULA / 26) * ESCALA_DA_COBRA;
+    const escala = (TAMANHO_CELULA / 26) * ESCALA_DA_COBRA * tamanhoDaCobra;
 
     ctx.save();
     ctx.translate(pontos[0].x, pontos[0].y);
@@ -696,6 +711,10 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
     if (modoCooperativo) {
         const juntos = jogadores.reduce((total, jogador) => total + jogador.pontuacao, 0);
         resultado = `Juntos: ${juntos} ${juntos === 1 ? "ponto" : "pontos"}`;
+    } else if (chefao) {
+        resultado = chefoesDerrotados === 0
+            ? "Os olhos venceram!"
+            : `Derrotou os olhos ${chefoesDerrotados} ${chefoesDerrotados === 1 ? "vez" : "vezes"}!`;
     } else if (modoAtual === "tempo") {
         const vencedor = vencedorPorPontos(jogadores);
         resultado = jogadores.length === 1 ? "Tempo esgotado!" : vencedor ? `${vencedor.nome} venceu!` : "Empate!";
@@ -708,14 +727,16 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
     }
 
     const textoPontuacao = jogadores
+          .filter((jogador) => !jogador.chefao) // os pontos do chefão não contam
           .map((jogador) => `${jogador.nome}: ${jogador.pontuacao}`)
           .join(" | ");
 
     elementoResultadoFinal.textContent = resultado;
     elementoCausaMorte.textContent = batidas
         .map(({ jogador, motivo }) => {
-            const nome = jogadores.length === 1 ? "Você" : jogador.nome;
+            const nome = jogadores.length === 1 || chefao ? "Você" : jogador.nome; // no Chefão, o chefão não conta como jogador
             const outro = jogadores.find((outroJogador) => outroJogador !== jogador);
+            if (chefao && motivo === "outroJogador") return `${nome} foi pego pelos olhos que emergem`;
             return descreverBatida(nome, motivo, outro ? outro.nome : "");
         })
         .join(" · ");

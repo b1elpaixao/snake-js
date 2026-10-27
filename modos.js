@@ -81,8 +81,11 @@ function passarDeFase(numero) {
 const DURACAO_FORA_JUNTOS_MS = 3000;
 
 // no 2 Juntos uma cobra passa por dentro da outra: só conta bater em si mesma, pedra e parede
+// no Chefão, com a espada, encostar no chefão é golpe e não batida
 function jogadoresQueBatem(jogador) {
-    return modoCooperativo ? [jogador] : jogadores;
+    if (modoCooperativo) return [jogador];
+    if (chefao && jogador !== chefao && temEspada(jogador)) return [jogador];
+    return jogadores;
 }
 
 // quem bateu volta pro começo, desde que o parceiro continue no jogo

@@ -509,6 +509,40 @@ function cortarCobraNaZona(cobra, zona) {
     return primeiroFora === -1 ? cobra : cobra.slice(0, primeiroFora);
 }
 
+// ==========================================
+// Modo Chefão (funções puras - testadas em testes.js)
+// ==========================================
+const DURACAO_ESPADA_MS = 6000;
+const ESPADA_VOLTA_EM_MS = 4000; // depois que a espada acaba (ou chega chefão novo), outra aparece
+const PONTOS_POR_CHEFAO = 10; // vezes o número do chefão: o 1º dá 10, o 2º dá 20...
+const DISTANCIA_DE_CACA = 8; // mais perto que isso, o chefão vai pra frente da sua cabeça
+
+// cada chefão é mais forte que o anterior: mais vida, maior e erra menos
+function nivelDoChefao(numero) {
+    return {
+        vida: Math.min(2 + numero, 6),
+        tamanho: Math.min(6 + numero * 2, 16),
+        chanceDeErro: Math.max(0.02, 0.14 - numero * 0.03),
+        cuidado: Math.min(1, 0.3 + numero * 0.15),
+    };
+}
+
+// pra onde o chefão vai: se você está com a espada, ele foge; perto, corta a sua frente; longe, vai na comida
+function alvoDoChefao(cabecaDoChefao, cabecaDoJogador, direcaoDoJogador, comida, fugindo, colunas, linhas) {
+    const dentro = (casa) => ({
+        x: Math.max(0, Math.min(colunas - 1, casa.x)),
+        y: Math.max(0, Math.min(linhas - 1, casa.y)),
+    });
+
+    if (fugindo) {
+        return dentro({ x: cabecaDoChefao.x * 2 - cabecaDoJogador.x, y: cabecaDoChefao.y * 2 - cabecaDoJogador.y });
+    }
+    if (distanciaManhattan(cabecaDoChefao, cabecaDoJogador) <= DISTANCIA_DE_CACA) {
+        return dentro({ x: cabecaDoJogador.x + direcaoDoJogador.x * 3, y: cabecaDoJogador.y + direcaoDoJogador.y * 3 });
+    }
+    return comida;
+}
+
 // tira "quantidade" pedaços do rabo, mas a cobra fica com pelo menos 1
 function encolherCobra (cobra, quantidade) {
     const tamanho = Math.max(1, cobra.length - quantidade);
@@ -775,6 +809,8 @@ const CONQUISTAS = [
     { id: "fiel", nome: "Fiel", descricao: "Completar as missões 7 dias seguidos", condicao: (c) => (c.missoesSeguidas || 0) >= 7 },
     { id: "contraORelogio", nome: "Contra o relógio", descricao: "Fazer 30 pontos no Contra o tempo", condicao: (c) => c.partida.modo === "tempo" && c.partida.pontos >= 30 },
     { id: "sobrevivente", nome: "Sobrevivente", descricao: "Chegar na última zona da Arena", condicao: (c) => c.partida.modo === "arena" && c.partida.zonaFinal === true },
+    { id: "encarouOAbismo", nome: "Encarou o abismo", descricao: "Derrotar os olhos que emergem no modo Chefão", condicao: (c) => (c.partida.chefoes || 0) >= 1 },
+    { id: "cacadora", nome: "Caçadora do abismo", descricao: "Derrotar os olhos que emergem 3 vezes numa partida", condicao: (c) => (c.partida.chefoes || 0) >= 3 },
     { id: "labirinto", nome: "Saí do labirinto", descricao: "Chegar à fase 4 no modo Fases", condicao: (c) => c.partida.modo === "fases" && c.partida.fase >= 4 },
     { id: "venceuBot", nome: "Mais esperta que o bot", descricao: "Vencer o bot no nível Difícil", condicao: (c) => c.partida.venceuBotDificil === true },
     { id: "veterana", nome: "Veterana", descricao: "Jogar 50 partidas", condicao: (c) => c.estatisticas.partidas >= 50 },
@@ -892,6 +928,7 @@ const NOMES_DOS_MODOS = {
     rato: "Rato",
     tempo: "Contra o tempo",
     arena: "Arena",
+    chefao: "Chefão",
     fases: "Fases",
     desafio: "Desafio do dia",
     personalizada: "Fase criada",
@@ -1340,6 +1377,7 @@ const ITENS_DA_LOJA = [
     { id: "zebra", nome: "Zebra", tipo: "corpo", conquista: "glutona" },
     { id: "dourado", nome: "Dourada brilhante", tipo: "corpo", conquista: "fiel" },
     { id: "magma", nome: "Cobra de magma", tipo: "corpo", conquista: "sobrevivente" },
+    { id: "espectro", nome: "Espectro", tipo: "corpo", preco: 800, liberaCom: "encarouOAbismo" }, // à venda, mas só depois da conquista
     { id: "bolhas", nome: "Bolhas", tipo: "rastro", preco: 300 },
     { id: "folhas", nome: "Folhas", tipo: "rastro", preco: 350 },
     { id: "notas", nome: "Notas musicais", tipo: "rastro", preco: 400 },
@@ -1396,9 +1434,11 @@ function limparCarteira(salva, conquistasGanhas) {
     };
 }
 
-// devolve a carteira depois da compra, ou null se não der (de conquista, já tem ou faltam moedas)
-function comprarItem(carteira, item) {
+// devolve a carteira depois da compra, ou null se não der (de conquista, já tem, faltam moedas
+// ou ainda não liberou: alguns itens à venda só podem ser comprados depois de uma conquista)
+function comprarItem(carteira, item, conquistasGanhas = []) {
     if (!item.preco || carteira.comprados.includes(item.id) || carteira.moedas < item.preco) return null;
+    if (item.liberaCom && !conquistasGanhas.includes(item.liberaCom)) return null;
     return { ...carteira, moedas: carteira.moedas - item.preco, comprados: [...carteira.comprados, item.id] };
 }
 
