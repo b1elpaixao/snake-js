@@ -86,6 +86,8 @@ function desenhar() {
         comItensMaiores(centro.x, centro.y, () => desenharPowerUp(powerUp));
     }
 
+    atualizarRastro();
+    desenharParticulas(); // rastro e efeito ao comer da loja
     desenharFantasma(); // por baixo das cobras de verdade
 
     for (const jogador of jogadores) {
@@ -258,6 +260,7 @@ function desenharTabuleiro() {
             desenharCelula(coluna, linha, ehClara ? temaDoTabuleiro().claro : temaDoTabuleiro().escuro);
         }
     }
+    desenharDecoracaoDoTabuleiro(ctx, temaDoTabuleiro(), COLUNAS, LINHAS, TAMANHO_CELULA, performance.now()); // tabuleiros da loja
 }
 
 function desenharMaca(x, y, cor = "#e7471d") {
@@ -526,6 +529,8 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
 
     const corCauda = jogador.invencivel ? "#d4a800" : jogador.corCorpo;
     const corCabeca = jogador.invencivel ? "#fff27a" : jogador.corCabeca;
+    const padrao = padraoDoCorpo(jogador); // padrão do corpo comprado na loja (só Jogador 1)
+    const tempo = agoraDoJogo();
     const larguraBase = TAMANHO_CELULA * 0.7 * ESCALA_DA_COBRA;
     const pedacoMaximo = TAMANHO_CELULA / 4; // desenha em pedacinhos pra cor e largura mudarem aos poucos
 
@@ -537,6 +542,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
     }
 
     ctx.lineCap = "round";
+    if (padrao === "neon") desenharContornoNeon(ctx, pontos, larguraBase);
 
     // do rabo pra cabeça, assim a parte da frente fica por cima
     let distanciaDaCabeca = total;
@@ -556,7 +562,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
             const meio = distanciaDaCabeca - tamanho * (t0 + t1) / 2;
             const posicaoNoCorpo = total > 0 ? 1 - meio / total : 1;
 
-            ctx.strokeStyle = misturarCores(corCauda, corCabeca, posicaoNoCorpo);
+            ctx.strokeStyle = corDoPedacoComPadrao(padrao, corCauda, corCabeca, posicaoNoCorpo, meio, tempo);
             ctx.lineWidth = larguraBase * (0.6 + 0.4 * posicaoNoCorpo);
             ctx.beginPath();
             ctx.moveTo(deste.x + (proximo.x - deste.x) * t0, deste.y + (proximo.y - deste.y) * t0);
@@ -592,6 +598,8 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
     
     }
 
+    if (padrao === "dourado") desenharBrilhosDourados(ctx, pontos, tempo);
+
     // a cabeça sempre olha pra onde está indo
     const angulo = Math.atan2(direcao.y, direcao.x);
     const escala = (TAMANHO_CELULA / 26) * ESCALA_DA_COBRA;
@@ -600,7 +608,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
     ctx.translate(pontos[0].x, pontos[0].y);
     ctx.rotate(angulo);
     ctx.scale(escala, escala);
-    desenharCabecaCobra(corCabeca);
+    desenharCabecaCobra(corDaCabecaComPadrao(padrao, corCabeca, tempo));
     if (jogador === jogadores[0] && !jogador.bot) {
         desenharChapeu(ctx, carteira.equipados.chapeu, agoraDoJogo()); // chapéu da loja: só no Jogador 1
     }

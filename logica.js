@@ -725,6 +725,8 @@ const CONQUISTAS = [
     { id: "colecionadora", nome: "Colecionadora", descricao: "Pegar 3 power-ups numa partida", condicao: (c) => c.partida.powerUps >= 3 },
     { id: "cinquenta", nome: "50 pontos", descricao: "Fazer 50 pontos numa partida", condicao: (c) => c.partida.pontos >= 50 },
     { id: "lendaria", nome: "Lendária", descricao: "Fazer 100 pontos numa partida", condicao: (c) => c.partida.pontos >= 100 },
+    { id: "comboOito", nome: "Combo x8", descricao: "Fazer um combo x8", condicao: (c) => c.estatisticas.maiorCombo >= 8 },
+    { id: "fiel", nome: "Fiel", descricao: "Completar as missões 7 dias seguidos", condicao: (c) => (c.missoesSeguidas || 0) >= 7 },
     { id: "contraORelogio", nome: "Contra o relógio", descricao: "Fazer 30 pontos no Contra o tempo", condicao: (c) => c.partida.modo === "tempo" && c.partida.pontos >= 30 },
     { id: "labirinto", nome: "Saí do labirinto", descricao: "Chegar à fase 4 no modo Fases", condicao: (c) => c.partida.modo === "fases" && c.partida.fase >= 4 },
     { id: "venceuBot", nome: "Mais esperta que o bot", descricao: "Vencer o bot no nível Difícil", condicao: (c) => c.partida.venceuBotDificil === true },
@@ -1284,8 +1286,25 @@ const ITENS_DA_LOJA = [
     { id: "melancia", nome: "Melancia", tipo: "comida", preco: 250 },
     { id: "donut", nome: "Donut", tipo: "comida", preco: 350 },
     { id: "pizza", nome: "Pizza", tipo: "comida", preco: 450 },
+    { id: "listras", nome: "Listras", tipo: "corpo", preco: 180 },
+    { id: "neon", nome: "Contorno neon", tipo: "corpo", preco: 450 },
+    { id: "arcoiris", nome: "Arco-íris", tipo: "corpo", preco: 950 },
+    { id: "zebra", nome: "Zebra", tipo: "corpo", conquista: "glutona" },
+    { id: "dourado", nome: "Dourada brilhante", tipo: "corpo", conquista: "fiel" },
+    { id: "bolhas", nome: "Bolhas", tipo: "rastro", preco: 300 },
+    { id: "folhas", nome: "Folhas", tipo: "rastro", preco: 350 },
+    { id: "notas", nome: "Notas musicais", tipo: "rastro", preco: 400 },
+    { id: "estrelinhas", nome: "Estrelinhas", tipo: "rastro", preco: 800 },
+    { id: "fogo", nome: "Fogo", tipo: "rastro", conquista: "comboOito" },
+    { id: "praia", nome: "Praia", tipo: "tabuleiro", preco: 300, claro: "#f7e3b0", escuro: "#f0d89a", decoracao: true },
+    { id: "doces", nome: "Doces", tipo: "tabuleiro", preco: 450, claro: "#ffd6e8", escuro: "#ffc6df", decoracao: true },
+    { id: "espaco", nome: "Espaço", tipo: "tabuleiro", preco: 950, claro: "#161c3d", escuro: "#111632", decoracao: true },
+    { id: "lava", nome: "Lava", tipo: "tabuleiro", conquista: "labirinto", claro: "#2a1716", escuro: "#221211", decoracao: true },
+    { id: "confete", nome: "Confete", tipo: "efeito", preco: 250 },
+    { id: "coracoes", nome: "Corações", tipo: "efeito", preco: 350 },
+    { id: "estrelas", nome: "Estrelas", tipo: "efeito", preco: 500 },
 ];
-const TIPOS_DA_LOJA = ["chapeu", "comida"];
+const TIPOS_DA_LOJA = ["chapeu", "comida", "corpo", "rastro", "tabuleiro", "efeito"];
 
 const MOEDAS_POR_MISSAO = 15;
 const MOEDAS_DIA_COMPLETO = 30;         // bônus por fazer as 3 missões do dia

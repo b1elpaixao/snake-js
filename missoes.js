@@ -43,6 +43,7 @@ function registrarMissoesDaPartida() {
     if (novas.length > 0 && estado.feitas.length === MISSOES_POR_DIA) {
         salvarNoArmazenamento("snakeSequenciaMissoes", JSON.stringify(atualizarSequencia(lerSequenciaDeMissoes(), estado.data)));
         completouODia = true;
+        verificarConquistas(); // conquista "Fiel" (7 dias seguidos)
     }
 
     const diasSeguidos = sequenciaValendo(lerSequenciaDeMissoes(), estado.data);

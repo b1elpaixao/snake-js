@@ -404,6 +404,7 @@ function contextoDasConquistas(extra = {}) {
 
     return {
         estatisticas,
+        missoesSeguidas: sequenciaValendo(lerSequenciaDeMissoes(), dataDeHoje()),
         partida: {
             pontos: Math.max(0, ...humanos.map((jogador) => jogador.pontuacao)),
             tamanho: Math.max(0, ...humanos.map((jogador) => jogador.cobra.length)),
@@ -593,6 +594,8 @@ function escolherCorDaCobra(id) {
 // ==========================================
 function temaDoTabuleiro() {
     if (opcoesDeAcessibilidade.altoContraste) return TEMA_ALTO_CONTRASTE; // a opção de acessibilidade ganha do tema
+    const daLoja = tabuleiroDaLoja();
+    if (daLoja) return daLoja; // tabuleiro comprado na loja
     return TEMAS_DO_TABULEIRO.find((tema) => tema.id === temaDoTabuleiroId) || TEMAS_DO_TABULEIRO[0];
 }
 
@@ -610,7 +613,7 @@ function mostrarTemasDoTabuleiro() {
         botao.style.setProperty("--cor-cabeca", tema.claro);
         botao.style.setProperty("--cor-corpo", tema.escuro);
         botao.disabled = !liberado;
-        botao.setAttribute("aria-pressed", String(tema.id === temaDoTabuleiroId));
+        botao.setAttribute("aria-pressed", String(tema.id === temaDoTabuleiroId && !carteira.equipados.tabuleiro));
         botao.title = liberado ? tema.nome : `${tema.nome}: ganhe a conquista "${conquista.nome}"`;
         botao.setAttribute("aria-label", botao.title);
         botao.addEventListener("click", () => escolherTemaDoTabuleiro(tema.id));
@@ -626,6 +629,10 @@ function escolherTemaDoTabuleiro(id) {
     if (!tema || !corEstaLiberada(tema, conquistasGanhas)) return; // bloqueado: não muda nada
 
     temaDoTabuleiroId = tema.id;
+    if (carteira.equipados.tabuleiro) {
+        carteira = { ...carteira, equipados: { ...carteira.equipados, tabuleiro: null } }; // escolheu um tema: tira o tabuleiro da loja
+        salvarCarteira();
+    }
     mostrarTemasDoTabuleiro();
     salvarPreferencias();
 }
@@ -1354,6 +1361,7 @@ function travarSemParedes(travado) {
 }
 
 function reiniciar() {
+    particulas = []; // rastro e efeitos da partida anterior
     clearTimeout(temporizadorAnimacaoMorte);
     elementoTextoCompartilhar.hidden = true;
     clearTimeout(temporizadorLoop);

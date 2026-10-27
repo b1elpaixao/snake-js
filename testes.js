@@ -566,15 +566,15 @@ verificar("loja: ids únicos", new Set(ITENS_DA_LOJA.map((item) => item.id)).siz
 verificar("loja: todo item tem preço ou conquista (nunca os dois)",
     ITENS_DA_LOJA.every((item) => Boolean(item.preco) !== Boolean(item.conquista)), true);
 verificar("loja: toda conquista de item existe", ITENS_DA_LOJA.filter((item) => item.conquista).every((item) => CONQUISTAS.some((c) => c.id === item.conquista)), true);
-verificar("loja: carteira vazia", JSON.stringify(limparCarteira(null, [])), '{"moedas":0,"comprados":[],"equipados":{"chapeu":null,"comida":null}}');
+verificar("loja: carteira vazia", JSON.stringify(limparCarteira(null, [])), '{"moedas":0,"comprados":[],"equipados":{"chapeu":null,"comida":null,"corpo":null,"rastro":null,"tabuleiro":null,"efeito":null}}');
 verificar("loja: carteira estranha é limpa",
     JSON.stringify(limparCarteira({ moedas: -5, comprados: ["bone", "bone", "coroa", "inventado"], equipados: { chapeu: "coroa", comida: "bone" } }, [])),
-    '{"moedas":0,"comprados":["bone"],"equipados":{"chapeu":null,"comida":null}}');
+    '{"moedas":0,"comprados":["bone"],"equipados":{"chapeu":null,"comida":null,"corpo":null,"rastro":null,"tabuleiro":null,"efeito":null}}');
 verificar("loja: item de conquista vale depois de ganhar",
     limparCarteira({ equipados: { chapeu: "coroa" } }, ["lendaria"]).equipados.chapeu, "coroa");
 const carteiraDeTeste = limparCarteira({ moedas: 200 }, []);
 verificar("loja: comprar desconta e guarda", JSON.stringify(comprarItem(carteiraDeTeste, itemDaLoja("bone"))),
-    '{"moedas":80,"comprados":["bone"],"equipados":{"chapeu":null,"comida":null}}');
+    '{"moedas":80,"comprados":["bone"],"equipados":{"chapeu":null,"comida":null,"corpo":null,"rastro":null,"tabuleiro":null,"efeito":null}}');
 verificar("loja: sem moedas não compra", comprarItem(carteiraDeTeste, itemDaLoja("helice")), null);
 verificar("loja: item de conquista não se compra", comprarItem({ ...carteiraDeTeste, moedas: 99999 }, itemDaLoja("coroa")), null);
 verificar("loja: não compra duas vezes", comprarItem({ ...carteiraDeTeste, comprados: ["bone"] }, itemDaLoja("bone")), null);
@@ -583,6 +583,20 @@ verificar("loja: usar e tirar", [equiparItem(comBone, itemDaLoja("bone"), []).eq
     equiparItem(equiparItem(comBone, itemDaLoja("bone"), []), itemDaLoja("bone"), []).equipados.chapeu].join(), "bone,");
 verificar("loja: não usa o que não tem", equiparItem(carteiraDeTeste, itemDaLoja("laco"), []), null);
 verificar("conquista: Lendária com 100 pontos", conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 100, tamanho: 1, powerUps: 0 } }).some((c) => c.id === "lendaria"), true);
+
+// loja parte 2
+verificar("loja: todo tipo tem item à venda e item de conquista ou mais de 2 à venda",
+    TIPOS_DA_LOJA.every((tipo) => ITENS_DA_LOJA.filter((item) => item.tipo === tipo && item.preco).length >= 3), true);
+verificar("loja: preços dentro das faixas (100 a 1000)", ITENS_DA_LOJA.filter((item) => item.preco).every((item) => item.preco >= 100 && item.preco <= 1000), true);
+verificar("loja: todo item é de um tipo que existe", ITENS_DA_LOJA.every((item) => TIPOS_DA_LOJA.includes(item.tipo)), true);
+verificar("loja: tabuleiro tem as duas cores", ITENS_DA_LOJA.filter((item) => item.tipo === "tabuleiro").every((item) => item.claro && item.escuro), true);
+verificar("loja: cada conquista dá no máximo 1 item", new Set(ITENS_DA_LOJA.filter((item) => item.conquista).map((item) => item.conquista)).size,
+    ITENS_DA_LOJA.filter((item) => item.conquista).length);
+verificar("conquista: Combo x8", conquistasNovas([], { estatisticas: { ...estatisticasVazias(), maiorCombo: 8 }, partida: { pontos: 0, tamanho: 1, powerUps: 0 } }).some((c) => c.id === "comboOito"), true);
+verificar("conquista: Fiel com 7 dias de missões",
+    [6, 7].map((dias) => conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 0, tamanho: 1, powerUps: 0 }, missoesSeguidas: dias }).some((c) => c.id === "fiel")).join(), "false,true");
+verificar("loja: usar tabuleiro guarda no tipo certo",
+    equiparItem({ moedas: 0, comprados: ["praia"], equipados: limparCarteira(null, []).equipados }, ITENS_DA_LOJA.find((item) => item.id === "praia"), []).equipados.tabuleiro, "praia");
 
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
