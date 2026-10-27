@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (284 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (289 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -54,6 +54,7 @@ Conquistas dão itens exclusivos (nunca vendidos); a loja vende só itens própr
 ## Coisas importantes do código
 
 - Movimento por trilha: a direção do próximo passo é combinada no fim de cada passo; o corpo é desenhado seguindo as casas, com cantos arredondados. Os passos acontecem dentro do `loopRenderizacao` (compasso do desenho) usando `proximoLoopEm`; não volte para `setTimeout`.
+- Velocidade: acelera pelo que a cobra come (`jogador.comidas`), não pelos pontos, numa curva suave (`duracaoDoPasso`) com limite por dificuldade (`aceleracaoMaxima`: 1,6x / 2x / 2,4x). Não voltar a ligar a velocidade aos pontos: o combo faz o jogo disparar.
 - `agoraDoJogo()` é o relógio que para na pausa. Use ele para tempos no jogo.
 - Teclas reservadas (não podem ser escolhidas para jogador): Espaço, Esc, F, Enter, Tab.
 - localStorage só pelas funções `lerDoArmazenamento` / `salvarNoArmazenamento`.

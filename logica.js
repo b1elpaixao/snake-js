@@ -358,6 +358,15 @@ function proximoPassoPedra(pedra, casaLivre) {
 // ==========================================
 // Velocidade no placar (função para - testadas em  testes.js)
 // ==========================================
+// a cobra acelera conforme COME, e não conforme os pontos (o combo multiplica os pontos e o jogo disparava).
+// Acelera mais no começo e cada vez menos, chegando perto do limite da dificuldade (ex.: 2x no Normal)
+const COMIDAS_PARA_ACELERAR = 30; // com 30 comidas a cobra já fez uns 2/3 da aceleração
+
+function duracaoDoPasso(velocidadeInicialMs, comidas, aceleracaoMaxima) {
+    const menorPasso = velocidadeInicialMs / aceleracaoMaxima;
+    return Math.round(menorPasso + (velocidadeInicialMs - menorPasso) * Math.exp(-comidas / COMIDAS_PARA_ACELERAR));
+}
+
 // quantas vezes mais rápido que no começo da partida, ex.: "1,4x"
 function formatarVelocidade(velocidadeInicialMs, velocidadeAtualMs) {
     const fator = velocidadeInicialMs / velocidadeAtualMs;

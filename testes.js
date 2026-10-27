@@ -613,6 +613,14 @@ verificar("conquista: Sobrevivente só na última zona da Arena",
 
 verificar("loja: Sobrevivente dá a Cobra de magma", ITENS_DA_LOJA.find((item) => item.conquista === "sobrevivente").id, "magma");
 
+// velocidade: acelera pelo que come, numa curva suave com limite
+verificar("velocidade: começa no passo inicial", duracaoDoPasso(250, 0, 2), 250);
+verificar("velocidade: 10 comidas no Normal ainda é tranquilo (~1,2x)", formatarVelocidade(250, duracaoDoPasso(250, 10, 2)), "1,2x");
+verificar("velocidade: 30 comidas no Normal (~1,5x)", formatarVelocidade(250, duracaoDoPasso(250, 30, 2)), "1,5x");
+verificar("velocidade: nunca passa do limite da dificuldade", [duracaoDoPasso(250, 1000, 2), duracaoDoPasso(300, 1000, 1.6), duracaoDoPasso(180, 1000, 2.4)].join(), "125,188,75");
+verificar("velocidade: cada comida acelera menos que a anterior",
+    (duracaoDoPasso(250, 0, 2) - duracaoDoPasso(250, 1, 2)) > (duracaoDoPasso(250, 40, 2) - duracaoDoPasso(250, 41, 2)), true);
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

@@ -65,8 +65,7 @@ ajustarResolucaoCanvas();
 window.addEventListener("resize", ajustarResolucaoCanvas);
 
 let VELOCIDADE_INICIAL_MS = 230;
-const VELOCIDADE_MINIMA_MS = 50;
-const REDUCAO_VELOCIDADE_POR_PONTO = 5;
+let ACELERACAO_MAXIMA = 2; // quantas vezes mais rápida a cobra pode ficar (muda com a dificuldade)
 const DISTANCIA_MINIMA_SWIPE = 20;
 
 let QUANTIDADE_OBSTACULOS = 8;
@@ -146,9 +145,9 @@ const seletorModo = document.getElementById("seletorModo");
 const seletorNivelBot = document.getElementById("seletorNivelBot");
 
 const CONFIGURACAO_DIFICULDADE = {
-    facil: { velocidadeInicial: 300, obstaculos: 5, pedrasMoveis: 0 },
-    normal: { velocidadeInicial: 250, obstaculos: 8, pedrasMoveis: 0 },
-    dificil: { velocidadeInicial: 180, obstaculos: 12, pedrasMoveis: 3 },
+    facil: { velocidadeInicial: 300, aceleracaoMaxima: 1.6, obstaculos: 5, pedrasMoveis: 0 },
+    normal: { velocidadeInicial: 250, aceleracaoMaxima: 2, obstaculos: 8, pedrasMoveis: 0 },
+    dificil: { velocidadeInicial: 180, aceleracaoMaxima: 2.4, obstaculos: 12, pedrasMoveis: 3 },
 };
 const botaoJogarBot = document.getElementById("botaoJogarBot");
 const botaoJogar1 = document.getElementById("botaoJogar1");
@@ -184,6 +183,7 @@ function criarJogador(config) {
         direcaoInicial: { ...config.direcaoInicial },
         filaDirecoes: [],
         pontuacao: 0,
+        comidas: 0, // quanto comeu na partida: é isso que acelera o jogo
         comboAtual: 0,
         ultimoComerEm: null,
         nome: config.nome,
@@ -1289,10 +1289,7 @@ function loop() {
 
     ultimoTickEm = agoraReal;
 
-    velocidadeAtual = Math.max(
-        VELOCIDADE_MINIMA_MS,
-        VELOCIDADE_INICIAL_MS - Math.max(...jogadores.map((j) => j.pontuacao)) * REDUCAO_VELOCIDADE_POR_PONTO
-    );
+    velocidadeAtual = duracaoDoPasso(VELOCIDADE_INICIAL_MS, Math.max(...jogadores.map((j) => j.comidas)), ACELERACAO_MAXIMA);
     atualizarVelocidadeNoPlacar();
     }
 
@@ -1429,6 +1426,7 @@ function aplicarDificuldade() {
     const configuracao = CONFIGURACAO_DIFICULDADE[dificuldade];
 
     VELOCIDADE_INICIAL_MS = configuracao.velocidadeInicial;
+    ACELERACAO_MAXIMA = configuracao.aceleracaoMaxima;
     QUANTIDADE_OBSTACULOS = modoAtual === "clássico" ? 0 : configuracao.obstaculos;
     QUANTIDADE_PEDRAS_MOVEIS = modoAtual === "clássico" ? 0 : configuracao.pedrasMoveis;
 }

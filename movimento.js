@@ -100,6 +100,7 @@ function comerAlimento(jogador, pontosBase) {
 
     jogador.comboAtual = dentroDoCombo ? jogador.comboAtual + 1 : 1;
     jogador.ultimoComerEm = agora;
+    jogador.comidas++;
 
     const pontosGanhos = pontosBase * jogador.comboAtual * (jogador.pontosDobradosAtivo ? 2 : 1);
 
