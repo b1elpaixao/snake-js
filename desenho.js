@@ -86,6 +86,7 @@ function desenhar() {
         comItensMaiores(centro.x, centro.y, () => desenharPowerUp(powerUp));
     }
 
+    desenharZonaDaArena();
     atualizarRastro();
     desenharParticulas(); // rastro e efeito ao comer da loja
     desenharFantasma(); // por baixo das cobras de verdade
@@ -251,6 +252,56 @@ function desenharTextosFlutuantes() {
         ctx.fillText(item.texto, x, y);
         ctx.restore();
     }
+}
+
+// Arena: escurece o que está fora da zona; no aviso, a faixa que vai fechar pisca em vermelho
+function desenharZonaDaArena() {
+    if (!zonaArena) return;
+
+    const lado = TAMANHO_CELULA;
+    const restante = tempoParaFecharArena(tempoDaPartidaMs, COLUNAS, LINHAS);
+    const proxima = restante !== null && restante <= ARENA_AVISO_MS
+        ? zonaDaArena(tempoDaPartidaMs + restante, COLUNAS, LINHAS)
+        : null;
+    const tempo = reduzirMovimento ? 0 : agoraDoJogo();
+    const pisca = reduzirMovimento ? 0.6 : 0.5 + 0.5 * Math.sin(tempo / 110);
+
+    ctx.save();
+    for (let linha = 0; linha < LINHAS; linha++) {
+        for (let coluna = 0; coluna < COLUNAS; coluna++) {
+            const casa = { x: coluna, y: linha };
+            const x = coluna * lado;
+            const y = linha * lado;
+
+            if (foraDaZona(casa, zonaArena)) {
+                // fogo: casa escura com uma brasa que acende e apaga (sempre nas mesmas casas)
+                ctx.fillStyle = (linha + coluna) % 2 === 0 ? "rgba(52, 12, 8, 0.88)" : "rgba(44, 10, 7, 0.88)";
+                ctx.fillRect(x, y, lado, lado);
+                const sorteio = sorteioDaCasa(coluna, linha);
+                if (sorteio < 0.35) {
+                    const brilho = 0.5 + 0.5 * Math.sin(tempo / 260 + sorteio * 40);
+                    ctx.fillStyle = `rgba(255, ${Math.round(90 + 80 * brilho)}, 40, ${0.35 + 0.5 * brilho})`;
+                    ctx.beginPath();
+                    ctx.arc(x + lado * (0.3 + sorteio), y + lado * (0.7 - sorteio), lado * 0.09, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else if (proxima && foraDaZona(casa, proxima)) {
+                ctx.fillStyle = `rgba(255, 55, 25, ${0.25 + 0.35 * pisca})`; // vai fechar: pisca em vermelho
+                ctx.fillRect(x, y, lado, lado);
+            }
+        }
+    }
+
+    // a borda da zona brilha
+    ctx.strokeStyle = "#ff6a3d";
+    ctx.shadowColor = "#ff6a3d";
+    ctx.shadowBlur = 8;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(
+        zonaArena.esquerda * lado + 1, zonaArena.topo * lado + 1,
+        (zonaArena.direita - zonaArena.esquerda + 1) * lado - 2, (zonaArena.baixo - zonaArena.topo + 1) * lado - 2
+    );
+    ctx.restore();
 }
 
 function desenharTabuleiro() {
@@ -543,6 +594,10 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
 
     ctx.lineCap = "round";
     if (padrao === "neon") desenharContornoNeon(ctx, pontos, larguraBase);
+    if (padrao === "magma") {
+        desenharContornoNeon(ctx, pontos, larguraBase, "#ff5a14"); // a lava brilhando em volta
+        soltarFagulhasDeMagma(pontos);
+    }
 
     // do rabo pra cabeça, assim a parte da frente fica por cima
     let distanciaDaCabeca = total;
@@ -599,6 +654,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
     }
 
     if (padrao === "dourado") desenharBrilhosDourados(ctx, pontos, tempo);
+    if (padrao === "magma") desenharPlacasDeMagma(ctx, pontos, larguraBase, tempo);
 
     // a cabeça sempre olha pra onde está indo
     const angulo = Math.atan2(direcao.y, direcao.x);
@@ -609,6 +665,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
     ctx.rotate(angulo);
     ctx.scale(escala, escala);
     desenharCabecaCobra(corDaCabecaComPadrao(padrao, corCabeca, tempo));
+    if (padrao === "magma") desenharRachadurasNaCabeca(ctx, reduzirMovimento ? 0 : tempo);
     if (jogador === jogadores[0] && !jogador.bot) {
         desenharChapeu(ctx, carteira.equipados.chapeu, agoraDoJogo()); // chapéu da loja: só no Jogador 1
     }

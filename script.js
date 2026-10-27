@@ -256,8 +256,8 @@ const movimentoReduzidoNoSistema = window.matchMedia && window.matchMedia("(pref
 let reduzirMovimento = movimentoReduzidoNoSistema; // também liga pela opção "Menos movimento"
 let textosFlutuantes = []; // os "=3" que sobem ao comer
 const DURACAO_TEXTO_FLUTUANTE_MS = 800;
-const MODOS_DE_JOGO = ["normal", "clássico", "rato", "tempo", "fases", "desafio"];
-const NOMES_MODOS = { normal: "Normal", "clássico": "Clássico", rato: "Rato", tempo: "Contra o tempo", fases: "Fases", desafio: "Desafio de hoje", personalizada: "Fase criada" };
+const MODOS_DE_JOGO = ["normal", "clássico", "rato", "tempo", "arena", "fases", "desafio"];
+const NOMES_MODOS = { normal: "Normal", "clássico": "Clássico", rato: "Rato", tempo: "Contra o tempo", arena: "Arena", fases: "Fases", desafio: "Desafio de hoje", personalizada: "Fase criada" };
 
 let jogoAtivo = false; // só fica true quando a partida começa ( o loopRenderizacao anda o jogo sempre que for true)
 let pausado = false;
@@ -1197,6 +1197,7 @@ function loop() {
             return;
         }
     }
+    const fechouAZona = zonaArena !== null && atualizarZonaDaArena();
     const passoCompleto = contadorMeiosPassos % MEIOS_PASSOS_POR_PASSO === 0;
     const agoraReal = performance.now();
     // o quadro chega um pouquinho depois do horário do passo: conta sempre do horário combinado,
@@ -1227,8 +1228,8 @@ function loop() {
         comidaDourada = null;
     }
     
-    // só quem andou pode ter batido
-    const batidas = jogadoresQueAndam
+    // só quem andou pode ter batido (ou quem ficou fora da zona da Arena que acabou de fechar)
+    const batidas = (fechouAZona ? jogadores : jogadoresQueAndam)
         .map((jogador) => ({ jogador, motivo: motivoDaBatida(jogador) }))
         .filter((batida) => batida.motivo !== null)
         .filter(({ jogador }) => !segurarComEscudo(jogador)); // com escudo, a batida não conta
@@ -1368,10 +1369,11 @@ function reiniciar() {
     cancelarContagem();
     menuPausa.hidden = true;
     animacaoMorte = null;
-    semParedesNaPartida = inputModoSemParedes.checked && modoAtual !== "desafio"; // desafio: sempre com paredes
+    semParedesNaPartida = inputModoSemParedes.checked && modoAtual !== "desafio" && modoAtual !== "arena"; // desafio e Arena: sempre com paredes
     travarSemParedes(true);
     iniciarMusicaFundo();
     jogadores = criarJogadores(quantidadeJogadoresAtual, nomesJogadoresAtuais);
+    prepararArena(); // antes da maçã e das pedras: na Arena elas nascem dentro da zona
 
     if (modoComBotAtivo) {
         jogadores[1].bot = true;
@@ -1405,7 +1407,7 @@ function reiniciar() {
     contadorPassosPedras = 0;
     tempoDaPartidaMs = 0;
     partidaAtual = { powerUps: 0, comidas: 0, douradas: 0, maiorCombo: 0 };
-    elementoRelogio.hidden = modoAtual !== "tempo";
+    elementoRelogio.hidden = modoAtual !== "tempo" && modoAtual !== "arena";
     atualizarRelogio();
     velocidadeAtual = VELOCIDADE_INICIAL_MS; // antes, o 1° passo usava a velocidade na partida anterior
     atualizarVelocidadeNoPlacar();

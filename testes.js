@@ -598,6 +598,21 @@ verificar("conquista: Fiel com 7 dias de missões",
 verificar("loja: usar tabuleiro guarda no tipo certo",
     equiparItem({ moedas: 0, comprados: ["praia"], equipados: limparCarteira(null, []).equipados }, ITENS_DA_LOJA.find((item) => item.id === "praia"), []).equipados.tabuleiro, "praia");
 
+// modo Arena
+verificar("arena: começa com o tabuleiro todo", JSON.stringify(zonaDaArena(0, 20, 20)), JSON.stringify({ esquerda: 0, topo: 0, direita: 19, baixo: 19, final: false }));
+verificar("arena: fecha 1 volta a cada 15 s", [14999, 15000, 30000].map((ms) => zonaDaArena(ms, 20, 20).esquerda).join(), "0,1,2");
+verificar("arena: para no lado mínimo (20x20 vira 8x8)", JSON.stringify(zonaDaArena(999999, 20, 20)), JSON.stringify({ esquerda: 6, topo: 6, direita: 13, baixo: 13, final: true }));
+verificar("arena: celular com 15 colunas para em 9 de largura", [zonaDaArena(999999, 15, 24).esquerda, zonaDaArena(999999, 15, 24).direita, zonaDaArena(999999, 15, 24).baixo].join(), "3,11,20");
+verificar("arena: tempo até fechar", [tempoParaFecharArena(0, 20, 20), tempoParaFecharArena(14000, 20, 20), tempoParaFecharArena(90000, 20, 20)].join(), "15000,1000,");
+verificar("arena: fora da zona", [{ x: 1, y: 1 }, { x: 0, y: 5 }, { x: 18, y: 18 }, { x: 19, y: 3 }].map((casa) => foraDaZona(casa, zonaDaArena(15000, 20, 20))).join(), "false,true,false,true");
+verificar("arena: corpo fora da zona queima", cortarCobraNaZona([{ x: 3, y: 1 }, { x: 2, y: 1 }, { x: 1, y: 1 }, { x: 0, y: 1 }, { x: 0, y: 2 }], zonaDaArena(15000, 20, 20)).length, 3);
+verificar("arena: a cabeça fora não é cortada (vira batida)", cortarCobraNaZona([{ x: 0, y: 1 }, { x: 1, y: 1 }], zonaDaArena(15000, 20, 20)).length, 2);
+verificar("arena: frase da batida", descreverBatida("Ana", "zona", ""), "Ana ficou fora da zona");
+verificar("conquista: Sobrevivente só na última zona da Arena",
+    [{ modo: "arena", zonaFinal: true }, { modo: "normal", zonaFinal: true }, { modo: "arena" }].map((extra) => conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 0, tamanho: 1, powerUps: 0, ...extra } }).some((c) => c.id === "sobrevivente")).join(), "true,false,false");
+
+verificar("loja: Sobrevivente dá a Cobra de magma", ITENS_DA_LOJA.find((item) => item.conquista === "sobrevivente").id, "magma");
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

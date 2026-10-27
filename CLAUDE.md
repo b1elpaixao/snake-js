@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (273 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (284 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -25,7 +25,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 3. `desenho.js` - desenho do tabuleiro, da cobra (movimento por trilha), telas e contagem
 4. `som.js` - efeitos, música, vibração
 5. `movimento.js` - mover, colisão, recordes, power-ups, bot, pausa
-6. `modos.js` - Contra o tempo e Fases
+6. `modos.js` - Contra o tempo, Fases, 2 Juntos e Arena (zona que fecha a cada 15 s: `zonaArena`, `atualizarZonaDaArena`)
 7. `fantasma.js` - fantasma do recorde: com 1 jogador, uma cobra transparente refaz a melhor partida de hoje
 8. `controle.js` - controle de videogame: lê os botões a cada quadro (setas/analógico, A, Start) e treme junto com a vibração
 9. `tutorial.js` - tutorial na primeira vez: dicas que avançam quando a pessoa vira, come etc. (`snakeTutorialVisto`)
@@ -69,5 +69,5 @@ Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 
 
 ## Melhorias pendentes (lista 5)
 
-Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loja.js` + `enfeites.js`: chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer; itens 🏆 só por conquista: Zebra=Glutona, Lava=Saí do labirinto, Fogo=Combo x8, Dourada=Fiel).
-A fazer: 3 modo Arena (zona que fecha) · 4 cobra inimiga / chefão · 5 power-ups Congelar, Bomba e Fantasma · 6 até 4 jogadores · 9 temas de época · 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP · 13 idiomas.
+Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loja.js` + `enfeites.js`: chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer; itens 🏆 só por conquista: Zebra=Glutona, Lava=Saí do labirinto, Fogo=Combo x8, Dourada=Fiel) · 3 modo Arena (zona que fecha, conquista Sobrevivente = corpo exclusivo Cobra de magma).
+A fazer: 4 cobra inimiga / chefão · 5 power-ups Congelar, Bomba e Fantasma · 6 até 4 jogadores · 9 temas de época · 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP · 13 idiomas.

@@ -11,6 +11,7 @@ function gerarPosicaoLivre() {
         };
     } while (
         posicaoOcupada(candidato, obstaculos, jogadores) ||
+        foraDaZonaAtual(candidato) ||
         mesmaPosicao(comida, candidato) ||
         ratos.some((rato) => mesmaPosicao(rato, candidato))
     );
@@ -19,7 +20,8 @@ function gerarPosicaoLivre() {
 }
 
 function gerarTipoPowerUp() {
-    const tipos = ["invencibilidade", "velocidade", "pontosDobrados", "encolher", "ima", "escudo", "portal", "cameraLenta"];
+    const tipos = ["invencibilidade", "velocidade", "pontosDobrados", "encolher", "ima", "escudo", "portal", "cameraLenta"]
+        .filter((tipo) => !(zonaArena && tipo === "portal")); // na Arena o portal jogaria a cobra pra fora da zona
     const indice = Math.floor(Math.random() * tipos.length);
     return tipos[indice];
 }
@@ -132,7 +134,8 @@ function gerarComida() {
             y: Math.floor(Math.random() * LINHAS),
         };
     } while (
-        posicaoOcupada(candidato, obstaculos, jogadores)
+        posicaoOcupada(candidato, obstaculos, jogadores) ||
+        foraDaZonaAtual(candidato)
     );
     
     return candidato;

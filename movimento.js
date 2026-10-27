@@ -307,7 +307,9 @@ function ativarEncolher(jogador) {
 }
 
 function motivoDaBatida(jogador) {
-    return motivoDaColisao(jogador, jogadoresQueBatem(jogador), obstaculos, COLUNAS, LINHAS);
+    const motivo = motivoDaColisao(jogador, jogadoresQueBatem(jogador), obstaculos, COLUNAS, LINHAS);
+    if (motivo !== "parede" && foraDaZonaAtual(jogador.cobra[0])) return "zona"; // na Arena, nem invencível escapa da zona
+    return motivo;
 }
 
 //  ==========================================
@@ -328,8 +330,11 @@ function escolherAlvoBot(cabeca) {
 function decidirDirecaoBot(jogador) {
     const semParedes = semParedesNaPartida;
     const andar = (posicao, direcao) => calcularNovaCabeca(posicao, direcao, semParedes, COLUNAS, LINHAS);
+    // na Arena ele já foge da faixa que vai fechar
+    const zonaDoBot = zonaArena ? zonaDaArena(tempoDaPartidaMs + ARENA_AVISO_MS, COLUNAS, LINHAS) : null;
     const casaLivre = (posicao) =>
-        !foraDoTabuleiro(posicao, COLUNAS, LINHAS) && !posicaoOcupada(posicao, obstaculos, jogadores);
+        !foraDoTabuleiro(posicao, COLUNAS, LINHAS) && !posicaoOcupada(posicao, obstaculos, jogadores) &&
+        !(zonaDoBot && foraDaZona(posicao, zonaDoBot));
     const cabeca = jogador.cobra[0];
 
     const nivel = NIVEIS_DO_BOT[limparNivelBot(seletorNivelBot.value)];

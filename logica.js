@@ -113,6 +113,7 @@ function descreverBatida(nome, motivo, nomeDoOutro) {
         proprioCorpo: "bateu no próprio corpo",
         pedra: "bateu numa pedra",
         outroJogador: `bateu em ${nomeDoOutro}`,
+        zona: "ficou fora da zona",
     };
 
     return `${nome} ${frases[motivo]}`;
@@ -463,6 +464,42 @@ function formatarRelogio(milissegundos) {
     return `${minutos}:${String(segundos).padStart(2, "0")}`;
 }
 
+// ==========================================
+// Modo Arena (funções puras - testadas em testes.js)
+// ==========================================
+const ARENA_FECHA_A_CADA_MS = 15000;
+const ARENA_AVISO_MS = 3000; // a faixa que vai fechar pisca antes
+const ARENA_LADO_MINIMO = 8; // a zona para de fechar quando o lado menor chega aqui
+
+function margemMaximaDaArena(colunas, linhas) {
+    return Math.max(0, Math.floor((Math.min(colunas, linhas) - ARENA_LADO_MINIMO) / 2));
+}
+
+// a zona livre depois de "tempoMs" jogados: a cada 15 s fecha uma volta inteira da borda
+function zonaDaArena(tempoMs, colunas, linhas) {
+    const maxima = margemMaximaDaArena(colunas, linhas);
+    const margem = Math.min(Math.floor(tempoMs / ARENA_FECHA_A_CADA_MS), maxima);
+
+    return { esquerda: margem, topo: margem, direita: colunas - 1 - margem, baixo: linhas - 1 - margem, final: margem === maxima };
+}
+
+// quanto falta pra zona fechar de novo (null: já é a zona final)
+function tempoParaFecharArena(tempoMs, colunas, linhas) {
+    if (zonaDaArena(tempoMs, colunas, linhas).final) return null;
+    return ARENA_FECHA_A_CADA_MS - (tempoMs % ARENA_FECHA_A_CADA_MS);
+}
+
+function foraDaZona(casa, zona) {
+    return casa.x < zona.esquerda || casa.x > zona.direita || casa.y < zona.topo || casa.y > zona.baixo;
+}
+
+// quando a zona fecha, o corpo que ficou fora queima (do primeiro pedaço fora até o rabo).
+// A cabeça fica: se ela estiver fora, é batida
+function cortarCobraNaZona(cobra, zona) {
+    const primeiroFora = cobra.findIndex((pedaco, indice) => indice > 0 && foraDaZona(pedaco, zona));
+    return primeiroFora === -1 ? cobra : cobra.slice(0, primeiroFora);
+}
+
 // tira "quantidade" pedaços do rabo, mas a cobra fica com pelo menos 1
 function encolherCobra (cobra, quantidade) {
     const tamanho = Math.max(1, cobra.length - quantidade);
@@ -728,6 +765,7 @@ const CONQUISTAS = [
     { id: "comboOito", nome: "Combo x8", descricao: "Fazer um combo x8", condicao: (c) => c.estatisticas.maiorCombo >= 8 },
     { id: "fiel", nome: "Fiel", descricao: "Completar as missões 7 dias seguidos", condicao: (c) => (c.missoesSeguidas || 0) >= 7 },
     { id: "contraORelogio", nome: "Contra o relógio", descricao: "Fazer 30 pontos no Contra o tempo", condicao: (c) => c.partida.modo === "tempo" && c.partida.pontos >= 30 },
+    { id: "sobrevivente", nome: "Sobrevivente", descricao: "Chegar na última zona da Arena", condicao: (c) => c.partida.modo === "arena" && c.partida.zonaFinal === true },
     { id: "labirinto", nome: "Saí do labirinto", descricao: "Chegar à fase 4 no modo Fases", condicao: (c) => c.partida.modo === "fases" && c.partida.fase >= 4 },
     { id: "venceuBot", nome: "Mais esperta que o bot", descricao: "Vencer o bot no nível Difícil", condicao: (c) => c.partida.venceuBotDificil === true },
     { id: "veterana", nome: "Veterana", descricao: "Jogar 50 partidas", condicao: (c) => c.estatisticas.partidas >= 50 },
@@ -844,6 +882,7 @@ const NOMES_DOS_MODOS = {
     "clássico": "Clássico",
     rato: "Rato",
     tempo: "Contra o tempo",
+    arena: "Arena",
     fases: "Fases",
     desafio: "Desafio do dia",
     personalizada: "Fase criada",
@@ -1291,6 +1330,7 @@ const ITENS_DA_LOJA = [
     { id: "arcoiris", nome: "Arco-íris", tipo: "corpo", preco: 950 },
     { id: "zebra", nome: "Zebra", tipo: "corpo", conquista: "glutona" },
     { id: "dourado", nome: "Dourada brilhante", tipo: "corpo", conquista: "fiel" },
+    { id: "magma", nome: "Cobra de magma", tipo: "corpo", conquista: "sobrevivente" },
     { id: "bolhas", nome: "Bolhas", tipo: "rastro", preco: 300 },
     { id: "folhas", nome: "Folhas", tipo: "rastro", preco: 350 },
     { id: "notas", nome: "Notas musicais", tipo: "rastro", preco: 400 },

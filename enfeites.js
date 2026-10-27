@@ -240,6 +240,7 @@ function corDaCabecaComPadrao(padrao, corCabeca, tempo) {
     if (padrao === "arcoiris") return `hsl(${Math.round(-tempo / 8) % 360}, 90%, 66%)`;
     if (padrao === "zebra") return "#f5f5f5";
     if (padrao === "dourado") return "#ffe27a";
+    if (padrao === "magma") return "#3a1712";
     return corCabeca;
 }
 
@@ -251,6 +252,10 @@ function corDoPedacoComPadrao(padrao, corCauda, corCabeca, posicao, distancia, t
     if (padrao === "arcoiris") return `hsl(${Math.round(distancia * 4 - tempo / 8) % 360}, 90%, 62%)`;
     if (padrao === "zebra") return Math.floor(distancia / 6) % 2 === 1 ? "#1b1b1b" : "#f5f5f5";
     if (padrao === "dourado") return misturarCores("#b8860b", "#ffe27a", posicao);
+    if (padrao === "magma") {
+        const calor = 0.5 + 0.5 * Math.sin(distancia / 9 - tempo / 160); // a lava pulsa e corre pelo corpo
+        return `hsl(${Math.round(14 + 30 * calor)}, 100%, ${Math.round(48 + 14 * calor)}%)`;
+    }
     return misturarCores(corCauda, corCabeca, posicao);
 }
 
@@ -264,10 +269,10 @@ function misturarCores6(corA, corB, proporcao) {
 }
 
 // contorno neon: um traço borrado embaixo do corpo inteiro
-function desenharContornoNeon(c, pontos, largura) {
+function desenharContornoNeon(c, pontos, largura, cor = "#39ff14") {
     c.save();
-    c.strokeStyle = "#39ff14";
-    c.shadowColor = "#39ff14";
+    c.strokeStyle = cor;
+    c.shadowColor = cor;
     c.shadowBlur = 10;
     c.lineWidth = largura + 5;
     c.lineCap = "round";
@@ -290,6 +295,117 @@ function desenharBrilhosDourados(c, pontos, tempo) {
         const ponto = pontos[Math.min(pontos.length - 1, Math.floor(((i + 1) / 4) * pontos.length))];
         desenharBrilho(c, ponto.x + 2, ponto.y - 3, 3.2 * intensidade, "#ffffff");
     }
+}
+
+// cobra de magma: placas de pedra escura por cima da lava; a lava aparece nas rachaduras entre elas.
+// pontos: da cabeça pro rabo. As placas são contadas da cabeça, então andam junto com a cobra
+function desenharPlacasDeMagma(c, pontos, largura, tempo) {
+    let total = 0;
+    for (let i = 1; i < pontos.length; i++) {
+        const d = Math.hypot(pontos[i].x - pontos[i - 1].x, pontos[i].y - pontos[i - 1].y);
+        if (d <= TAMANHO_CELULA * 1.5) total += d;
+    }
+
+    const passo = largura * 0.62;
+    let andado = 0;
+    let proxima = largura * 0.55; // perto da cabeça não tem placa: a cabeça é desenhada depois
+    let numero = 0;
+
+    c.save();
+    for (let i = 1; i < pontos.length; i++) {
+        const de = pontos[i - 1];
+        const ate = pontos[i];
+        const distancia = Math.hypot(ate.x - de.x, ate.y - de.y);
+        if (distancia === 0) continue;
+        if (distancia > TAMANHO_CELULA * 1.5) { // atravessou a borda: pula
+            proxima = Math.max(proxima, andado + passo / 2);
+            continue;
+        }
+
+        const dx = (ate.x - de.x) / distancia;
+        const dy = (ate.y - de.y) / distancia;
+        while (proxima <= andado + distancia && proxima < total - passo * 0.3) {
+            const t = (proxima - andado) / distancia;
+            const largo = largura * (0.6 + 0.4 * (1 - proxima / total)); // mesma largura do corpo nesse ponto
+            desenharPlacaDeMagma(c, de.x + (ate.x - de.x) * t, de.y + (ate.y - de.y) * t, dx, dy, passo, largo, numero++);
+            proxima += passo;
+        }
+        andado += distancia;
+    }
+    c.restore();
+}
+
+// duas placas tortinhas (uma de cada lado do meio do corpo); o tremido vem de sorteioDaCasa, sempre igual pra cada placa
+function desenharPlacaDeMagma(c, x, y, dx, dy, comprimento, largura, numero) {
+    const nx = -dy;
+    const ny = dx;
+
+    for (const lado of [-1, 1]) {
+        const centro = { x: x + nx * lado * largura * 0.23, y: y + ny * lado * largura * 0.23 };
+        const meiaFrente = comprimento * 0.47;
+        const meioLado = largura * 0.23;
+        const cantos = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([f, l], canto) => {
+            const tremido = (sorteioDaCasa(numero * 2 + (lado + 1), canto) - 0.5) * 0.45;
+            const frente = f * meiaFrente * (1 + tremido);
+            const de_lado = l * meioLado * (1 - tremido);
+            return { x: centro.x + dx * frente + nx * de_lado, y: centro.y + dy * frente + ny * de_lado };
+        });
+
+        c.fillStyle = sorteioDaCasa(numero, lado + 1) < 0.5 ? "#2b120d" : "#3a1a13";
+        c.beginPath();
+        cantos.forEach((canto, indice) => (indice === 0 ? c.moveTo(canto.x, canto.y) : c.lineTo(canto.x, canto.y)));
+        c.closePath();
+        c.fill();
+        c.fillStyle = "rgba(120, 20, 10, 0.55)"; // miolo avermelhado, como pedra quente por dentro
+        c.beginPath();
+        c.arc(centro.x, centro.y, meioLado * 0.45, 0, Math.PI * 2);
+        c.fill();
+    }
+}
+
+// fagulhas saindo do corpo de magma (só na partida, não na prévia)
+let ultimaFagulhaEm = 0;
+function soltarFagulhasDeMagma(pontos) {
+    if (!jogoAtivo || pausado || contagemAtiva || reduzirMovimento) return;
+
+    const agora = agoraDoJogo();
+    if (agora - ultimaFagulhaEm < 70) return;
+    ultimaFagulhaEm = agora;
+
+    const ponto = pontos[Math.floor(Math.random() * pontos.length)];
+    const fagulha = criarParticula("fogo", ponto.x + (Math.random() - 0.5) * 8, ponto.y + (Math.random() - 0.5) * 8, agora);
+    Object.assign(fagulha, { vy: -(25 + Math.random() * 25), vida: 900, tamanho: 1.4 + Math.random() * 1.2 }); // menores e sobem mais que as do rastro
+    particulas.push(fagulha);
+    if (particulas.length > 150) particulas.shift();
+}
+
+// rachaduras de lava na cabeça (no mesmo jeito do desenharCabecaCobra: olhando pra direita), passando longe dos olhos
+function desenharRachadurasNaCabeca(c, tempo) {
+    const calor = 0.5 + 0.5 * Math.sin(tempo / 160);
+    c.save();
+    c.strokeStyle = `hsl(${Math.round(20 + 25 * calor)}, 100%, ${Math.round(55 + 10 * calor)}%)`;
+    c.shadowColor = "#ff5a14";
+    c.shadowBlur = 6;
+    c.lineCap = "round";
+    c.lineJoin = "round";
+
+    c.lineWidth = 1.6;
+    c.beginPath();
+    c.ellipse(4, 0, 15, 14, 0, 0, Math.PI * 2); // a borda da cabeça brilha
+    c.stroke();
+
+    c.lineWidth = 1.5;
+    for (const linha of [
+        [[-9, 1], [-2, -2], [5, -1], [9, -6], [16, -6]],
+        [[5, -1], [9, 4], [16, 5]],
+        [[9, 4], [7, 10]],
+        [[-2, -2], [-4, -4]],
+    ]) {
+        c.beginPath();
+        linha.forEach(([x, y], indice) => (indice === 0 ? c.moveTo(x, y) : c.lineTo(x, y)));
+        c.stroke();
+    }
+    c.restore();
 }
 
 // estrelinha de 4 pontas
@@ -526,6 +642,7 @@ function desenharCorpoDePrevia(c, padrao, tempo) {
 
     const cor = corDaCobra();
     if (padrao === "neon") desenharContornoNeon(c, pontos, 13);
+    if (padrao === "magma") desenharContornoNeon(c, pontos, 13, "#ff5a14");
 
     c.lineCap = "round";
     const total = pontos.length - 1;
@@ -536,11 +653,17 @@ function desenharCorpoDePrevia(c, padrao, tempo) {
         c.beginPath(); c.moveTo(pontos[i].x, pontos[i].y); c.lineTo(pontos[i + 1].x, pontos[i + 1].y); c.stroke();
     }
     if (padrao === "dourado") desenharBrilhosDourados(c, pontos, 300);
+    if (padrao === "magma") {
+        desenharPlacasDeMagma(c, [...pontos].reverse(), 13, 0); // aqui o caminho vai do rabo pra cabeça
+        [[14, 40, 0.3], [30, 34, 0.55], [22, 30, 0.75], [44, 14, 0.4]].forEach(([x, y, idade]) =>
+            desenharParticula(c, { tipo: "fogo", x, y, nasceu: 0, vida: 650, vx: 0, vy: -20, giro: 0, tamanho: 2.2, cor: null }, 650 * idade));
+    }
 
     c.save();
     c.translate(56, 26);
     c.scale(0.75, 0.75);
     desenharCabecaCobra(corDaCabecaComPadrao(padrao, cor.cabeca, tempo), c);
+    if (padrao === "magma") desenharRachadurasNaCabeca(c, 0);
     c.restore();
 }
 

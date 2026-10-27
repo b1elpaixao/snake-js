@@ -17,6 +17,11 @@ function penalizarBatida(jogador) {
 }
 
 function atualizarRelogio() {
+    if (zonaArena) {
+        atualizarRelogioDaArena();
+        return;
+    }
+    elementoRelogio.title = "Tempo restante";
     const restante = DURACAO_MODO_TEMPO_MS - tempoDaPartidaMs;
     elementoRelogio.textContent = formatarRelogio(restante);
     elementoRelogio.classList.toggle("acabando", restante <= 10000);
@@ -98,10 +103,75 @@ function voltarAoInicio(jogador) {
     jogador.comboAtual = 0;
     jogador.bateu = false;
     jogador.atordoadoAte = agoraDoJogo() + DURACAO_FORA_JUNTOS_MS; // pisca parada no começo e volta a andar
-    adicionarTextoFlutuante(jogador.inicio, "Volta em 3 s", "#ffffff");
+    if (foraDaZonaAtual(jogador.inicio)) {
+        jogador.cobra = [gerarPosicaoLivre()]; // na Arena o começo pode ter ficado fora da zona
+        jogador.cobraAnterior = jogador.cobra.map((pedaco) => ({ ...pedaco }));
+    }
+    adicionarTextoFlutuante(jogador.cobra[0], "Volta em 3 s", "#ffffff");
 }
 
 function atualizarPlacarJuntos() {
     placarJuntos.hidden = !modoCooperativo;
     elementoPontosJuntos.textContent = jogadores.reduce((total, jogador) => total + jogador.pontuacao, 0);
+}
+
+// ==========================================
+// Arena: a cada 15 s a zona fecha uma volta da borda
+// ==========================================
+let zonaArena = null; // { esquerda, topo, direita, baixo, final } na Arena; null nos outros modos
+let avisouQueVaiFechar = false;
+
+function foraDaZonaAtual(casa) {
+    return zonaArena !== null && foraDaZona(casa, zonaArena);
+}
+
+function prepararArena() {
+    zonaArena = modoAtual === "arena" ? zonaDaArena(0, COLUNAS, LINHAS) : null;
+    avisouQueVaiFechar = false;
+}
+
+function atualizarRelogioDaArena() {
+    const restante = tempoParaFecharArena(tempoDaPartidaMs, COLUNAS, LINHAS);
+    elementoRelogio.title = "Tempo até a zona fechar";
+    elementoRelogio.textContent = restante === null ? "Zona final" : `Zona ${formatarRelogio(restante)}`;
+    elementoRelogio.classList.toggle("acabando", restante !== null && restante <= ARENA_AVISO_MS);
+}
+
+// chamado a cada meio passo; devolve true quando a zona acabou de fechar
+function atualizarZonaDaArena() {
+    atualizarRelogioDaArena();
+    const restante = tempoParaFecharArena(tempoDaPartidaMs, COLUNAS, LINHAS);
+
+    if (restante !== null && restante <= ARENA_AVISO_MS && !avisouQueVaiFechar) {
+        avisouQueVaiFechar = true;
+        tocarSom(440, 0.12, "square");
+        anunciar("A zona vai fechar");
+    }
+
+    const nova = zonaDaArena(tempoDaPartidaMs, COLUNAS, LINHAS);
+    if (nova.esquerda === zonaArena.esquerda) return false;
+
+    zonaArena = nova;
+    avisouQueVaiFechar = false;
+
+    for (const jogador of jogadores) {
+        const antes = jogador.cobra.length;
+        jogador.cobra = cortarCobraNaZona(jogador.cobra, zonaArena);
+        jogador.cobraAnterior = jogador.cobraAnterior.slice(0, jogador.cobra.length);
+        if (jogador.cobra.length < antes) adicionarTextoFlutuante(jogador.cobra[0], "Queimou!", "#ff8a65");
+    }
+
+    // o que ficou fora some: a maçã nasce de novo dentro da zona
+    obstaculos = obstaculos.filter((pedra) => !foraDaZonaAtual(pedra));
+    if (foraDaZonaAtual(comida)) comida = gerarComida();
+    if (powerUp && foraDaZonaAtual(powerUp)) powerUp = null;
+    if (comidaDourada && foraDaZonaAtual(comidaDourada)) comidaDourada = null;
+
+    tocarSom(160, 0.3, "sawtooth");
+    vibrar(100);
+    if (zonaArena.final) {
+        anunciar("Zona final");
+        verificarConquistas({ zonaFinal: true });
+    }
+    return true;
 }
