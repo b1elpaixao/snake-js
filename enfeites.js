@@ -715,13 +715,10 @@ function desenharEfeitoDePrevia(c, tipo) {
 
 // ==========================================
 // Estilo "aura": o chefão do modo Chefão ("os olhos que emergem") e o corpo "Espectro" da loja.
-// Corpo escuro desfocado e granulado, aura colorida em volta, o rabo sumindo como fumaça e só os olhos acesos
+// Corpo escuro de borda macia e granulado, aura colorida em volta, o rabo sumindo como fumaça e só os olhos acesos
 // ==========================================
 const PALETA_DA_SOMBRA = [[70, 160, 255], [120, 90, 255], [255, 70, 170], [255, 190, 60]]; // azul, roxo, rosa, amarelo (da cabeça pro rabo)
 const PALETA_DO_CHEFAO = [[255, 70, 70], [230, 40, 150], [120, 50, 230], [50, 25, 110]]; // vermelho, magenta, roxo, roxo-escuro
-const CANVAS_TEM_FILTRO = typeof CanvasRenderingContext2D !== "undefined" && "filter" in CanvasRenderingContext2D.prototype;
-let telaDaSombra = null; // canvas de rascunho, reaproveitado a cada quadro
-let granulado = null;
 
 function corDaPaleta(paleta, t) {
     const x = Math.min(0.999, Math.max(0, t)) * (paleta.length - 1);
@@ -731,108 +728,97 @@ function corDaPaleta(paleta, t) {
     return a.map((valor, k) => Math.round(valor + (b[k] - valor) * u));
 }
 
-// pontinhos claros e escuros, feito uma vez só
-function padraoGranulado(c) {
-    if (!granulado) {
-        granulado = document.createElement("canvas");
-        granulado.width = granulado.height = 96;
-        const g = granulado.getContext("2d");
-        const imagem = g.createImageData(96, 96);
-        for (let i = 0; i < imagem.data.length; i += 4) {
-            const claro = Math.random() < 0.35;
-            imagem.data[i] = imagem.data[i + 1] = imagem.data[i + 2] = claro ? 255 : 0;
-            imagem.data[i + 3] = claro ? Math.random() * 45 : Math.random() * 110;
-        }
-        g.putImageData(imagem, 0, 0);
-    }
-    return c.createPattern(granulado, "repeat");
-}
-
-// pontos: da cabeça pro rabo · direcao: pra onde a cabeça olha ({ x, y }) · largura: do corpo perto da cabeça
+// pontos: da cabeça pro rabo · direcao: pra onde a cabeça olha ({ x, y }) · largura: do corpo perto da cabeça.
+// Tudo direto no tabuleiro, sem desfoque nem rascunho (os dois pesavam: travava o jogo).
+// O borrado da aura vem de várias camadas transparentes, uma dentro da outra; o granulado são pontinhos espalhados
 function desenharSombraViva(c, pontos, direcao, largura, tempo, paleta) {
-    const transformacao = c.getTransform();
-    const escala = Math.hypot(transformacao.a, transformacao.b);
-    if (!telaDaSombra) telaDaSombra = document.createElement("canvas");
-    if (telaDaSombra.width !== c.canvas.width || telaDaSombra.height !== c.canvas.height) {
-        telaDaSombra.width = c.canvas.width;
-        telaDaSombra.height = c.canvas.height;
-    }
-    const s = telaDaSombra.getContext("2d");
-    s.setTransform(1, 0, 0, 1, 0, 0);
-    s.clearRect(0, 0, telaDaSombra.width, telaDaSombra.height);
-    s.setTransform(transformacao);
-    s.lineCap = "round";
-    s.lineJoin = "round";
-
+    const escala = Math.hypot(c.getTransform().a, c.getTransform().b);
     const total = pontos.length - 1;
     const larguraEm = (i) => largura * (0.55 + 0.45 * (1 - i / Math.max(1, total)));
     const pulou = (i) => Math.hypot(pontos[i].x - pontos[i - 1].x, pontos[i].y - pontos[i - 1].y) > TAMANHO_CELULA * 1.5;
-    const traco = (i) => { s.beginPath(); s.moveTo(pontos[i].x, pontos[i].y); s.lineTo(pontos[i - 1].x, pontos[i - 1].y); s.stroke(); };
+    const traco = (i) => { c.beginPath(); c.moveTo(pontos[i].x, pontos[i].y); c.lineTo(pontos[i - 1].x, pontos[i - 1].y); c.stroke(); };
+    const tamanhoDaCabeca = largura / 19;
+    const cabeca = (desenhar) => {
+        c.save();
+        c.translate(pontos[0].x, pontos[0].y);
+        c.rotate(Math.atan2(direcao.y, direcao.x));
+        c.scale(tamanhoDaCabeca, tamanhoDaCabeca);
+        desenhar();
+        c.restore();
+    };
+    const formaDaCabeca = () => {
+        c.beginPath();
+        c.ellipse(2, 0, 13, 11.5, 0, 0, Math.PI * 2);
+        for (const lado of [-1, 1]) {
+            c.moveTo(-4, lado * 8);
+            c.quadraticCurveTo(-10, lado * 15, -16, lado * 15);
+            c.quadraticCurveTo(-11, lado * 9, -9, lado * 4);
+            c.closePath();
+        }
+    };
 
-    // 1) aura colorida desfocada, pulsando devagar (sem desfoque no navegador: várias camadas fraquinhas)
-    s.filter = CANVAS_TEM_FILTRO ? `blur(${5 * escala}px)` : "none";
-    for (let i = total; i >= 1; i--) {
-        if (pulou(i)) continue;
-        const [r, g, b] = corDaPaleta(paleta, i / Math.max(1, total));
-        const pulso = reduzirMovimento ? 0.85 : 0.75 + 0.25 * Math.sin(tempo / 300 - i / 2);
-        for (const camada of CANVAS_TEM_FILTRO ? [2.5] : [2.8, 2.2, 1.6]) {
-            s.strokeStyle = `rgba(${r}, ${g}, ${b}, ${(CANVAS_TEM_FILTRO ? 0.75 : 0.25) * pulso})`;
-            s.lineWidth = larguraEm(i) * camada;
+    c.save();
+    c.lineCap = "round";
+    c.lineJoin = "round";
+
+    // 1) aura colorida: 4 camadas transparentes (a de fora mais larga e mais fraca), pulsando devagar
+    for (const [camada, forca] of [[2.9, 0.12], [2.4, 0.16], [1.95, 0.22], [1.55, 0.3]]) {
+        for (let i = total; i >= 1; i--) {
+            if (pulou(i)) continue;
+            const [r, g, b] = corDaPaleta(paleta, i / Math.max(1, total));
+            const pulso = reduzirMovimento ? 0.85 : 0.75 + 0.25 * Math.sin(tempo / 300 - i / 2);
+            c.strokeStyle = `rgba(${r}, ${g}, ${b}, ${forca * pulso})`;
+            c.lineWidth = larguraEm(i) * camada;
             traco(i);
         }
     }
 
-    // 2) o corpo: escuro, de borda macia; o rabo some como fumaça
-    s.filter = CANVAS_TEM_FILTRO ? `blur(${1.6 * escala}px)` : "none";
+    // 2) o corpo: uma beirada meio transparente (borda macia) e o escuro por dentro; o rabo some como fumaça
+    for (const [camada, forca] of [[1.15, 0.45], [0.95, 0.95]]) {
+        for (let i = total; i >= 1; i--) {
+            if (pulou(i)) continue;
+            c.strokeStyle = `rgba(10, 8, 22, ${forca * Math.min(1, (total - i + 1) / 3)})`;
+            c.lineWidth = larguraEm(i) * camada;
+            traco(i);
+        }
+    }
+    cabeca(() => { formaDaCabeca(); c.fillStyle = "rgba(10, 8, 22, 0.97)"; c.fill(); });
+
+    // 3) granulado: pontinhos claros e escuros espalhados no corpo e na aura, que mudam um pouco a cada 120 ms.
+    // Cada cor é um caminho só, pintado de uma vez (bem mais leve que pintar com "tinta" de imagem)
+    const lampejo = reduzirMovimento ? 0 : Math.floor(tempo / 120);
+    const grao = Math.max(0.6, 1 / escala);
+    const claros = new Path2D();
+    const escuros = new Path2D();
     for (let i = total; i >= 1; i--) {
         if (pulou(i)) continue;
-        s.strokeStyle = `rgba(10, 8, 22, ${0.95 * Math.min(1, (total - i + 1) / 3)})`;
-        s.lineWidth = larguraEm(i);
-        traco(i);
+        const de = pontos[i];
+        const ate = pontos[i - 1];
+        const comprimento = Math.hypot(ate.x - de.x, ate.y - de.y) || 1;
+        const nx = -(ate.y - de.y) / comprimento;
+        const ny = (ate.x - de.x) / comprimento;
+        const quantos = Math.ceil(comprimento * larguraEm(i) / 14);
+        for (let k = 0; k < quantos; k++) {
+            const t = sorteioDaCasa(i * 31 + k, lampejo);
+            const lado = (sorteioDaCasa(k * 17 + lampejo, i) - 0.5) * larguraEm(i) * 2.2; // até um pouco fora do corpo, na aura
+            const x = de.x + (ate.x - de.x) * t + nx * lado;
+            const y = de.y + (ate.y - de.y) * t + ny * lado;
+            (k % 3 === 0 ? claros : escuros).rect(x, y, grao, grao);
+        }
     }
+    c.fillStyle = "rgba(255, 255, 255, 0.28)";
+    c.fill(claros);
+    c.fillStyle = "rgba(0, 0, 0, 0.4)";
+    c.fill(escuros);
 
-    // cabeça: oval escura com duas barbatanas pra trás
-    const tamanhoDaCabeca = largura / 19;
-    s.save();
-    s.translate(pontos[0].x, pontos[0].y);
-    s.rotate(Math.atan2(direcao.y, direcao.x));
-    s.scale(tamanhoDaCabeca, tamanhoDaCabeca);
-    s.fillStyle = "rgba(10, 8, 22, 0.97)";
-    s.beginPath(); s.ellipse(2, 0, 13, 11.5, 0, 0, Math.PI * 2); s.fill();
-    for (const lado of [-1, 1]) {
-        s.beginPath();
-        s.moveTo(-4, lado * 8);
-        s.quadraticCurveTo(-10, lado * 15, -16, lado * 15);
-        s.quadraticCurveTo(-11, lado * 9, -9, lado * 4);
-        s.closePath();
-        s.fill();
-    }
-    s.restore();
-
-    // 3) granulado só onde tem desenho
-    s.filter = "none";
-    s.save();
-    s.setTransform(1, 0, 0, 1, 0, 0);
-    s.globalCompositeOperation = "source-atop";
-    s.fillStyle = padraoGranulado(s);
-    s.fillRect(0, 0, telaDaSombra.width, telaDaSombra.height);
-    s.restore();
-
-    c.save();
-    c.setTransform(1, 0, 0, 1, 0, 0);
-    c.drawImage(telaDaSombra, 0, 0);
-    c.restore();
-
-    // 4) só os olhos, brancos e acesos (nítidos, por cima de tudo)
-    c.save();
-    c.translate(pontos[0].x, pontos[0].y);
-    c.rotate(Math.atan2(direcao.y, direcao.x));
-    c.scale(tamanhoDaCabeca, tamanhoDaCabeca);
-    c.fillStyle = "#ffffff";
-    c.shadowColor = "#ffffff";
-    c.shadowBlur = 8 * escala * tamanhoDaCabeca;
-    for (const lado of [-1, 1]) {
-        c.beginPath(); c.arc(5, lado * 4.6, 2.6, 0, Math.PI * 2); c.fill();
-    }
+    // 4) só os olhos, brancos e acesos
+    cabeca(() => {
+        c.fillStyle = "#ffffff";
+        c.shadowColor = "#ffffff";
+        c.shadowBlur = 8 * escala * tamanhoDaCabeca;
+        for (const lado of [-1, 1]) {
+            c.beginPath(); c.arc(5, lado * 4.6, 2.6, 0, Math.PI * 2); c.fill();
+        }
+    });
     c.restore();
 }
