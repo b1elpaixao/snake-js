@@ -496,7 +496,7 @@ verificar("acessibilidade: guarda o que foi ligado", JSON.stringify(limparAcessi
 verificar("acessibilidade: dado estranho vira desligado", JSON.stringify(limparAcessibilidade({
 altoContraste: "sim", menosMovimento: 1 })), '{"altoContraste":false,"menosMovimento":false}');
 verificar("acessibilidade: todo power-up tem nome falado",
-Object.keys(NOMES_DOS_POWERUPS).length, 9);
+Object.keys(NOMES_DOS_POWERUPS).length, 10);
 
 // histórico
 const partidaDeTeste = (pontos) => ({ data: "2026-10-23", modo: "normal", pontos, ms: 30000 });
@@ -638,10 +638,14 @@ verificar("loja: Espectro compra depois de Encarou o abismo",
     JSON.stringify(comprarItem({ moedas: 5000, comprados: [], equipados: {} }, ITENS_DA_LOJA.find((item) => item.id === "espectro"), ["encarouOAbismo"]).comprados), JSON.stringify(["espectro"]));
 
 // power-ups que aparecem na partida
-verificar("power-ups: com alguém pra congelar, aparecem os 9", powerUpsDaPartida({ arena: false, temQuemCongelar: true }).length, 9);
-verificar("power-ups: sozinha e sem nada andando não tem Congelar", powerUpsDaPartida({ arena: false, temQuemCongelar: false }).includes("congelar"), false);
-verificar("power-ups: na Arena não tem Portal", powerUpsDaPartida({ arena: true, temQuemCongelar: true }).includes("portal"), false);
-verificar("power-ups: todos têm nome", powerUpsDaPartida({ arena: false, temQuemCongelar: true }).every((tipo) => NOMES_DOS_POWERUPS[tipo]), true);
+verificar("power-ups: com tudo, aparecem os 10", powerUpsDaPartida({ arena: false, temQuemCongelar: true, temPedras: true }).length, 10);
+verificar("power-ups: sozinha e sem nada andando não tem Congelar", powerUpsDaPartida({ arena: false, temQuemCongelar: false, temPedras: true }).includes("congelar"), false);
+verificar("power-ups: sem pedras não tem Bomba", powerUpsDaPartida({ arena: false, temQuemCongelar: true, temPedras: false }).includes("bomba"), false);
+verificar("power-ups: na Arena não tem Portal", powerUpsDaPartida({ arena: true, temQuemCongelar: true, temPedras: true }).includes("portal"), false);
+verificar("power-ups: todos têm nome", powerUpsDaPartida({ arena: false, temQuemCongelar: true, temPedras: true }).every((tipo) => NOMES_DOS_POWERUPS[tipo]), true);
+verificar("bomba: explode as pedras no quadrado 5x5 em volta",
+    JSON.stringify(pedrasNaExplosao([{ x: 0, y: 0 }, { x: 3, y: 3 }, { x: 4, y: 1 }, { x: 6, y: 6 }], { x: 2, y: 2 }, 2).explodidas), JSON.stringify([{ x: 0, y: 0 }, { x: 3, y: 3 }, { x: 4, y: 1 }]));
+verificar("bomba: as pedras longe ficam", JSON.stringify(pedrasNaExplosao([{ x: 0, y: 0 }, { x: 6, y: 6 }, { x: 5, y: 2 }], { x: 2, y: 2 }, 2).ficam), JSON.stringify([{ x: 6, y: 6 }, { x: 5, y: 2 }]));
 
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;

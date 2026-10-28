@@ -92,6 +92,8 @@ function moverJogador(jogador) {
             jogador.congelarAte = agoraDoJogo() + DURACAO_CONGELAR_MS;
             adicionarTextoFlutuante(novaCabeca, "Congelou!", CORES_POWERUP.congelar);
             tocarSom(1200, 0.15, "triangle");
+        } else if (powerUp.tipo === "bomba") {
+            explodirBomba(jogador);
         }
 
         powerUp = null;

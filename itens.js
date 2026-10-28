@@ -23,6 +23,7 @@ function gerarTipoPowerUp() {
     const tipos = powerUpsDaPartida({
         arena: zonaArena !== null,
         temQuemCongelar: (jogadores.length > 1 && !modoCooperativo) || modoAtual === "rato" || obstaculos.some((pedra) => pedra.movel),
+        temPedras: obstaculos.length > 0,
     });
     const indice = Math.floor(Math.random() * tipos.length);
     return tipos[indice];
@@ -112,7 +113,7 @@ function adicionarObstaculosSeNecessario() {
     if (modoAtual === "clássico" || modoAtual === "fases" || modoAtual === "desafio" || modoAtual === "personalizada") return;
 
     const maiorPontuacao = Math.max(...jogadores.map((j) => j.pontuacao));
-    const quantidadeAlvo = QUANTIDADE_OBSTACULOS + Math.floor(maiorPontuacao / PONTOS_POR_NOVO_OBSTACULO);
+    const quantidadeAlvo = QUANTIDADE_OBSTACULOS + Math.floor(maiorPontuacao / PONTOS_POR_NOVO_OBSTACULO) - pedrasDestruidas; // as que a Bomba explodiu não voltam
 
     while (obstaculos.length < quantidadeAlvo) {
         obstaculos.push(gerarPosicaoParaPedra());

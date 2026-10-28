@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (304 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (307 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -27,7 +27,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 5. `movimento.js` - mover, colisão, recordes, power-ups, bot, pausa
 6. `modos.js` - Contra o tempo, Fases, 2 Juntos e Arena (zona que fecha a cada 15 s: `zonaArena`, `atualizarZonaDaArena`)
 7. `chefao.js` - modo Chefão: "os olhos que emergem" (o Jogador 2 vira o chefão, `chefao`), espada, golpes, vida no placar, pulsos de luz; tabuleiro `TEMA_DO_ABISMO`
-8. `poderes.js` - power-ups novos: Congelar (`quemCongelou`, `estaCongelado`; tabuleiro de gelo, rachaduras no fim e o gelo estilhaça)
+8. `poderes.js` - power-ups novos: Congelar (`quemCongelou`, `estaCongelado`; tabuleiro de gelo, rachaduras no fim e o gelo estilhaça) e Bomba (`explodirBomba`: pedras num 5x5 somem e não voltam, `pedrasDestruidas`; no Chefão tira 1 de vida; explosão cartoon, tela treme; só aparece com pedras)
 9. `fantasma.js` - fantasma do recorde: com 1 jogador, uma cobra transparente refaz a melhor partida de hoje
 10. `controle.js` - controle de videogame: lê os botões a cada quadro (setas/analógico, A, Start) e treme junto com a vibração
 11. `tutorial.js` - tutorial na primeira vez: dicas que avançam quando a pessoa vira, come etc. (`snakeTutorialVisto`)
@@ -40,7 +40,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 18. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último)
 
 Os arquivos 2 a 17 só tem funções e valores fixos; o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-v15`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
+Outros: `style.css`, `sw.js` (service worker, cache `snake-v16`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
 **Ao criar um arquivo .js novo:** incluir no `index.html` antes do `script.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
@@ -73,5 +73,5 @@ Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 
 ## Melhorias pendentes (lista 5)
 
 Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loja.js` + `enfeites.js`: chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer; itens 🏆 só por conquista: Zebra=Glutona, Lava=Saí do labirinto, Fogo=Combo x8, Dourada=Fiel) · 3 modo Arena (zona que fecha, conquista Sobrevivente = corpo exclusivo Cobra de magma). · 4 modo Chefão (`chefao.js`: "os olhos que emergem", estilo aura no abismo; espada; skin Espectro liberada por conquista).
-Em andamento: 5 power-ups (feito: Congelar; falta: Bomba, conquista Arsenal; Fantasma descartado).
+Em andamento: 5 power-ups (feito: Congelar e Bomba; falta: conquista Arsenal; Fantasma descartado).
 A fazer: 6 até 4 jogadores · 9 temas de época · 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP · 13 idiomas.

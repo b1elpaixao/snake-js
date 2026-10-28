@@ -48,6 +48,7 @@ function desenhar() {
         const forca = 5 * (1 - progressoMorte); // treme forte no começo e vai parando
         ctx.translate((Math.random() * 2 - 1) * forca, (Math.random() * 2 - 1) * forca);
     }
+    aplicarTremor(); // explosão da Bomba
 
     desenharTabuleiro();
     desenharGeloNoTabuleiro(); // Congelar
@@ -112,6 +113,7 @@ function desenhar() {
     desenharGeloPorCima(); // quem está congelado
 
     desenharPulsos(); // pulsos de luz do Chefão, por cima das cobras
+    desenharExplosoes(); // "BOOM!" da Bomba
     desenharTextosFlutuantes();
 
     if (animacaoMorte) {
@@ -402,6 +404,10 @@ function desenharRato(rato, progresso) {
 }
 
 function desenharPowerUp(item) {
+    if (item.tipo === "bomba") {
+        desenharBombaNoChao(item); // desenho próprio, com o pavio aceso
+        return;
+    }
     const centroX= item.x * TAMANHO_CELULA+ TAMANHO_CELULA / 2;
     const centroY = item.y * TAMANHO_CELULA + TAMANHO_CELULA / 2;
     const cor = CORES_POWERUP[item.tipo];

@@ -109,6 +109,7 @@ const CORES_POWERUP = {
     portal: "#a5b4fc",
     cameraLenta: "#cbd5e1",
     congelar: "#a5f3fc",
+    bomba: "#fb7185",
 };
 // símbolo de cada power-up (pra não depender só da cor - ajuda quem é daltônico)
 // caminhos no formato SVG, numa caixa de 24x24; "cheio" = pintado por dentro, senão só o contorno
@@ -122,6 +123,7 @@ const SIMBOLOS_POWERUP = {
     portal: { caminho: "M6 22 V10 A6 6 0 0 1 18 10 V22 M2 22 H22", cheio: false }, // arco
     cameraLenta: { caminho: "M5 2 H19 L12 12 L19 22 H5 L12 12 Z", cheio: false }, // ampulheta
     congelar: { caminho: "M12 2 V22 M3.3 7 L20.7 17 M3.3 17 L20.7 7 M9 3.5 L12 6 L15 3.5 M9 20.5 L12 18 L15 20.5", cheio: false }, // floco de neve
+    bomba: { caminho: "M10 8 A7 7 0 1 1 9.99 8 Z M8.5 4.5 H13.5 V8.5 H8.5 Z M16 1 L19 2 L17 4 Z", cheio: true }, // bomba
 };
 const COR_SIMBOLO_POWERUP = "#1f2937";
 const EFEITOS_COM_DURACAO = [
@@ -1415,6 +1417,7 @@ function reiniciar() {
     contadorPassosPedras = 0;
     tempoDaPartidaMs = 0;
     partidaAtual = { powerUps: 0, comidas: 0, douradas: 0, maiorCombo: 0 };
+    prepararPoderes();
     elementoRelogio.hidden = modoAtual !== "tempo" && modoAtual !== "arena";
     atualizarRelogio();
     velocidadeAtual = VELOCIDADE_INICIAL_MS; // antes, o 1° passo usava a velocidade na partida anterior

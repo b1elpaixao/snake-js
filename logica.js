@@ -1177,13 +1177,23 @@ const NOMES_DOS_POWERUPS = {
     portal: "Portal",
     cameraLenta: "Câmera lenta",
     congelar: "Congelar",
+    bomba: "Bomba",
 };
 
+const RAIO_DA_BOMBA = 2; // a bomba explode as pedras num quadrado de 5x5 em volta da cabeça
+
+// separa as pedras que a bomba explode (perto do centro) das que ficam
+function pedrasNaExplosao(pedras, centro, raio) {
+    const perto = (pedra) => Math.max(Math.abs(pedra.x - centro.x), Math.abs(pedra.y - centro.y)) <= raio;
+    return { ficam: pedras.filter((pedra) => !perto(pedra)), explodidas: pedras.filter(perto) };
+}
+
 // quais power-ups podem aparecer: só os que fazem sentido na partida
-function powerUpsDaPartida({ arena, temQuemCongelar }) {
-    return ["invencibilidade", "velocidade", "pontosDobrados", "encolher", "ima", "escudo", "portal", "cameraLenta", "congelar"]
+function powerUpsDaPartida({ arena, temQuemCongelar, temPedras }) {
+    return ["invencibilidade", "velocidade", "pontosDobrados", "encolher", "ima", "escudo", "portal", "cameraLenta", "congelar", "bomba"]
         .filter((tipo) => !(arena && tipo === "portal")) // na Arena o portal jogaria a cobra pra fora da zona
-        .filter((tipo) => temQuemCongelar || tipo !== "congelar");
+        .filter((tipo) => temQuemCongelar || tipo !== "congelar")
+        .filter((tipo) => temPedras || tipo !== "bomba");
 }
 
 // opções salvas: só true conta como ligado (dado estranho = desligado)

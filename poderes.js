@@ -1,6 +1,10 @@
 // ==========================================
-// Power-up Congelar
+// Power-ups Congelar e Bomba
 // ==========================================
+let pedrasDestruidas = 0; // pedras que a Bomba explodiu: não voltam na hora
+let explosoes = [];       // { casa, ate } (relógio de verdade: o clarão e a onda aparecem até na animação de morte)
+let tremorAte = 0;        // até quando a tela treme (performance.now)
+
 // ---------- Congelar ----------
 // quem pegou o Congelar continua andando; o resto (outra cobra, chefão, ratos e pedras que andam) fica parado
 function quemCongelou() {
@@ -164,4 +168,209 @@ function estilhacarGelo(dono) {
         }
     }
     particulas = particulas.slice(-220);
+}
+
+// ---------- Bomba ----------
+const DURACAO_EXPLOSAO_MS = 1000;
+
+function explodirBomba(jogador) {
+    const centro = jogador.cobra[0];
+    const { ficam, explodidas } = pedrasNaExplosao(obstaculos, centro, RAIO_DA_BOMBA);
+
+    obstaculos = ficam;
+    pedrasDestruidas += explodidas.length;
+    if (!jogador.bot) anunciar(`Bomba: ${explodidas.length} ${explodidas.length === 1 ? "pedra explodida" : "pedras explodidas"}`);
+
+    // no Chefão, pegar ele na explosão tira 1 de vida
+    if (chefao && jogador !== chefao && !estaAtordoado(chefao)) {
+        const atingido = chefao.cobra.find((pedaco) => Math.max(Math.abs(pedaco.x - centro.x), Math.abs(pedaco.y - centro.y)) <= RAIO_DA_BOMBA);
+        if (atingido) acertarChefao(atingido, "Bum!");
+    }
+
+    // som: estrondo grave
+    tocarSom(70, 0.45, "sawtooth");
+    tocarSom(45, 0.6, "square");
+    vibrar([80, 40, 160]);
+
+    explosoes.push({ casa: { ...centro }, ate: performance.now() + DURACAO_EXPLOSAO_MS });
+    if (!reduzirMovimento) {
+        tremorAte = performance.now() + 450;
+        soltarParticulasDaExplosao(centro, explodidas);
+    }
+}
+
+// estrelinhas saindo pra todo lado e pedaços das pedras voando
+function soltarParticulasDaExplosao(centro, pedras) {
+    const agora = agoraDoJogo();
+    const meio = centroDaCasa(centro);
+    const sorteio = (minimo, maximo) => minimo + Math.random() * (maximo - minimo);
+
+    for (let i = 0; i < 16; i++) {
+        const angulo = (i / 16) * Math.PI * 2 + sorteio(0, 0.3);
+        const velocidade = sorteio(70, 130);
+        particulas.push({ tipo: "estrelas", x: meio.x, y: meio.y, nasceu: agora, vida: sorteio(550, 800),
+            vx: Math.cos(angulo) * velocidade, vy: Math.sin(angulo) * velocidade, giro: Math.random() * 6, tamanho: sorteio(2.5, 4),
+            cor: ["#ffe066", "#ffffff", "#ff8c42"][i % 3] });
+    }
+    for (const pedra of pedras) {
+        const lugar = centroDaCasa(pedra);
+        for (let i = 0; i < 5; i++) {
+            const angulo = Math.atan2(lugar.y - meio.y, lugar.x - meio.x) + sorteio(-0.8, 0.8);
+            const velocidade = sorteio(50, 120);
+            particulas.push({ tipo: "estilhaco", x: lugar.x, y: lugar.y, nasceu: agora, vida: sorteio(500, 800),
+                vx: Math.cos(angulo) * velocidade, vy: Math.sin(angulo) * velocidade - 40, giro: Math.random() * 6, tamanho: sorteio(2, 3.5), cor: null });
+        }
+    }
+    particulas = particulas.slice(-220);
+}
+
+// a tela treme forte no começo e vai parando
+function aplicarTremor() {
+    const falta = tremorAte - performance.now();
+    if (falta <= 0 || reduzirMovimento) return;
+    const forca = 7 * (falta / 450);
+    ctx.translate((Math.random() * 2 - 1) * forca, (Math.random() * 2 - 1) * forca);
+}
+
+// explosão de desenho animado: estouro em estrela, nuvem de cogumelo e "BOOM!"
+function desenharExplosoes() {
+    const agora = performance.now();
+    explosoes = explosoes.filter((explosao) => explosao.ate > agora);
+    if (explosoes.length === 0) return;
+
+    ctx.save();
+    ctx.lineJoin = "round";
+    for (const explosao of explosoes) {
+        const andou = 1 - (explosao.ate - agora) / DURACAO_EXPLOSAO_MS; // 0 = acabou de explodir, 1 = sumiu
+        const centro = centroDaCasa(explosao.casa);
+        const alcance = TAMANHO_CELULA * (RAIO_DA_BOMBA + 0.5);
+        const contorno = "#3b2414";
+
+        // clarão branco rapidinho
+        if (andou < 0.12) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.85 * (1 - andou / 0.12)})`;
+            ctx.beginPath(); ctx.arc(centro.x, centro.y, alcance * 1.3, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // estouro em estrela (amarelo por fora, laranja por dentro), cresce rápido e some
+        if (andou < 0.45) {
+            const cresce = reduzirMovimento ? 1 : Math.min(1, andou / 0.15);
+            ctx.globalAlpha = andou < 0.3 ? 1 : 1 - (andou - 0.3) / 0.15;
+            for (const [tamanho, cor] of [[1.15, "#ffd23f"], [0.7, "#ff8c42"]]) {
+                ctx.fillStyle = cor;
+                ctx.strokeStyle = contorno;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                for (let i = 0; i < 24; i++) {
+                    const angulo = (i / 24) * Math.PI * 2 + 0.2;
+                    const raio = alcance * tamanho * cresce * (i % 2 === 0 ? 1 : 0.62);
+                    ctx.lineTo(centro.x + Math.cos(angulo) * raio, centro.y + Math.sin(angulo) * raio);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        // nuvem de cogumelo: o tronco e a copa sobem juntos
+        if (andou > 0.12) {
+            const sobe = reduzirMovimento ? 0.5 : (andou - 0.12) / 0.88;
+            ctx.globalAlpha = andou < 0.7 ? 1 : 1 - (andou - 0.7) / 0.3;
+            const baseY = centro.y;
+            const topoY = centro.y - alcance * (0.6 + sobe * 0.9);
+            const fumacas = [];
+            for (let i = 0; i < 4; i++) { // tronco
+                const y = baseY + (topoY - baseY) * (i / 4);
+                fumacas.push([centro.x + (i % 2 ? 3 : -3), y, TAMANHO_CELULA * (0.45 - i * 0.04)]);
+            }
+            for (const [dx, dy, raio] of [[-1.1, 0.15, 0.55], [1.1, 0.15, 0.55], [-0.55, -0.35, 0.65], [0.55, -0.35, 0.65], [0, 0, 0.8]]) { // copa
+                fumacas.push([centro.x + dx * TAMANHO_CELULA, topoY + dy * TAMANHO_CELULA, TAMANHO_CELULA * raio * (0.7 + sobe * 0.4)]);
+            }
+            ctx.fillStyle = contorno; // contorno grosso de desenho
+            for (const [x, y, raio] of fumacas) { ctx.beginPath(); ctx.arc(x, y, raio + 2.5, 0, Math.PI * 2); ctx.fill(); }
+            ctx.fillStyle = "#c9c4bd";
+            for (const [x, y, raio] of fumacas) { ctx.beginPath(); ctx.arc(x, y, raio, 0, Math.PI * 2); ctx.fill(); }
+            ctx.fillStyle = "#efebe6"; // luz na parte de cima de cada bolota
+            for (const [x, y, raio] of fumacas) { ctx.beginPath(); ctx.arc(x - raio * 0.25, y - raio * 0.3, raio * 0.5, 0, Math.PI * 2); ctx.fill(); }
+            ctx.globalAlpha = 1;
+        }
+
+        // "BOOM!" grande, que salta e depois some
+        if (andou < 0.8) {
+            const salto = reduzirMovimento ? 1 : 1 + 0.5 * Math.max(0, 1 - andou / 0.15);
+            const tamanhoDaLetra = Math.round(TAMANHO_CELULA * 1.5);
+            const x = Math.max(tamanhoDaLetra * 2, Math.min(LARGURA_TABULEIRO - tamanhoDaLetra * 2, centro.x));
+            const y = Math.max(tamanhoDaLetra, centro.y - alcance * 0.2);
+            ctx.save();
+            ctx.globalAlpha = andou < 0.6 ? 1 : 1 - (andou - 0.6) / 0.2;
+            ctx.translate(x, y);
+            ctx.rotate(-0.12);
+            ctx.scale(salto, salto);
+            ctx.font = `900 ${tamanhoDaLetra}px "Arial Black", Impact, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.lineWidth = Math.max(4, tamanhoDaLetra * 0.16);
+            ctx.strokeStyle = contorno;
+            ctx.strokeText("BOOM!", 0, 0);
+            ctx.fillStyle = "#ffe14d";
+            ctx.fillText("BOOM!", 0, 0);
+            ctx.restore();
+        }
+    }
+    ctx.restore();
+}
+
+// a bomba no chão: bolota preta com brilho e o pavio aceso soltando faíscas
+function desenharBombaNoChao(item) {
+    const centro = centroDaCasa(item);
+    const raio = TAMANHO_CELULA * 0.34;
+    const tempo = reduzirMovimento ? 0 : agoraDoJogo();
+    const pulso = (Math.sin(tempo / 200) + 1) / 2;
+
+    ctx.save();
+    ctx.globalAlpha = 0.18 + 0.18 * pulso; // brilho em volta, como os outros power-ups
+    ctx.fillStyle = CORES_POWERUP.bomba;
+    ctx.beginPath(); ctx.arc(centro.x, centro.y, TAMANHO_CELULA * 0.5, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+
+    const cx = centro.x - raio * 0.1;
+    const cy = centro.y + raio * 0.15;
+    ctx.fillStyle = "#1f2430";
+    ctx.beginPath(); ctx.arc(cx, cy, raio, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#4b5263"; // tampinha
+    ctx.fillRect(cx + raio * 0.35, cy - raio * 1.05, raio * 0.55, raio * 0.4);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.45)"; // brilho
+    ctx.beginPath(); ctx.arc(cx - raio * 0.35, cy - raio * 0.35, raio * 0.25, 0, Math.PI * 2); ctx.fill();
+
+    // pavio
+    const pontaX = cx + raio * 1.0;
+    const pontaY = cy - raio * 1.45;
+    ctx.strokeStyle = "#c8a165";
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(cx + raio * 0.62, cy - raio * 1.0);
+    ctx.quadraticCurveTo(cx + raio * 0.7, cy - raio * 1.5, pontaX, pontaY);
+    ctx.stroke();
+
+    // faíscas piscando na ponta
+    for (let i = 0; i < 5; i++) {
+        const angulo = (i / 5) * Math.PI * 2 + tempo / 90;
+        const comprimento = raio * (0.3 + 0.35 * ((Math.sin(tempo / 50 + i * 2.1) + 1) / 2));
+        ctx.strokeStyle = i % 2 ? "#ffe066" : "#ff8c42";
+        ctx.beginPath();
+        ctx.moveTo(pontaX, pontaY);
+        ctx.lineTo(pontaX + Math.cos(angulo) * comprimento, pontaY + Math.sin(angulo) * comprimento);
+        ctx.stroke();
+    }
+    ctx.fillStyle = "#fff6c2";
+    ctx.beginPath(); ctx.arc(pontaX, pontaY, 1.6 + pulso, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+}
+
+function prepararPoderes() {
+    pedrasDestruidas = 0;
+    explosoes = [];
+    tremorAte = 0;
 }
