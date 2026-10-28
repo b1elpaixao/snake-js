@@ -65,6 +65,7 @@ function moverJogador(jogador) {
             anunciar(`Pegou ${NOMES_DOS_POWERUPS[powerUp.tipo]}`);
             estatisticas.powerUps++;
             partidaAtual.powerUps++;
+            if (!partidaAtual.tiposDePowerUp.includes(powerUp.tipo)) partidaAtual.tiposDePowerUp.push(powerUp.tipo);
             vibrar(50);
             verificarConquistas();
         }

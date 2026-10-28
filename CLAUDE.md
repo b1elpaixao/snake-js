@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (307 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (309 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -72,6 +72,6 @@ Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 
 
 ## Melhorias pendentes (lista 5)
 
-Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loja.js` + `enfeites.js`: chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer; itens 🏆 só por conquista: Zebra=Glutona, Lava=Saí do labirinto, Fogo=Combo x8, Dourada=Fiel) · 3 modo Arena (zona que fecha, conquista Sobrevivente = corpo exclusivo Cobra de magma). · 4 modo Chefão (`chefao.js`: "os olhos que emergem", estilo aura no abismo; espada; skin Espectro liberada por conquista).
-Em andamento: 5 power-ups (feito: Congelar e Bomba; falta: conquista Arsenal; Fantasma descartado).
+Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loja.js` + `enfeites.js`: chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer; itens 🏆 só por conquista: Zebra=Glutona, Lava=Saí do labirinto, Fogo=Combo x8, Dourada=Fiel, Faíscas=Arsenal) · 3 modo Arena (zona que fecha, conquista Sobrevivente = corpo exclusivo Cobra de magma). · 4 modo Chefão (`chefao.js`: "os olhos que emergem", estilo aura no abismo; espada; skin Espectro liberada por conquista).
+· 5 power-ups Congelar e Bomba (`poderes.js`; Fantasma descartado) + conquista Arsenal (6 power-ups diferentes numa partida, `partidaAtual.tiposDePowerUp`) = rastro exclusivo Faíscas.
 A fazer: 6 até 4 jogadores · 9 temas de época · 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP · 13 idiomas.

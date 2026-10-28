@@ -285,7 +285,7 @@ let temporizadorDestaqueVelocidade = null;
 let estatisticas = lerEstatisticas();
 let conquistasGanhas = lerConquistas();
 let carteira = lerCarteira(); // { moedas, comprados, equipados } (loja.js)
-let partidaAtual = { powerUps: 0, comidas: 0, douradas: 0, maiorCombo: 0 }; // contadores só desta partida (pras conquistas e missões)
+let partidaAtual = { powerUps: 0, tiposDePowerUp: [], comidas: 0, douradas: 0, maiorCombo: 0 }; // contadores só desta partida (pras conquistas e missões)
 let temporizadorAvisoConquista = null;
 let tempoDaPartidaMs = 0;
 let velocidadeMostrada = null;  
@@ -418,6 +418,7 @@ function contextoDasConquistas(extra = {}) {
             pontos: Math.max(0, ...humanos.map((jogador) => jogador.pontuacao)),
             tamanho: Math.max(0, ...humanos.map((jogador) => jogador.cobra.length)),
             powerUps: partidaAtual.powerUps,
+            tiposDePowerUp: partidaAtual.tiposDePowerUp.length,
             modo: modoAtual,
             fase: faseAtual,
             venceuBotDificil: false,
@@ -1416,7 +1417,7 @@ function reiniciar() {
     contadorMeiosPassos = 0;
     contadorPassosPedras = 0;
     tempoDaPartidaMs = 0;
-    partidaAtual = { powerUps: 0, comidas: 0, douradas: 0, maiorCombo: 0 };
+    partidaAtual = { powerUps: 0, tiposDePowerUp: [], comidas: 0, douradas: 0, maiorCombo: 0 };
     prepararPoderes();
     elementoRelogio.hidden = modoAtual !== "tempo" && modoAtual !== "arena";
     atualizarRelogio();

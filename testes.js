@@ -647,6 +647,11 @@ verificar("bomba: explode as pedras no quadrado 5x5 em volta",
     JSON.stringify(pedrasNaExplosao([{ x: 0, y: 0 }, { x: 3, y: 3 }, { x: 4, y: 1 }, { x: 6, y: 6 }], { x: 2, y: 2 }, 2).explodidas), JSON.stringify([{ x: 0, y: 0 }, { x: 3, y: 3 }, { x: 4, y: 1 }]));
 verificar("bomba: as pedras longe ficam", JSON.stringify(pedrasNaExplosao([{ x: 0, y: 0 }, { x: 6, y: 6 }, { x: 5, y: 2 }], { x: 2, y: 2 }, 2).ficam), JSON.stringify([{ x: 6, y: 6 }, { x: 5, y: 2 }]));
 
+// conquista Arsenal
+verificar("conquista: Arsenal com 6 power-ups diferentes (5 não)",
+    [5, 6].map((tiposDePowerUp) => conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 0, tamanho: 1, powerUps: tiposDePowerUp, tiposDePowerUp } }).some((c) => c.id === "arsenal")).join(), "false,true");
+verificar("loja: Arsenal dá o rastro Faíscas (não vendido)", JSON.stringify(ITENS_DA_LOJA.filter((item) => item.conquista === "arsenal").map((item) => [item.id, item.tipo, item.preco ?? null])), JSON.stringify([["faiscas", "rastro", null]]));
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

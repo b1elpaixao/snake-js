@@ -447,6 +447,7 @@ function criarParticula(tipo, x, y, agora) {
     if (tipo === "notas") Object.assign(particula, { vy: sorteio(-14, -8), vida: 1100, cor: ["#9b5de5", "#4dabf7", "#ff4d6d"][Math.floor(Math.random() * 3)] });
     if (tipo === "estrelinhas") Object.assign(particula, { vida: 800, cor: Math.random() < 0.5 ? "#ffe066" : "#ffffff" });
     if (tipo === "fogo") Object.assign(particula, { vy: sorteio(-20, -10), vida: 650, tamanho: sorteio(3, 4.5) });
+    if (tipo === "faiscas") Object.assign(particula, { vx: sorteio(-70, 70), vy: sorteio(-70, 20), vida: 500, tamanho: sorteio(2.5, 3.5), cor: Math.random() < 0.5 ? "#ffe066" : "#ffffff" });
     return particula;
 }
 
@@ -527,6 +528,14 @@ function desenharParticula(c, p, idade) {
         c.rotate(p.giro + t * 8);
         c.fillStyle = p.cor;
         c.fillRect(-p.tamanho, -p.tamanho * 0.45, p.tamanho * 2, p.tamanho * 0.9);
+    } else if (p.tipo === "faiscas") { // risco na direção em que voa (laranja por fora, claro por dentro) com um brilho na ponta
+        c.lineCap = "round";
+        for (const [largura, cor] of [[1.6, "#ff7b00"], [0.7, p.cor || "#ffe066"]]) {
+            c.strokeStyle = cor;
+            c.lineWidth = p.tamanho * largura;
+            c.beginPath(); c.moveTo(x - p.vx * 0.08, y - p.vy * 0.08); c.lineTo(x, y); c.stroke();
+        }
+        desenharBrilho(c, x, y, p.tamanho * 1.3, "#fff6c2");
     } else if (p.tipo === "estilhaco") { // pedaço de pedra
         c.translate(x, y);
         c.rotate(p.giro + t * 10);
