@@ -55,6 +55,16 @@
                     <div class="teclas" data-jogador="1"></div>
                 </div>
 
+                <div class="controle">
+                    <p class="controle-nome"><span class="ponto ponto-3"></span>Jogador 3</p>
+                    <div class="teclas" data-jogador="2"></div>
+                </div>
+
+                <div class="controle">
+                    <p class="controle-nome"><span class="ponto ponto-4"></span>Jogador 4</p>
+                    <div class="teclas" data-jogador="3"></div>
+                </div>
+
                 <p class="dica-teclas">
                     <span id="dicaTeclas">Clique numa tecla pra trocar</span>
                     <button id="botaoTeclasPadrao" class="botao-link" type="button">Restaurar padrão</button>
@@ -94,6 +104,36 @@
                         <span id="nomeExibido2">Jogador 2</span>
                         <strong id="score2">0</strong>
                         <span class="efeitos" id="efeitosJogador2">
+                            <span class="efeito" data-efeito="imaAtivo" hidden>Imã<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="invencivel" hidden>Invencível<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="velocidadeExtraAtiva" hidden>Turbo<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="pontosDobradosAtivo" hidden>Pontos x2<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="escudoAtivo" hidden>Escudo<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="portalAtivo" hidden>Portal<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="cameraLentaAtiva" hidden>Lento<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="congelarAtivo" hidden>Congelar<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                        </span>
+                    </span>
+                    <span id="placarJogador3" class="placar-jogador" hidden>
+                        <span class="ponto ponto-3"></span>
+                        <span id="nomeExibido3">Jogador 3</span>
+                        <strong id="score3">0</strong>
+                        <span class="efeitos" id="efeitosJogador3">
+                            <span class="efeito" data-efeito="imaAtivo" hidden>Imã<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="invencivel" hidden>Invencível<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="velocidadeExtraAtiva" hidden>Turbo<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="pontosDobradosAtivo" hidden>Pontos x2<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="escudoAtivo" hidden>Escudo<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="portalAtivo" hidden>Portal<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="cameraLentaAtiva" hidden>Lento<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="congelarAtivo" hidden>Congelar<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                        </span>
+                    </span>
+                    <span id="placarJogador4" class="placar-jogador" hidden>
+                        <span class="ponto ponto-4"></span>
+                        <span id="nomeExibido4">Jogador 4</span>
+                        <strong id="score4">0</strong>
+                        <span class="efeitos" id="efeitosJogador4">
                             <span class="efeito" data-efeito="imaAtivo" hidden>Imã<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                             <span class="efeito" data-efeito="invencivel" hidden>Invencível<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                             <span class="efeito" data-efeito="velocidadeExtraAtiva" hidden>Turbo<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
@@ -165,6 +205,14 @@
                             Jogador 2 · <span id="resumoTeclas2">WASD</span>
                             <input type="text" id="inputNomeJogador2" placeholder="Jogador 2" maxlength="12" />
                         </label>
+                        <label class="campo campo-3" hidden>
+                            Jogador 3 · <span id="resumoTeclas3">IJKL</span>
+                            <input type="text" id="inputNomeJogador3" placeholder="Jogador 3" maxlength="12" />
+                        </label>
+                        <label class="campo campo-4" hidden>
+                            Jogador 4 · <span id="resumoTeclas4">8456</span>
+                            <input type="text" id="inputNomeJogador4" placeholder="Jogador 4" maxlength="12" />
+                        </label>
                     </div>
 
                     <div class="menu-opcoes">
@@ -189,6 +237,14 @@
                                 <option value="dificil">Difícil</option>
                         </select>
                     </div>
+                        <div class="menu-dificuldade">
+                            <label for="seletorQuantidade">Jogadores</label>
+                            <select id="seletorQuantidade">
+                                <option value="2" selected>2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                            </select>
+                        </div>
                         <div class="menu-dificuldade">
                             <label for="seletorNivelBot">Nível do bot</label>
                             <select id="seletorNivelBot">

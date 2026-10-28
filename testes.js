@@ -237,12 +237,12 @@ const prefValidas = limparPreferencias(
     ["normal", "rato"], ["facil", "normal", "dificil"]
 );
 verificar("preferências válidas são mantidas",
-    JSON.stringify(prefValidas), JSON.stringify({ nome1: "Ana", nome2: "Leo", modo: "rato",
+    JSON.stringify(prefValidas), JSON.stringify({ nome1: "Ana", nome2: "Leo", nome3: "", nome4: "", quantidade: 2, modo: "rato",
 dificuldade: "dificil", semParedes: true }));
 const prefLixo = limparPreferencias({ nome1: 42, modo: "voador", dificuldade: "impossivel",
 semParedes: "sim" }, ["normal", "rato"], ["facil", "normal", "dificil"]);
 verificar("preferência inválida volta pro padrão",
-    JSON.stringify(prefLixo), JSON.stringify({ nome1: "", nome2: "", modo: "normal", dificuldade:
+    JSON.stringify(prefLixo), JSON.stringify({ nome1: "", nome2: "", nome3: "", nome4: "", quantidade: 2, modo: "normal", dificuldade:
 "normal", semParedes: false }));
 verificar("sem nada salvo usa o padrão", limparPreferencias(null, ["normal"], ["normal"]).modo,
 "normal");
@@ -387,6 +387,13 @@ verificar("nomeDaTecla: seta", nomeDaTecla("arrowleft"), "←");
 verificar("nomeDaTecla: letra", nomeDaTecla("k"), "K");
 verificar("resumoDasTeclas: setas", resumoDasTeclas(TECLAS_PADRAO[0]), "setas");
 verificar("resumoDasTeclas: WASD", resumoDasTeclas(TECLAS_PADRAO[1]), "WASD");
+verificar("teclas: 4 jogadores, nenhuma repetida", new Set(TECLAS_PADRAO.flatMap((teclas) => Object.values(teclas))).size, 16);
+verificar("teclas: o 3º usa IJKL e o 4º o teclado numérico", resumoDasTeclas(TECLAS_PADRAO[2]) + " " + resumoDasTeclas(TECLAS_PADRAO[3]), "IJKL 8456");
+verificar("limparTeclas: salvas com 2 ganham o 3º e o 4º", limparTeclas([TECLAS_PADRAO[0], TECLAS_PADRAO[1]]).length, 4);
+const teclasAntigasComIJKL = limparTeclas([{ cima: "i", baixo: "k", esquerda: "j", direita: "l" }, TECLAS_PADRAO[1]]);
+verificar("limparTeclas: 1º com IJKL, o 3º e o 4º pegam outras livres", teclasAntigasComIJKL.map(resumoDasTeclas).join(","), "IJKL,WASD,8456,Home Delete End Pagedown");
+verificar("limparTeclas: 4 salvas ficam", limparTeclas(copiarTeclasPadrao())[3].cima, "8");
+verificar("limparTeclas: 3 salvas volta pro padrão", limparTeclas(copiarTeclasPadrao().slice(0, 3)).length, 4);
 
 // compartilhar resultado
 verificar("compartilhar: desafio com data e 1 jogador",
@@ -651,6 +658,31 @@ verificar("bomba: as pedras longe ficam", JSON.stringify(pedrasNaExplosao([{ x: 
 verificar("conquista: Arsenal com 6 power-ups diferentes (5 não)",
     [5, 6].map((tiposDePowerUp) => conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 0, tamanho: 1, powerUps: tiposDePowerUp, tiposDePowerUp } }).some((c) => c.id === "arsenal")).join(), "false,true");
 verificar("loja: Arsenal dá o rastro Faíscas (não vendido)", JSON.stringify(ITENS_DA_LOJA.filter((item) => item.conquista === "arsenal").map((item) => [item.id, item.tipo, item.preco ?? null])), JSON.stringify([["faiscas", "rastro", null]]));
+
+// até 4 jogadores
+const inicios4 = posicoesIniciais(4, 20, 20);
+verificar("início: com 2, igual a antes (no meio, de frente)", JSON.stringify(posicoesIniciais(2, 20, 20).map((p) => [p.x, p.y, p.direcao.x])), JSON.stringify([[6, 10, 1], [14, 10, -1]]));
+verificar("início: com 4, cada uma num canto", JSON.stringify(inicios4.map((p) => [p.x, p.y])), JSON.stringify([[3, 3], [16, 16], [16, 3], [3, 16]]));
+verificar("início: com 4, ninguém começa indo pra fora", inicios4.every((p) => { const x = p.x + p.direcao.x * 10, y = p.y + p.direcao.y * 10; return x >= 0 && x < 20 && y >= 0 && y < 20; }), true);
+verificar("início: com 3, os 3 primeiros cantos", posicoesIniciais(3, 20, 20).length, 3);
+verificar("vagas: Normal e Arena até 4", [jogadoresPermitidos("normal", 4), jogadoresPermitidos("arena", 3), jogadoresPermitidos("tempo", 9)].join(), "4,3,4");
+verificar("vagas: Fases, Desafio, fase criada e Chefão até 2", ["fases", "desafio", "personalizada", "chefao"].map((modo) => jogadoresPermitidos(modo, 4)).join(), "2,2,2,2");
+const pessoa = (nome, pontuacao = 0, bot = false) => ({ nome, pontuacao, bot, cobra: [] });
+const [ana, bia, caio, dani] = [pessoa("Ana", 5), pessoa("Bia", 9), pessoa("Caio", 2), pessoa("Dani", 2)];
+verificar("sobrevivência: com 2, bater acaba", partidaContinuaSemOsBatidos([ana, bia], [ana]), false);
+verificar("sobrevivência: 4 e 1 bate, continua", partidaContinuaSemOsBatidos([ana, bia, caio, dani], [ana, bia, caio]), true);
+verificar("sobrevivência: sobrou 1, acaba", partidaContinuaSemOsBatidos([ana, bia, caio], [caio]), false);
+verificar("sobrevivência: só sobraram bots, acaba", partidaContinuaSemOsBatidos([ana, pessoa("B1", 0, true), pessoa("B2", 0, true)], [pessoa("B1", 0, true), pessoa("B2", 0, true)]), false);
+verificar("sobrevivência: só bots jogando, vai até sobrar 1", partidaContinuaSemOsBatidos([1, 2, 3].map((n) => pessoa("B" + n, 0, true)), [1, 2].map((n) => pessoa("B" + n, 0, true))), true);
+const fim1 = classificarPorSobrevivencia([ana, bia, caio, dani], [[bia], [caio, dani]]);
+verificar("classificação: quem sobrou ganha, mesmo com menos pontos", fim1.vencedor.nome + ": " + fim1.ordem.map((j) => j.nome).join(","), "Ana: Ana,Caio,Dani,Bia");
+const fim2 = classificarPorSobrevivencia([ana, bia, caio], [[caio], [ana, bia]]);
+verificar("classificação: os últimos batem juntos, ganha quem tem mais pontos", fim2.vencedor.nome + ": " + fim2.ordem.map((j) => j.nome).join(","), "Bia: Bia,Ana,Caio");
+verificar("classificação: batem juntos empatados, empate", classificarPorSobrevivencia([caio, dani, ana], [[ana], [caio, dani]]).vencedor, null);
+const atingidoA = { cobra: [{ x: 2, y: 2 }] }, atingidoB = { cobra: [{ x: 5, y: 5 }, { x: 2, y: 2 }] }, atingidoC = { cobra: [{ x: 9, y: 9 }] };
+verificar("quem foi atingido: acha a dona do corpo", quemFoiAtingido(atingidoA, [atingidoA, atingidoC, atingidoB]), atingidoB);
+verificar("quem foi atingido: ninguém", quemFoiAtingido(atingidoC, [atingidoA, atingidoB, atingidoC]), null);
+verificar("preferências: quantidade 2 a 4 (o resto vira 2)", [3, 7, "4"].map((quantidade) => limparPreferencias({ quantidade }, ["normal"], ["normal"]).quantidade).join(), "3,2,2");
 
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;

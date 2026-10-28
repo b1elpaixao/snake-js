@@ -137,10 +137,7 @@ const EFEITOS_COM_DURACAO = [
     { ativo: "congelarAtivo", ate: "congelarAte", duracao: DURACAO_CONGELAR_MS },
 ];
 const TEMPO_AVISO_FIM_EFEITO_MS = 1500;
-const containersEfeitos = [
-    document.getElementById("efeitosJogador1"),
-    document.getElementById("efeitosJogador2"),
-];
+const containersEfeitos = [1, 2, 3, 4].map((numero) => document.getElementById(`efeitosJogador${numero}`));
 
 const telaInicial = document.getElementById("telaInicial");
 const telaComoJogar = document.getElementById("telaComoJogar");
@@ -159,6 +156,8 @@ const botaoJogarBot = document.getElementById("botaoJogarBot");
 const botaoJogar1 = document.getElementById("botaoJogar1");
 const botaoJogar2 = document.getElementById("botaoJogar2");
 const placarJogador2 = document.getElementById("placarJogador2");
+const placaresDosJogadores = [1, 2, 3, 4].map((numero) => document.getElementById(`placarJogador${numero}`));
+const seletorQuantidade = document.getElementById("seletorQuantidade");
 
 const elementoListaRecordes = document.getElementById("listaRecordes");
 const elementoModoRecordes = document.getElementById("modoRecordes");
@@ -175,6 +174,7 @@ const inputNomeJogador1 = document.getElementById("inputNomeJogador1");
 const inputNomeJogador2 = document.getElementById("inputNomeJogador2");
 const elementoNomeExibido1 = document.getElementById("nomeExibido1");
 const elementoNomeExibido2 = document.getElementById("nomeExibido2");
+const inputsNomesExtras = [document.getElementById("inputNomeJogador3"), document.getElementById("inputNomeJogador4")];
 
 
 // ==========================================
@@ -221,31 +221,29 @@ function criarJogador(config) {
     };
 }
 
-function criarJogadores(quantidade = 2, nomes = ["Jogador 1", "Jogador 2"]) {
-    const todosOsJogadores = [
-        criarJogador({
-            x: Math.round(COLUNAS * 0.3),
-            y: Math.round(LINHAS / 2),
-            direcaoInicial: { x: 1, y: 0 },
-            teclas: teclasDosJogadores[0],
-            corCabeca: corDaCobra().cabeca,
-            corCorpo: corDaCobra().corpo,
-            nome: nomes[0],
-            elementoPontuacao: document.getElementById("score1"),
-        }),
-        criarJogador({
-            x: COLUNAS - Math.round(COLUNAS * 0.3),
-            y: Math.floor(LINHAS / 2),
-            direcaoInicial: { x: -1, y: 0 },
-            teclas: teclasDosJogadores[1],
-            corCabeca: "#ff9a6b",
-            corCorpo: "#c7431a",
-            nome: nomes[1],
-            elementoPontuacao: document.getElementById("score2"),
-        }),
-    ];
+// cores do Jogador 2 em diante (a do Jogador 1 é a escolhida no painel)
+const CORES_DOS_OUTROS_JOGADORES = [
+    { cabeca: "#ff9a6b", corpo: "#c7431a" }, // laranja
+    { cabeca: "#ff7ac6", corpo: "#c2185b" }, // rosa
+    { cabeca: "#b98bff", corpo: "#6d3fd1" }, // roxo
+];
 
-    return todosOsJogadores.slice(0, quantidade);
+function criarJogadores(quantidade = 2, nomes = ["Jogador 1", "Jogador 2", "Jogador 3", "Jogador 4"]) {
+    return posicoesIniciais(quantidade, COLUNAS, LINHAS).map((inicio, indice) => {
+        const cor = indice === 0 ? corDaCobra() : CORES_DOS_OUTROS_JOGADORES[indice - 1];
+        const jogador = criarJogador({
+            x: inicio.x,
+            y: inicio.y,
+            direcaoInicial: inicio.direcao,
+            teclas: teclasDosJogadores[indice],
+            corCabeca: cor.cabeca,
+            corCorpo: cor.corpo,
+            nome: nomes[indice],
+            elementoPontuacao: document.getElementById(`score${indice + 1}`),
+        });
+        jogador.numero = indice + 1; // não muda quando alguém sai da partida
+        return jogador;
+    });
 }
 
 let jogadores = criarJogadores();
@@ -289,7 +287,10 @@ let partidaAtual = { powerUps: 0, tiposDePowerUp: [], comidas: 0, douradas: 0, m
 let temporizadorAvisoConquista = null;
 let tempoDaPartidaMs = 0;
 let velocidadeMostrada = null;  
-let nomesJogadoresAtuais = ["Jogador 1", "Jogador 2"];
+let nomesJogadoresAtuais = ["Jogador 1", "Jogador 2", "Jogador 3", "Jogador 4"];
+let participantes = [];         // todos que começaram a partida (jogadores = só quem ainda está nela)
+let saidasDaPartida = [];       // com 3 ou mais: [[quem saiu primeiro], [depois]...], cada um { jogador, motivo, outro }
+let eliminacoesRecentes = [];   // { jogador, ate }: quem acabou de sair pisca um pouco antes de sumir
 let mudo = lerDoArmazenamento("snakeMudo") === "true"; // "mudo" agora vale só para os efeitos que já tinha desligado o som antes continua sem música
 const musicaSalva = lerDoArmazenamento("snakeMusicaDesligada");
 let musicaDesligada = musicaSalva === null ? mudo : musicaSalva === "true";
@@ -507,10 +508,9 @@ function mostrarTeclas() {
         }
     }
 
-    document.getElementById("resumoTeclas1").textContent =
-resumoDasTeclas(teclasDosJogadores[0]);
-    document.getElementById("resumoTeclas2").textContent =
-resumoDasTeclas(teclasDosJogadores[1]);
+    teclasDosJogadores.forEach((teclas, indice) => {
+        document.getElementById(`resumoTeclas${indice + 1}`).textContent = resumoDasTeclas(teclas);
+    });
     document.getElementById("dicaTeclas").textContent = teclaSendoTrocada ? "Aperte a nova tecla · Esc cancela" : "Clique numa tecla pra trocar";
 }
 
@@ -1246,6 +1246,11 @@ function loop() {
         .filter((batida) => batida.motivo !== null)
         .filter(({ jogador }) => !segurarComEscudo(jogador)); // com escudo, a batida não conta
     if (chefao) batidas = tratarBatidasDoChefao(batidas); // o chefão não morre de uma batida: perde vida
+    batidas.forEach((batida) => { // guarda em quem bateu agora: depois a outra cobra já andou
+        const atingido = batida.motivo === "outroJogador" ? quemFoiAtingido(batida.jogador, jogadores) : null;
+        batida.outro = atingido ? atingido.nome : "";
+    });
+    const restantes = jogadores.filter((jogador) => !batidas.some((batida) => batida.jogador === jogador));
 
     batidas.forEach(({ jogador }) => { jogador.bateu = true; }); // o desenho mostra a cabeça encostada
 
@@ -1259,6 +1264,9 @@ function loop() {
         batidas.forEach(({ jogador }) => voltarAoInicio(jogador));
         tocarSomColisao();
         vibrar(80);
+    } else if (batidas.length > 0 && modoAtual !== "tempo" && partidaContinuaSemOsBatidos(participantes, restantes)) {
+        // 3 ou 4 jogadores: quem bateu sai e o resto continua
+        tirarDaPartida(batidas);
     } else if (batidas.length > 0) {
         jogoAtivo = false;
         travarSemParedes(false);
@@ -1269,10 +1277,10 @@ function loop() {
         animacaoMorte = { inicio: performance.now(), batidos: batidas.map((batida) => batida.jogador) };
         temporizadorAnimacaoMorte = setTimeout(() => {
             animacaoMorte = null;
-            mostrarTelaGameOver(
-                jogadores.filter((jogador) => !batidas.some((batida) => batida.jogador === jogador)),
-                batidas
-            );
+            const vivos = jogadores.filter((jogador) => !batidas.some((batida) => batida.jogador === jogador));
+            if (participantes.length > 2) saidasDaPartida.push(batidas); // a última rodada de quem bateu
+            jogadores = participantes; // o fim (placar, recordes, moedas) conta todo mundo que jogou
+            mostrarTelaGameOver(vivos, participantes.length > 2 ? saidasDaPartida.flat() : batidas);
         }, DURACAO_ANIMACAO_MORTE_MS);
         return;
     }
@@ -1383,6 +1391,10 @@ function reiniciar() {
     travarSemParedes(true);
     iniciarMusicaFundo();
     jogadores = criarJogadores(quantidadeJogadoresAtual, nomesJogadoresAtuais);
+    participantes = jogadores;
+    saidasDaPartida = [];
+    eliminacoesRecentes = [];
+    placaresDosJogadores.forEach((placar) => placar.classList.remove("fora"));
     prepararArena(); // antes da maçã e das pedras: na Arena elas nascem dentro da zona
 
     if (modoComBotAtivo) {
@@ -1467,17 +1479,19 @@ function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorM
     mostrarRecordesDoModo(modoAtual);
     aplicarDificuldade();
     const comChefao = modo === "chefao"; // qualquer botão joga você contra o chefão
-    quantidadeJogadoresAtual = comBot || comChefao ? 2 : quantidade;
+    quantidadeJogadoresAtual = comBot || comChefao || juntos ? 2 : jogadoresPermitidos(modo, quantidade);
     modoComBotAtivo = comBot && !comChefao;
     modoCooperativo = juntos && !comChefao;
 
     const nome1 = inputNomeJogador1.value.trim() || "Jogador 1";
     const nome2 = comChefao ? "Os olhos que emergem" : comBot ? "Bot" : (inputNomeJogador2.value.trim() || "Jogador 2");
-    nomesJogadoresAtuais = [nome1, nome2];
+    nomesJogadoresAtuais = [nome1, nome2, ...inputsNomesExtras.map((input, indice) => input.value.trim() || `Jogador ${indice + 3}`)];
 
-    elementoNomeExibido1.textContent = nome1;
-    elementoNomeExibido2.textContent = nome2;
-    placarJogador2.hidden = quantidadeJogadoresAtual === 1;
+    nomesJogadoresAtuais.forEach((nome, indice) => {
+        document.getElementById(`nomeExibido${indice + 1}`).textContent = nome;
+        placaresDosJogadores[indice].hidden = indice >= quantidadeJogadoresAtual;
+    });
+    document.querySelector(".placares").classList.toggle("placares-muitos", quantidadeJogadoresAtual > 2);
     noMenu = false;
     telaInicial.hidden= true;
     aplicarTamanhoDoTabuleiro();
@@ -1491,7 +1505,25 @@ function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorM
 }
 
 botaoJogar1.addEventListener("click", () => comecarJogo(1));
-botaoJogar2.addEventListener("click", () => comecarJogo(2));
+botaoJogar2.addEventListener("click", () => comecarJogo(quantidadeEscolhida()));
+
+// quantos jogam no botão "2 Jogadores" (no celular, sempre 2: não cabe tanta gente no toque)
+function quantidadeEscolhida() {
+    return window.matchMedia("(pointer: coarse)").matches ? 2 : Number(seletorQuantidade.value);
+}
+
+function mostrarQuantidadeEscolhida() {
+    const quantidade = quantidadeEscolhida();
+    botaoJogar2.textContent = `${quantidade} Jogadores`;
+    inputsNomesExtras.forEach((input, indice) => { input.parentElement.hidden = indice + 3 > quantidade; });
+}
+
+seletorQuantidade.addEventListener("change", () => {
+    mostrarQuantidadeEscolhida();
+    salvarPreferencias();
+});
+if (window.matchMedia("(pointer: coarse)").matches) seletorQuantidade.parentElement.hidden = true;
+mostrarQuantidadeEscolhida();
 botaoJogarBot.addEventListener("click", () => comecarJogo(1, true));
 document.getElementById("botaoJogarJuntos").addEventListener("click", () => comecarJogo(2, false, true));
 

@@ -37,6 +37,38 @@ function encerrarPorTempo() {
 }
 
 // ==========================================
+// 3 ou 4 jogadores: quem bate sai e o resto continua
+// ==========================================
+function tirarDaPartida(batidas) {
+    const quem = batidas.map((batida) => batida.jogador);
+    saidasDaPartida.push(batidas);
+    jogadores = jogadores.filter((jogador) => !quem.includes(jogador));
+
+    for (const jogador of quem) {
+        jogador.fora = true;
+        placaresDosJogadores[jogador.numero - 1].classList.add("fora");
+        eliminacoesRecentes.push({ jogador, ate: performance.now() + 900 });
+        adicionarTextoFlutuante(jogador.cobra[0], "Fora!", "#ff6b6b");
+    }
+    anunciar(`${quem.map((jogador) => jogador.nome).join(" e ")} ${quem.length === 1 ? "saiu" : "saíram"}. Sobraram ${jogadores.length}.`);
+    tocarSomColisao();
+    vibrar(80);
+}
+
+// quem acabou de sair pisca apagado no lugar onde bateu e some
+function desenharQuemSaiu() {
+    const agora = performance.now();
+    eliminacoesRecentes = eliminacoesRecentes.filter((saida) => saida.ate > agora);
+    for (const { jogador } of eliminacoesRecentes) {
+        if (Math.floor(agora / 120) % 2 === 0) continue;
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        desenharCobra(jogador);
+        ctx.restore();
+    }
+}
+
+// ==========================================
 // Modo Fases
 // ==========================================
 // coloca as paredes do mapa e põe as cobras (pequenas) nos pontos de partida

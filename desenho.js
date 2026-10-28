@@ -93,8 +93,10 @@ function desenhar() {
     atualizarRastro();
     desenharParticulas(); // rastro e efeito ao comer da loja
     desenharFantasma(); // por baixo das cobras de verdade
+    desenharQuemSaiu(); // 3 ou 4 jogadores
 
     for (const jogador of jogadores) {
+        if (jogador.fora) continue; // saiu da partida (3 ou 4 jogadores): não volta nem no fundo da tela de fim
         const bateu = animacaoMorte && animacaoMorte.batidos.includes(jogador);
         // pisca: some e aparece a cada 120 ms
         
@@ -689,7 +691,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
     ctx.scale(escala, escala);
     desenharCabecaCobra(corDaCabecaComPadrao(padrao, corCabeca, tempo));
     if (padrao === "magma") desenharRachadurasNaCabeca(ctx, reduzirMovimento ? 0 : tempo);
-    if (jogador === jogadores[0] && !jogador.bot) {
+    if (jogador.numero === 1 && !jogador.bot) {
         desenharChapeu(ctx, carteira.equipados.chapeu, agoraDoJogo()); // chapéu da loja: só no Jogador 1
     }
     ctx.restore();
@@ -728,24 +730,30 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
         resultado = jogadores.length === 1 ? "Tempo esgotado!" : vencedor ? `${vencedor.nome} venceu!` : "Empate!";
     } else if (jogadores.length === 1) {
         resultado = "Game Over";
+    } else if (jogadores.length > 2) {
+        const { vencedor } = classificarPorSobrevivencia(jogadores, saidasDaPartida.map((saida) => saida.map((batida) => batida.jogador)));
+        resultado = vencedor ? `${vencedor.nome} venceu!` : "Empate!";
     } else if (jogadoresVivos.length === 1) {
         resultado = `${jogadoresVivos[0].nome} venceu!`;
     } else {
         resultado = "Empate!";
     }
 
-    const textoPontuacao = jogadores
+    const textoPontuacao = jogadores.length > 2 && modoAtual !== "tempo"
+        ? classificarPorSobrevivencia(jogadores, saidasDaPartida.map((saida) => saida.map((batida) => batida.jogador))).ordem
+            .map((jogador, indice) => `${indice + 1}º ${jogador.nome}: ${jogador.pontuacao}`)
+            .join(" | ")
+        : jogadores
           .filter((jogador) => !jogador.chefao) // os pontos do chefão não contam
           .map((jogador) => `${jogador.nome}: ${jogador.pontuacao}`)
           .join(" | ");
 
     elementoResultadoFinal.textContent = resultado;
     elementoCausaMorte.textContent = batidas
-        .map(({ jogador, motivo }) => {
+        .map(({ jogador, motivo, outro }) => {
             const nome = jogadores.length === 1 || chefao ? "Você" : jogador.nome; // no Chefão, o chefão não conta como jogador
-            const outro = jogadores.find((outroJogador) => outroJogador !== jogador);
             if (chefao && motivo === "outroJogador") return `${nome} foi pego pelos olhos que emergem`;
-            return descreverBatida(nome, motivo, outro ? outro.nome : "");
+            return descreverBatida(nome, motivo, outro || "outra cobra");
         })
         .join(" · ");
 
@@ -820,8 +828,8 @@ function desenharContagem() {
 function atualizarBarrasEfeitos() {
     const agora = agoraDoJogo();
 
-    jogadores.forEach((jogador, indice) => {
-        const container = containersEfeitos[indice];
+    jogadores.forEach((jogador) => {
+        const container = containersEfeitos[jogador.numero - 1];
 
         for (const efeito of EFEITOS_COM_DURACAO) {
             const elemento = container.querySelector(`[data-efeito="${efeito.ativo}"]`);

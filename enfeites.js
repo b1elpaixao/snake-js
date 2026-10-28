@@ -233,7 +233,7 @@ function desenharComidaEquipada(posicao) {
 // Padrões do corpo (só no Jogador 1; o Invencível amarelo continua valendo por cima)
 // ==========================================
 function padraoDoCorpo(jogador) {
-    return jogador === jogadores[0] && !jogador.bot && !jogador.invencivel ? carteira.equipados.corpo : null;
+    return jogador.numero === 1 && !jogador.bot && !jogador.invencivel ? carteira.equipados.corpo : null;
 }
 
 function corDaCabecaComPadrao(padrao, corCabeca, tempo) {
@@ -454,7 +454,7 @@ function criarParticula(tipo, x, y, agora) {
 // chamado a cada quadro pelo desenhar: o rastro sai do rabo do Jogador 1
 function atualizarRastro() {
     const id = carteira.equipados.rastro;
-    const jogador = jogadores[0];
+    const jogador = jogadores.find((outro) => outro.numero === 1); // se o Jogador 1 saiu, o rastro some junto
     if (!id || !jogador || jogador.bot || !jogoAtivo || pausado || contagemAtiva || reduzirMovimento) return;
 
     const agora = agoraDoJogo();

@@ -14,6 +14,8 @@
     --ouro: #f5c451;
     --jogador1: #6fa0ff;
     --jogador2: #ff9a6b;
+    --jogador3: #ff7ac6;
+    --jogador4: #b98bff;
 
     --fonte: "Bricolage Grotesque", system-ui, sans-serif;
     --fonte-numeros: "IBM Plex Mono", ui-monospace, monospace;
@@ -64,6 +66,8 @@ button {
 
 .ponto-1 { background: var(--jogador1); }
 .ponto-2 { background: var(--jogador2); }
+.ponto-3 { background: var(--jogador3); }
+.ponto-4 { background: var(--jogador4); }
 
 /* ==========================================
    Topo
@@ -306,6 +310,22 @@ kbd,
     font-weight: 600;
 }
 
+/* 3 ou 4 jogadores: placares em grade 2x2 */
+.placares-muitos {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 4px 20px;
+}
+
+/* saiu da partida (3 ou 4 jogadores) */
+.placar-jogador.fora {
+    opacity: 0.45;
+}
+
+.placar-jogador.fora > span:nth-child(2) {
+    text-decoration: line-through;
+}
+
 .barra-recorde {
     display: flex;
     align-items: center;
@@ -384,6 +404,8 @@ canvas {
 
 .campo-1 input { box-shadow: inset 0 -3px 0 var(--jogador1); }
 .campo-2 input { box-shadow: inset 0 -3px 0 var(--jogador2); }
+.campo-3 input { box-shadow: inset 0 -3px 0 var(--jogador3); }
+.campo-4 input { box-shadow: inset 0 -3px 0 var(--jogador4); }
 
 .campo input::placeholder {
     color: var(--texto-apagado);
@@ -1093,10 +1115,10 @@ canvas {
 }
 
 /* ==========================================
-   Menu: Modo, Dificuldade e Nível de Bot lado a lado
+   Menu: Modo, Dificuldade, Jogadores e Nível de Bot (2 por linha)
    ========================================== */
 .menu-opcoes {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .menu-dificuldade select {

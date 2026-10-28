@@ -85,8 +85,8 @@ function lerTeclasSalvas() {
 function guardarTeclas(novas) {
     teclasDosJogadores = novas;
     salvarNoArmazenamento("snakeTeclas", JSON.stringify(teclasDosJogadores));
-    jogadores.forEach((jogador, indice) => {
-        jogador.teclas = teclasDosJogadores[indice]; // vale na hora, até no meio da partida
+    jogadores.forEach((jogador) => {
+        jogador.teclas = teclasDosJogadores[jogador.numero - 1]; // vale na hora, até no meio da partida
     });
 }
 
@@ -106,6 +106,9 @@ function aplicarPreferenciasSalvas() {
 
     inputNomeJogador1.value = preferencias.nome1;
     inputNomeJogador2.value = preferencias.nome2;
+    inputsNomesExtras[0].value = preferencias.nome3;
+    inputsNomesExtras[1].value = preferencias.nome4;
+    seletorQuantidade.value = String(preferencias.quantidade);
     seletorModo.value = preferencias.modo;
     seletorDificuldade.value = preferencias.dificuldade;
     seletorNivelBot.value = limparNivelBot(salvas && salvas.nivelBot);
@@ -118,6 +121,9 @@ function salvarPreferencias() {
     salvarNoArmazenamento("snakePreferencias", JSON.stringify({
         nome1: inputNomeJogador1.value.trim(),
         nome2: inputNomeJogador2.value.trim(),
+        nome3: inputsNomesExtras[0].value.trim(),
+        nome4: inputsNomesExtras[1].value.trim(),
+        quantidade: Number(seletorQuantidade.value),
         modo: seletorModo.value,
         dificuldade: seletorDificuldade.value,
         nivelBot: seletorNivelBot.value,

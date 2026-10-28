@@ -133,7 +133,7 @@ function comerAlimento(jogador, pontosBase) {
         estatisticas.maiorCombo = Math.max(estatisticas.maiorCombo, jogador.comboAtual);
         partidaAtual.comidas++;
         partidaAtual.maiorCombo = Math.max(partidaAtual.maiorCombo, jogador.comboAtual);
-        if (jogador === jogadores[0]) soltarEfeitoAoComer(jogador.cobra[0]); // efeito da loja
+        if (jogador.numero === 1) soltarEfeitoAoComer(jogador.cobra[0]); // efeito da loja
         vibrar(30);
         verificarConquistas();
     }

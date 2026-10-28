@@ -384,6 +384,9 @@ function limparPreferencias(salvas, modosValidos, dificuldadesValidas) {
     return {
         nome1: nome(preferencias.nome1),
         nome2: nome(preferencias.nome2),
+        nome3: nome(preferencias.nome3),
+        nome4: nome(preferencias.nome4),
+        quantidade: [2, 3, 4].includes(preferencias.quantidade) ? preferencias.quantidade : 2,
         modo: modosValidos.includes(preferencias.modo) ? preferencias.modo : modosValidos[0],
         dificuldade: dificuldadesValidas.includes(preferencias.dificuldade) ? preferencias.dificuldade : "normal",
         semParedes: preferencias.semParedes === true,
@@ -558,6 +561,60 @@ function vencedorPorPontos(jogadores) {
     }
 
     return ordenados[0];
+}
+
+// ==========================================
+// Até 4 jogadores (funções puras - testadas em testes.js)
+// ==========================================
+const MAXIMO_DE_JOGADORES = 4;
+
+// onde cada cobra começa: com 1 ou 2, no meio, uma de frente pra outra;
+// com 3 ou 4, nos cantos girando como um cata-vento (ninguém começa indo de cara pra ninguém)
+function posicoesIniciais(quantidade, colunas, linhas) {
+    if (quantidade <= 2) {
+        return [
+            { x: Math.round(colunas * 0.3), y: Math.round(linhas / 2), direcao: { x: 1, y: 0 } },
+            { x: colunas - Math.round(colunas * 0.3), y: Math.floor(linhas / 2), direcao: { x: -1, y: 0 } },
+        ].slice(0, quantidade);
+    }
+    const borda = 3;
+    return [
+        { x: borda, y: borda, direcao: { x: 1, y: 0 } },
+        { x: colunas - 1 - borda, y: linhas - 1 - borda, direcao: { x: -1, y: 0 } },
+        { x: colunas - 1 - borda, y: borda, direcao: { x: 0, y: 1 } },
+        { x: borda, y: linhas - 1 - borda, direcao: { x: 0, y: -1 } },
+    ].slice(0, quantidade);
+}
+
+// Fases, Desafio, fase criada e Chefão só têm lugar pra 2
+function jogadoresPermitidos(modo, quantidade) {
+    const soDois = ["fases", "desafio", "personalizada", "chefao"].includes(modo);
+    return Math.max(1, Math.min(quantidade, soDois ? 2 : MAXIMO_DE_JOGADORES));
+}
+
+// com 3 ou mais, quem bate sai e o resto continua; acaba quando sobra 1 (ou quando não sobra mais nenhuma pessoa, só bots)
+function partidaContinuaSemOsBatidos(participantes, restantes) {
+    if (participantes.length < 3) return false;
+    const tinhaPessoa = participantes.some((jogador) => !jogador.bot);
+    return restantes.length >= 2 && (!tinhaPessoa || restantes.some((jogador) => !jogador.bot));
+}
+
+// em quem a cabeça bateu (pra dizer "bateu em Fulano")
+function quemFoiAtingido(jogador, outros) {
+    const cabeca = jogador.cobra[0];
+    return outros.find((outro) => outro !== jogador && outro.cobra.some((segmento) => mesmaPosicao(segmento, cabeca))) || null;
+}
+
+// ordem do fim: quem sobrou na frente, depois quem saiu por último...; empatados na mesma rodada, mais pontos na frente
+// saidas: [[quem saiu primeiro], [quem saiu depois], ...]
+function classificarPorSobrevivencia(todos, saidas) {
+    const porPontos = (a, b) => b.pontuacao - a.pontuacao;
+    const sairam = saidas.flat();
+    const grupos = [todos.filter((jogador) => !sairam.includes(jogador)), ...[...saidas].reverse()].filter((grupo) => grupo.length > 0);
+    const ordem = grupos.flatMap((grupo) => [...grupo].sort(porPontos));
+    const primeiros = grupos[0] || [];
+    const vencedor = primeiros.length === 1 ? primeiros[0] : vencedorPorPontos(primeiros) || null;
+    return { ordem, vencedor };
 }
 
 // ==========================================
@@ -863,6 +920,15 @@ const DIRECOES_DAS_TECLAS = ["cima", "esquerda", "baixo", "direita"]; // ordem d
 const TECLAS_PADRAO = [
     { cima: "arrowup", baixo: "arrowdown", esquerda: "arrowleft", direita: "arrowright" },
     { cima: "w", baixo: "s", esquerda: "a", direita: "d" },
+    { cima: "i", baixo: "k", esquerda: "j", direita: "l" },
+    { cima: "8", baixo: "5", esquerda: "4", direita: "6" }, // teclado numérico
+];
+// pra quem salvou as teclas quando só tinha 2 jogadores: o 3º e o 4º pegam o primeiro jogo de teclas livre
+const TECLAS_EXTRAS = [
+    TECLAS_PADRAO[2],
+    TECLAS_PADRAO[3],
+    { cima: "y", baixo: "h", esquerda: "g", direita: "j" },
+    { cima: "home", baixo: "end", esquerda: "delete", direita: "pagedown" },
 ];
 // Espaço/Esc pausam, F é a tela cheia, Enter/Tab mexem nos botões; as outras são teclas "invisíveis" do teclado
 const TECLAS_RESERVADAS = [" ", "escape", "f", "enter", "tab", "dead", "unidentified", "process"];
@@ -877,7 +943,8 @@ function teclaPodeSerUsada(tecla) {
 
 // as telas salvas só valem se estiverem completas e sem repetir; senão volta pro padrão
 function limparTeclas(salvas) {
-    if (!Array.isArray(salvas) || salvas.length !== 2) return copiarTeclasPadrao();
+    if (!Array.isArray(salvas) || (salvas.length !== 2 && salvas.length !== TECLAS_PADRAO.length)) return copiarTeclasPadrao();
+    if (salvas.length === 2) salvas = completarTeclas(salvas);
 
     const usadas = [];
     for (const teclasDoJogador of salvas) {
@@ -889,6 +956,17 @@ function limparTeclas(salvas) {
     }
 
     return salvas.map((teclas) => ({ cima: teclas.cima, baixo: teclas.baixo, esquerda: teclas.esquerda, direita: teclas.direita }));
+}
+
+// as teclas salvas de 2 jogadores ganham as do 3º e do 4º, sem repetir nenhuma
+function completarTeclas(salvas) {
+    const completas = [...salvas];
+    for (const opcao of TECLAS_EXTRAS) {
+        if (completas.length === TECLAS_PADRAO.length) break;
+        const usadas = completas.flatMap((teclas) => DIRECOES_DAS_TECLAS.map((direcao) => teclas && teclas[direcao]));
+        if (DIRECOES_DAS_TECLAS.every((direcao) => !usadas.includes(opcao[direcao]))) completas.push({ ...opcao });
+    }
+    return completas;
 }
 
 // troca uma tecla; se a nova já era usada em outro lugar, as duas trocam de lugar (nunca fica repetida)

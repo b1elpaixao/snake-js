@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (309 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (332 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -25,7 +25,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 3. `desenho.js` - desenho do tabuleiro, da cobra (movimento por trilha), telas e contagem
 4. `som.js` - efeitos, música, vibração
 5. `movimento.js` - mover, colisão, recordes, power-ups, bot, pausa
-6. `modos.js` - Contra o tempo, Fases, 2 Juntos e Arena (zona que fecha a cada 15 s: `zonaArena`, `atualizarZonaDaArena`)
+6. `modos.js` - Contra o tempo, Fases, 2 Juntos, 3-4 jogadores (`tirarDaPartida`) e Arena (zona que fecha a cada 15 s: `zonaArena`, `atualizarZonaDaArena`)
 7. `chefao.js` - modo Chefão: "os olhos que emergem" (o Jogador 2 vira o chefão, `chefao`), espada, golpes, vida no placar, pulsos de luz; tabuleiro `TEMA_DO_ABISMO`
 8. `poderes.js` - power-ups novos: Congelar (`quemCongelou`, `estaCongelado`; tabuleiro de gelo, rachaduras no fim e o gelo estilhaça) e Bomba (`explodirBomba`: pedras num 5x5 somem e não voltam, `pedrasDestruidas`; no Chefão tira 1 de vida; explosão cartoon, tela treme; só aparece com pedras)
 9. `fantasma.js` - fantasma do recorde: com 1 jogador, uma cobra transparente refaz a melhor partida de hoje
@@ -55,6 +55,8 @@ Conquistas dão itens exclusivos 🏆 (nunca vendidos); a loja vende só itens p
 
 ## Coisas importantes do código
 
+- Até 4 jogadores: `jogadores` = só quem ainda está na partida; `participantes` = todos que começaram (volta pra `jogadores` no fim, pra placar/recordes/moedas). Use `jogador.numero` (1 a 4), não o índice em `jogadores`. Com 3+, quem bate sai (`saidasDaPartida`) e o último vivo ganha (`classificarPorSobrevivencia`). Fases/Desafio/fase criada/Chefão: só 2 (`jogadoresPermitidos`).
+
 - Movimento por trilha: a direção do próximo passo é combinada no fim de cada passo; o corpo é desenhado seguindo as casas, com cantos arredondados. Os passos acontecem dentro do `loopRenderizacao` (compasso do desenho) usando `proximoLoopEm`; não volte para `setTimeout`.
 - Velocidade: acelera pelo que a cobra come (`jogador.comidas`), não pelos pontos, numa curva suave (`duracaoDoPasso`) com limite por dificuldade (`aceleracaoMaxima`: 1,6x / 2x / 2,4x). Não voltar a ligar a velocidade aos pontos: o combo faz o jogo disparar.
 - `agoraDoJogo()` é o relógio que para na pausa. Use ele para tempos no jogo.
@@ -74,4 +76,5 @@ Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 
 
 Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loja.js` + `enfeites.js`: chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer; itens 🏆 só por conquista: Zebra=Glutona, Lava=Saí do labirinto, Fogo=Combo x8, Dourada=Fiel, Faíscas=Arsenal) · 3 modo Arena (zona que fecha, conquista Sobrevivente = corpo exclusivo Cobra de magma). · 4 modo Chefão (`chefao.js`: "os olhos que emergem", estilo aura no abismo; espada; skin Espectro liberada por conquista).
 · 5 power-ups Congelar e Bomba (`poderes.js`; Fantasma descartado) + conquista Arsenal (6 power-ups diferentes numa partida, `partidaAtual.tiposDePowerUp`) = rastro exclusivo Faíscas.
-A fazer: 6 até 4 jogadores · 9 temas de época · 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP · 13 idiomas.
+Em andamento: 6 até 4 jogadores (feito: pedaço 1, base; falta: menu com bots por vaga, controle pra 4, ajustes nos modos).
+A fazer: 9 temas de época · 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP · 13 idiomas.
