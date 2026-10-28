@@ -86,6 +86,7 @@
                             <span class="efeito" data-efeito="escudoAtivo" hidden>Escudo<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                             <span class="efeito" data-efeito="portalAtivo" hidden>Portal<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                             <span class="efeito" data-efeito="cameraLentaAtiva" hidden>Lento<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="congelarAtivo" hidden>Congelar<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                         </span>
                     </span>
                     <span id="placarJogador2" class="placar-jogador">
@@ -100,6 +101,7 @@
                             <span class="efeito" data-efeito="escudoAtivo" hidden>Escudo<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                             <span class="efeito" data-efeito="portalAtivo" hidden>Portal<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                             <span class="efeito" data-efeito="cameraLentaAtiva" hidden>Lento<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
+                            <span class="efeito" data-efeito="congelarAtivo" hidden>Congelar<span class="efeito-trilho"><span class="efeito-barra"></span></span></span>
                         </span>
                     </span>
                     <span id="placarJuntos" class="placar-jogador placar-juntos" hidden>
@@ -292,6 +294,7 @@
                             <li><b>Escudo</b> (verde, bolha): aguenta 1 batida em qualquer coisa, até na parede. A cobra volta uma casa e fica meio segundo parada pra você virar. Some se não for usado em 10 s.</li>
                             <li><b>Portal</b> (roxo, arco): na próxima vez que bater na parede, sai do outro lado. Vale por 10 s.</li>
                             <li><b>Câmera lenta</b> (cinza, ampulheta): por 5 s o jogo inteiro fica mais devagar.</li>
+                            <li><b>Congelar</b> (azul-claro, floco de neve): por 5 s o tabuleiro vira gelo e a outra cobra, o chefão, os ratos e as pedras que andam ficam parados. Você continua andando.</li>
                         </ul>
                     </section>
                 </div>
@@ -421,6 +424,7 @@
                     <li><span class="item-icone" data-powerup="escudo"></span><div><b>Escudo</b><span>Aguenta 1 batida (vale por 10 s)</span></div></li>
                     <li><span class="item-icone" data-powerup="portal"></span><div><b>Portal</b><span>Atravessa a parede 1 vez (vale por 10 s)</span></div></li>
                     <li><span class="item-icone" data-powerup="cameraLenta"></span><div><b>Câmera lenta</b><span>O jogo fica mais devagar por 5 s</span></div></li>
+                    <li><span class="item-icone" data-powerup="congelar"></span><div><b>Congelar</b><span>Os outros ficam parados por 5 s</span></div></li>
                     <li><span class="item-icone item-redondo" style="--cor: #f5c451"></span><div><b>Maçã dourada</b><span>+5 pontos, some em 4 s</span></div></li>
                     <li><span class="item-icone item-redondo" style="--cor: #b0b5bb"></span> <div><b>Rato cinza</b><span>Modo Rato: parado, 1 ponto</span></div></li>
                     <li><span class="item-icone item-redondo" style="--cor: #8d6e63"></span> <div><b>Rato marrom</b><span>Modo rato: foge de você, 3 pontos</span></div></li>
@@ -436,6 +440,7 @@
     <script src="movimento.js"></script>
     <script src="modos.js"></script>
     <script src="chefao.js"></script>
+    <script src="poderes.js"></script>
     <script src="fantasma.js"></script>
     <script src="controle.js"></script>
     <script src="tutorial.js"></script>

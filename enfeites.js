@@ -494,7 +494,7 @@ function desenharParticulas() {
 function desenharParticula(c, p, idade) {
     const t = idade / 1000;
     const vida = idade / p.vida; // 0 = nasceu, 1 = sumiu
-    const gravidade = p.tipo === "confete" ? 90 : 0;
+    const gravidade = p.tipo === "confete" ? 90 : p.tipo === "gelo" ? 260 : 0;
     const x = p.x + p.vx * t;
     const y = p.y + p.vy * t + 0.5 * gravidade * t * t;
 
@@ -527,6 +527,11 @@ function desenharParticula(c, p, idade) {
         c.rotate(p.giro + t * 8);
         c.fillStyle = p.cor;
         c.fillRect(-p.tamanho, -p.tamanho * 0.45, p.tamanho * 2, p.tamanho * 0.9);
+    } else if (p.tipo === "gelo") { // caco de gelo
+        c.translate(x, y);
+        c.rotate(p.giro + t * 8);
+        c.fillStyle = "rgba(210, 240, 255, 0.95)";
+        c.beginPath(); c.moveTo(0, -p.tamanho * 1.4); c.lineTo(p.tamanho, p.tamanho); c.lineTo(-p.tamanho, p.tamanho * 0.6); c.closePath(); c.fill();
     } else if (p.tipo === "coracoes") {
         desenharCoracao(c, x, y, p.tamanho, "#ff4d8d");
     }

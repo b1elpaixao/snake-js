@@ -1176,7 +1176,15 @@ const NOMES_DOS_POWERUPS = {
     escudo: "Escudo",
     portal: "Portal",
     cameraLenta: "Câmera lenta",
+    congelar: "Congelar",
 };
+
+// quais power-ups podem aparecer: só os que fazem sentido na partida
+function powerUpsDaPartida({ arena, temQuemCongelar }) {
+    return ["invencibilidade", "velocidade", "pontosDobrados", "encolher", "ima", "escudo", "portal", "cameraLenta", "congelar"]
+        .filter((tipo) => !(arena && tipo === "portal")) // na Arena o portal jogaria a cobra pra fora da zona
+        .filter((tipo) => temQuemCongelar || tipo !== "congelar");
+}
 
 // opções salvas: só true conta como ligado (dado estranho = desligado)
 function limparAcessibilidade(salvas) {

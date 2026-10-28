@@ -87,6 +87,11 @@ function moverJogador(jogador) {
         } else if (powerUp.tipo === "cameraLenta") {
             jogador.cameraLentaAtiva = true;
             jogador.cameraLentaAte = agoraDoJogo() + DURACAO_CAMERA_LENTA_MS;
+        } else if (powerUp.tipo === "congelar") {
+            jogador.congelarAtivo = true;
+            jogador.congelarAte = agoraDoJogo() + DURACAO_CONGELAR_MS;
+            adicionarTextoFlutuante(novaCabeca, "Congelou!", CORES_POWERUP.congelar);
+            tocarSom(1200, 0.15, "triangle");
         }
 
         powerUp = null;
@@ -226,6 +231,10 @@ function atualizarEfeitos(jogador) {
     }
     if (jogador.cameraLentaAtiva && agora >= jogador.cameraLentaAte) {
         jogador.cameraLentaAtiva = false;
+    }
+    if (jogador.congelarAtivo && agora >= jogador.congelarAte) {
+        estilhacarGelo(jogador);
+        jogador.congelarAtivo = false;
     }
 }
 

@@ -20,8 +20,10 @@ function gerarPosicaoLivre() {
 }
 
 function gerarTipoPowerUp() {
-    const tipos = ["invencibilidade", "velocidade", "pontosDobrados", "encolher", "ima", "escudo", "portal", "cameraLenta"]
-        .filter((tipo) => !(zonaArena && tipo === "portal")); // na Arena o portal jogaria a cobra pra fora da zona
+    const tipos = powerUpsDaPartida({
+        arena: zonaArena !== null,
+        temQuemCongelar: (jogadores.length > 1 && !modoCooperativo) || modoAtual === "rato" || obstaculos.some((pedra) => pedra.movel),
+    });
     const indice = Math.floor(Math.random() * tipos.length);
     return tipos[indice];
 }
@@ -87,7 +89,7 @@ function moverPedras() {
 
         pedra.anterior = { x: pedra.x, y: pedra.y };
 
-        if (!vezDeAndar) continue;
+        if (!vezDeAndar || quemCongelou()) continue; // com Congelar as pedras param
 
         // a pedra não entra em nada, e nunca chega colada na cabeça de uma cobra
         const casaLivre = (posicao) =>
@@ -205,7 +207,7 @@ function moverRatos() {
     for (const rato of ratos) {
         rato.anterior = { x: rato.x, y: rato.y };
 
-        if (!TIPOS_RATO[rato.tipo].anda || !vezDeAndar) {
+        if (!TIPOS_RATO[rato.tipo].anda || !vezDeAndar || quemCongelou()) {
             continue;
         }
 

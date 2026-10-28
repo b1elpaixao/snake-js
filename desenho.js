@@ -50,6 +50,7 @@ function desenhar() {
     }
 
     desenharTabuleiro();
+    desenharGeloNoTabuleiro(); // Congelar
 
     const progresso = jogoAtivo && !pausado
         ? Math.min((performance.now() - ultimoTickEm) / velocidadeAtual, 1)
@@ -108,6 +109,7 @@ function desenhar() {
         desenharCobra(jogador);
         ctx.restore();
     }
+    desenharGeloPorCima(); // quem está congelado
 
     desenharPulsos(); // pulsos de luz do Chefão, por cima das cobras
     desenharTextosFlutuantes();
@@ -123,7 +125,7 @@ function desenhar() {
 
 // quanto a cabeça já andou rumo à próxima casa (0 a 1); null = parada (contagem, atordoada, fim)
 function progressoDoJogador(jogador) {
-    if (!jogoAtivo || jogador.ultimoPassoEm === 0 || estaAtordoado(jogador)) {
+    if (!jogoAtivo || jogador.ultimoPassoEm === 0 || estaAtordoado(jogador) || estaCongelado(jogador)) {
         return null;
     }
 

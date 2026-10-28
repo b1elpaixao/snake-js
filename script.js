@@ -86,6 +86,7 @@ const DURACAO_ESCUDO_MS = 10000;          // se não bater em 10 s, o escudo som
 const DURACAO_PORTAL_MS = 10000;
 const DURACAO_CAMERA_LENTA_MS = 5000;
 const FATOR_CAMERA_LENTA = 1.6;           // cada passo demora 60% a mais
+const DURACAO_CONGELAR_MS = 5000;
 const DURACAO_SUSTO_ESCUDO_MS = 500;      // depois que o escudo segura a batida, fica meio segundo parada
 const MEIOS_PASSOS_POR_PASSO = 2; // com Turbo a cobra anda em todo meio passo (2x mais rápida)
 const QUANTIDADE_ENCOLHER = 3;
@@ -107,6 +108,7 @@ const CORES_POWERUP = {
     escudo: "#4ade80",
     portal: "#a5b4fc",
     cameraLenta: "#cbd5e1",
+    congelar: "#a5f3fc",
 };
 // símbolo de cada power-up (pra não depender só da cor - ajuda quem é daltônico)
 // caminhos no formato SVG, numa caixa de 24x24; "cheio" = pintado por dentro, senão só o contorno
@@ -119,6 +121,7 @@ const SIMBOLOS_POWERUP = {
     escudo: { caminho: "M12 2.5 A9.5 9.5 0 1 1 11.99 2.5 M7.5 11 A4.5 4.5 0 0 1 12 6.5", cheio: false }, // bolha
     portal: { caminho: "M6 22 V10 A6 6 0 0 1 18 10 V22 M2 22 H22", cheio: false }, // arco
     cameraLenta: { caminho: "M5 2 H19 L12 12 L19 22 H5 L12 12 Z", cheio: false }, // ampulheta
+    congelar: { caminho: "M12 2 V22 M3.3 7 L20.7 17 M3.3 17 L20.7 7 M9 3.5 L12 6 L15 3.5 M9 20.5 L12 18 L15 20.5", cheio: false }, // floco de neve
 };
 const COR_SIMBOLO_POWERUP = "#1f2937";
 const EFEITOS_COM_DURACAO = [
@@ -129,6 +132,7 @@ const EFEITOS_COM_DURACAO = [
     { ativo: "escudoAtivo", ate: "escudoAte", duracao: DURACAO_ESCUDO_MS },
     { ativo: "portalAtivo", ate: "portalAte", duracao: DURACAO_PORTAL_MS },
     { ativo: "cameraLentaAtiva", ate: "cameraLentaAte", duracao: DURACAO_CAMERA_LENTA_MS },
+    { ativo: "congelarAtivo", ate: "congelarAte", duracao: DURACAO_CONGELAR_MS },
 ];
 const TEMPO_AVISO_FIM_EFEITO_MS = 1500;
 const containersEfeitos = [
@@ -206,6 +210,8 @@ function criarJogador(config) {
         portalAte: 0,
         cameraLentaAtiva: false,
         cameraLentaAte: 0,
+        congelarAtivo: false,
+        congelarAte: 0,
         teclas: config.teclas,
         corCabeca: config.corCabeca,
         corCorpo: config.corCorpo,
@@ -1216,7 +1222,7 @@ function loop() {
     }
 
     const jogadoresQueAndam = jogadores.filter(
-        (jogador) => (passoCompleto || jogador.velocidadeExtraAtiva) && !estaAtordoado(jogador)
+        (jogador) => (passoCompleto || jogador.velocidadeExtraAtiva) && !estaAtordoado(jogador) && !estaCongelado(jogador)
     );
 
     for (const jogador of jogadoresQueAndam) {
@@ -1320,8 +1326,8 @@ function loop() {
                 definirDirecaoJogador(jogador, decidirDirecaoBot(jogador));
             }
             aplicarProximaDirecao(jogador);
-        } else if (estaAtordoado(jogador)) {
-            // parada (bateu, escudo, voltando pro começo): já combina pra onde vai sair,
+        } else if (estaAtordoado(jogador) || estaCongelado(jogador)) {
+            // parada (bateu, escudo, voltando pro começo, congelada): já combina pra onde vai sair,
             // senão ela sai de novo na mesma direção em que bateu
             if (jogador.bot) {
                 definirDirecaoJogador(jogador, decidirDirecaoBot(jogador));
