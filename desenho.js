@@ -680,6 +680,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
 
     if (padrao === "dourado") desenharBrilhosDourados(ctx, pontos, tempo);
     if (padrao === "magma") desenharPlacasDeMagma(ctx, pontos, larguraBase, tempo);
+    if (padrao === "esqueleto") desenharOssosDoEsqueleto(ctx, pontos, larguraBase);
 
     // a cabeça sempre olha pra onde está indo
     const angulo = Math.atan2(direcao.y, direcao.x);
@@ -691,6 +692,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
     ctx.scale(escala, escala);
     desenharCabecaCobra(corDaCabecaComPadrao(padrao, corCabeca, tempo));
     if (padrao === "magma") desenharRachadurasNaCabeca(ctx, reduzirMovimento ? 0 : tempo);
+    if (padrao === "esqueleto") desenharDentesDaCaveira(ctx);
     if (jogador.numero === 1 && !jogador.bot) {
         desenharChapeu(ctx, carteira.equipados.chapeu, agoraDoJogo()); // chapéu da loja: só no Jogador 1
     }

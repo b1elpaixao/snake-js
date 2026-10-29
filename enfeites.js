@@ -119,6 +119,8 @@ function desenharChapeu(c, id, tempo = 0) {
         }
     } else if (id === "mascara") {
         desenharMascaraDeFerro(c, tempo); // logo abaixo, fora do desenharChapeu
+    } else if (id === "bruxa") {
+        desenharChapeuDeBruxa(c, tempo); // no fim do arquivo (Halloween)
     }
 
     c.restore();
@@ -338,6 +340,8 @@ function desenharComida(c, id, cx, cy, r) {
         c.quadraticCurveTo(cx, cy - r * 1.05, cx + r * 0.95, cy - r * 0.6);
         c.stroke();
         for (const [x, y] of [[-0.3, -0.25], [0.3, -0.2], [0, 0.35]]) circulo(cx + x * r, cy + y * r, r * 0.19, "#d62828");
+    } else if (id === "abobora") {
+        desenharAbobora(c, cx, cy, r, performance.now()); // comida do Halloween (no fim do arquivo)
     } else {
         // "maca" e qualquer coisa desconhecida: a maçã de sempre
         circulo(cx, cy, r, "#e7471d");
@@ -352,9 +356,9 @@ function desenharComida(c, id, cx, cy, r) {
     c.restore();
 }
 
-// a comida do tabuleiro: a escolhida na loja, ou a maçã de sempre
+// a comida do tabuleiro: a da época (Halloween...), a escolhida na loja, ou a maçã de sempre
 function desenharComidaEquipada(posicao) {
-    const id = carteira.equipados.comida;
+    const id = epocaAtual && enfeitesDeEpoca ? epocaAtual.comida : carteira.equipados.comida;
     if (!id) {
         desenharMaca(posicao.x, posicao.y);
         return;
@@ -375,6 +379,7 @@ function corDaCabecaComPadrao(padrao, corCabeca, tempo) {
     if (padrao === "zebra") return "#f5f5f5";
     if (padrao === "dourado") return "#ffe27a";
     if (padrao === "magma") return "#3a1712";
+    if (padrao === "esqueleto") return "#ece5d3"; // caveira
     return corCabeca;
 }
 
@@ -390,6 +395,7 @@ function corDoPedacoComPadrao(padrao, corCauda, corCabeca, posicao, distancia, t
         const calor = 0.5 + 0.5 * Math.sin(distancia / 9 - tempo / 160); // a lava pulsa e corre pelo corpo
         return `hsl(${Math.round(14 + 30 * calor)}, 100%, ${Math.round(48 + 14 * calor)}%)`;
     }
+    if (padrao === "esqueleto") return misturarCores("#1d1a29", "#2e2a40", posicao);
     return misturarCores(corCauda, corCabeca, posicao);
 }
 
@@ -581,6 +587,7 @@ function criarParticula(tipo, x, y, agora) {
     if (tipo === "notas") Object.assign(particula, { vy: sorteio(-14, -8), vida: 1100, cor: ["#9b5de5", "#4dabf7", "#ff4d6d"][Math.floor(Math.random() * 3)] });
     if (tipo === "estrelinhas") Object.assign(particula, { vida: 800, cor: Math.random() < 0.5 ? "#ffe066" : "#ffffff" });
     if (tipo === "fogo") Object.assign(particula, { vy: sorteio(-20, -10), vida: 650, tamanho: sorteio(3, 4.5) });
+    if (tipo === "morcegos") Object.assign(particula, { vx: sorteio(-18, 18), vy: sorteio(-34, -20), vida: 1000, tamanho: sorteio(5, 6.5) });
     if (tipo === "faiscas") Object.assign(particula, { vx: sorteio(-70, 70), vy: sorteio(-70, 20), vida: 500, tamanho: sorteio(2.5, 3.5), cor: Math.random() < 0.5 ? "#ffe066" : "#ffffff" });
     return particula;
 }
@@ -680,6 +687,8 @@ function desenharParticula(c, p, idade) {
         c.rotate(p.giro + t * 8);
         c.fillStyle = "rgba(210, 240, 255, 0.95)";
         c.beginPath(); c.moveTo(0, -p.tamanho * 1.4); c.lineTo(p.tamanho, p.tamanho); c.lineTo(-p.tamanho, p.tamanho * 0.6); c.closePath(); c.fill();
+    } else if (p.tipo === "morcegos") {
+        desenharMorceguinho(c, x, y, p.tamanho, idade, p.giro);
     } else if (p.tipo === "coracoes") {
         desenharCoracao(c, x, y, p.tamanho, "#ff4d8d");
     }
@@ -759,6 +768,8 @@ function desenharDecoracaoDoTabuleiro(c, tema, colunas, linhas, lado, tempo, den
                     c.fillStyle = `rgba(${r}, ${g}, ${b}, ${0.15 + 0.45 * brilho})`;
                     c.beginPath(); c.arc(x, y, (0.6 + brilho * 0.6) * escala, 0, Math.PI * 2); c.fill();
                 }
+            } else if (tema.id === "halloween") {
+                desenharEnfeiteDoHalloween(c, x, y, sorteio, escala, tempo); // no fim do arquivo
             } else if (tema.id === "lava") {
                 if (sorteio < 0.18) { // rachadura brilhando
                     const brilho = 0.55 + 0.45 * Math.sin(tempo / 500 + sorteio * 40);
@@ -778,6 +789,7 @@ function desenharDecoracaoDoTabuleiro(c, tema, colunas, linhas, lado, tempo, den
             }
         }
     }
+    if (tema.id === "halloween") desenharTeiasDosCantos(c, colunas * lado, linhas * lado, lado, tempo);
     c.restore();
 }
 
@@ -822,6 +834,7 @@ function desenharCorpoDePrevia(c, padrao, tempo) {
         c.beginPath(); c.moveTo(pontos[i].x, pontos[i].y); c.lineTo(pontos[i + 1].x, pontos[i + 1].y); c.stroke();
     }
     if (padrao === "dourado") desenharBrilhosDourados(c, pontos, 300);
+    if (padrao === "esqueleto") desenharOssosDoEsqueleto(c, [...pontos].reverse(), 13); // aqui o caminho vai do rabo pra cabeça
     if (padrao === "magma") {
         desenharPlacasDeMagma(c, [...pontos].reverse(), 13, 0); // aqui o caminho vai do rabo pra cabeça
         [[14, 40, 0.3], [30, 34, 0.55], [22, 30, 0.75], [44, 14, 0.4]].forEach(([x, y, idade]) =>
@@ -833,6 +846,7 @@ function desenharCorpoDePrevia(c, padrao, tempo) {
     c.scale(0.75, 0.75);
     desenharCabecaCobra(corDaCabecaComPadrao(padrao, cor.cabeca, tempo), c);
     if (padrao === "magma") desenharRachadurasNaCabeca(c, 0);
+    if (padrao === "esqueleto") desenharDentesDaCaveira(c);
     c.restore();
 }
 
@@ -974,4 +988,322 @@ function desenharSombraViva(c, pontos, direcao, largura, tempo, paleta) {
         }
     });
     c.restore();
+}
+
+// ==========================================
+// Época: Halloween (tabuleiro, abóbora, chapéu de bruxa, esqueleto e morcegos).
+// Estilo gibi, igual à Máscara de ferro: contorno de nanquim e cor chapada.
+// ==========================================
+const TINTA_DE_GIBI = "#141414";
+
+// abóbora com a cara acesa (comida da época e enfeite do tabuleiro); a vela tremula com o tempo
+function desenharAbobora(c, cx, cy, r, tempo) {
+    const chama = 0.5 + 0.5 * Math.sin(tempo / 90) * Math.sin(tempo / 37);
+
+    c.save();
+    c.lineJoin = "round";
+    c.lineCap = "round";
+
+    c.fillStyle = `rgba(255, 150, 30, ${0.12 + 0.12 * chama})`; // luz em volta
+    c.beginPath(); c.arc(cx, cy, r * 1.55, 0, Math.PI * 2); c.fill();
+
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineWidth = Math.max(0.8, r * 0.13);
+    c.fillStyle = "#3f8f2f"; // cabinho
+    c.beginPath();
+    c.moveTo(cx - r * 0.14, cy - r * 0.6);
+    c.lineTo(cx - r * 0.04, cy - r * 1.12);
+    c.lineTo(cx + r * 0.3, cy - r * 1.04);
+    c.lineTo(cx + r * 0.16, cy - r * 0.6);
+    c.closePath(); c.fill(); c.stroke();
+
+    const gomo = (x, rx, cor) => {
+        c.fillStyle = cor;
+        c.beginPath(); c.ellipse(cx + x * r, cy + r * 0.08, rx * r, r * 0.86, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+    };
+    gomo(-0.42, 0.6, "#d9600f");
+    gomo(0.42, 0.6, "#d9600f");
+    gomo(0, 0.62, "#f7841f");
+
+    c.strokeStyle = "rgba(255, 225, 170, 0.85)"; // brilho no gomo do meio
+    c.lineWidth = r * 0.1;
+    c.beginPath(); c.arc(cx, cy + r * 0.08, r * 0.46, Math.PI * 1.12, Math.PI * 1.4); c.stroke();
+
+    // olhos e boca cavados, com a vela acesa dentro
+    c.fillStyle = chama > 0.25 ? "#ffe066" : "#ffb627";
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineWidth = Math.max(0.6, r * 0.08);
+    c.beginPath();
+    for (const lado of [-1, 1]) {
+        c.moveTo(cx + lado * r * 0.16, cy - r * 0.02);
+        c.lineTo(cx + lado * r * 0.48, cy - r * 0.06);
+        c.lineTo(cx + lado * r * 0.36, cy - r * 0.38);
+        c.closePath();
+    }
+    c.moveTo(cx - r * 0.5, cy + r * 0.2);
+    for (const [x, y] of [[-0.3, 0.34], [-0.15, 0.24], [0, 0.36], [0.15, 0.24], [0.3, 0.34], [0.5, 0.2]]) c.lineTo(cx + x * r, cy + y * r);
+    c.quadraticCurveTo(cx, cy + r * 0.78, cx - r * 0.5, cy + r * 0.2);
+    c.fill();
+    c.stroke();
+    c.restore();
+}
+
+// morcego de gibi; batida de -1 a 1 (asas lá em cima / lá embaixo)
+function desenharMorcego(c, x, y, tamanho, batida, cor, contorno) {
+    const ponta = -4 - 5 * batida;
+
+    c.save();
+    c.translate(x, y);
+    c.scale(tamanho / 10, tamanho / 10);
+    c.lineJoin = "round";
+    c.fillStyle = cor;
+    c.strokeStyle = contorno;
+    c.lineWidth = 1.1;
+    c.beginPath();
+    for (const lado of [-1, 1]) {
+        c.moveTo(lado * 1.5, -1);
+        c.lineTo(lado * 6, ponta * 0.55 - 1);
+        c.lineTo(lado * 11, ponta);
+        c.quadraticCurveTo(lado * 9.6, 0.6, lado * 8, 2.6); // a borda de baixo em ondinhas
+        c.quadraticCurveTo(lado * 6.6, 0.6, lado * 5, 2.6);
+        c.quadraticCurveTo(lado * 3.6, 0.8, lado * 1.5, 2.2);
+        c.closePath();
+    }
+    c.moveTo(-2.4, -1.6); // corpo com as orelhas
+    c.lineTo(-1.9, -5);
+    c.lineTo(-0.7, -3.1);
+    c.lineTo(0.7, -3.1);
+    c.lineTo(1.9, -5);
+    c.lineTo(2.4, -1.6);
+    c.quadraticCurveTo(2.8, 4.2, 0, 4.6);
+    c.quadraticCurveTo(-2.8, 4.2, -2.4, -1.6);
+    c.fill();
+    c.stroke();
+    c.fillStyle = "#ffd23a";
+    for (const lado of [-1, 1]) { c.beginPath(); c.arc(lado * 0.95, -0.9, 0.6, 0, Math.PI * 2); c.fill(); }
+    c.restore();
+}
+
+function desenharLapide(c, x, y, escala) {
+    c.save();
+    c.translate(x, y);
+    c.scale(escala, escala);
+    c.lineJoin = "round";
+    c.lineCap = "round";
+    c.fillStyle = "#2f5a3d"; // tufinho de grama no pé
+    c.beginPath(); c.ellipse(0, 3.2, 4.6, 1.3, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#8b88a6";
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineWidth = 0.9;
+    c.beginPath();
+    c.moveTo(-3.2, 3);
+    c.lineTo(-3.2, -1.4);
+    c.arc(0, -1.4, 3.2, Math.PI, 0);
+    c.lineTo(3.2, 3);
+    c.closePath();
+    c.fill();
+    c.stroke();
+    c.fillStyle = "#64607f"; // lado na sombra
+    c.fillRect(1.3, -2.6, 1.4, 5.2);
+    c.strokeStyle = "#45415e";
+    c.lineWidth = 0.7;
+    c.beginPath(); c.moveTo(-0.6, -3); c.lineTo(-0.6, 0.9); c.moveTo(-1.8, -1.7); c.lineTo(0.6, -1.7); c.stroke();
+    c.restore();
+}
+
+// teias nos 4 cantos do tabuleiro, e uma aranha descendo do canto de cima à esquerda
+function desenharTeiasDosCantos(c, largura, altura, lado, tempo) {
+    const raio = lado * 2.4;
+    c.save();
+    c.strokeStyle = "rgba(235, 228, 255, 0.42)";
+    c.lineWidth = lado * 0.035;
+    for (const [x, y, sx, sy] of [[0, 0, 1, 1], [largura, 0, -1, 1], [0, altura, 1, -1], [largura, altura, -1, -1]]) {
+        const fios = [0, 0.4, 0.8, 1.2, 1.5708].map((angulo) => ({ x: Math.cos(angulo) * sx, y: Math.sin(angulo) * sy }));
+        c.beginPath();
+        for (const fio of fios) { c.moveTo(x, y); c.lineTo(x + fio.x * raio, y + fio.y * raio); }
+        for (const volta of [0.35, 0.62, 0.88]) { // os fios de volta caem um pouco entre um raio e outro
+            for (let i = 0; i < fios.length - 1; i++) {
+                const a = fios[i];
+                const b = fios[i + 1];
+                const meio = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+                if (i === 0) c.moveTo(x + a.x * raio * volta, y + a.y * raio * volta);
+                c.quadraticCurveTo(x + meio.x * raio * volta * 0.82, y + meio.y * raio * volta * 0.82, x + b.x * raio * volta, y + b.y * raio * volta);
+            }
+        }
+        c.stroke();
+    }
+
+    const descida = lado * (1.6 + 0.5 * Math.sin(tempo / 900));
+    const aranha = { x: lado * 0.95, y: lado * 0.6 + descida };
+    c.beginPath(); c.moveTo(aranha.x, 0); c.lineTo(aranha.x, aranha.y); c.stroke();
+    c.strokeStyle = "#0b0712";
+    c.lineWidth = lado * 0.06;
+    c.beginPath();
+    for (const lado2 of [-1, 1]) {
+        for (const altura2 of [-0.12, 0, 0.12]) {
+            c.moveTo(aranha.x, aranha.y);
+            c.quadraticCurveTo(aranha.x + lado2 * lado * 0.22, aranha.y + (altura2 - 0.12) * lado, aranha.x + lado2 * lado * 0.3, aranha.y + (altura2 + 0.08) * lado);
+        }
+    }
+    c.stroke();
+    c.fillStyle = "#0b0712";
+    c.beginPath(); c.arc(aranha.x, aranha.y, lado * 0.13, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#ff4d4d";
+    c.beginPath(); c.arc(aranha.x - lado * 0.04, aranha.y + lado * 0.03, lado * 0.025, 0, Math.PI * 2); c.arc(aranha.x + lado * 0.04, aranha.y + lado * 0.03, lado * 0.025, 0, Math.PI * 2); c.fill();
+    c.restore();
+}
+
+// enfeites de uma casa do tabuleiro do Halloween (chamado pelo desenharDecoracaoDoTabuleiro)
+function desenharEnfeiteDoHalloween(c, x, y, sorteio, escala, tempo) {
+    if (sorteio < 0.018) { // abóbora pequena e meio apagada, pra não confundir com a comida
+        c.save();
+        c.globalAlpha = 0.6;
+        desenharAbobora(c, x, y, 3.6 * escala, tempo + sorteio * 50000);
+        c.restore();
+    } else if (sorteio < 0.03) {
+        desenharLapide(c, x, y, escala * 0.95);
+    } else if (sorteio < 0.042) { // morcego parado no ar, batendo as asas
+        desenharMorcego(c, x, y + Math.sin(tempo / 600 + sorteio * 90) * 2 * escala, 6 * escala, Math.sin(tempo / 110 + sorteio * 300), "#140a1f", "#b48cff");
+    } else if (sorteio < 0.2) { // vagalume laranja que acende e apaga
+        const brilho = Math.max(0, Math.sin(tempo / 900 + sorteio * 70));
+        c.fillStyle = `rgba(255, 170, 60, ${0.06 + 0.4 * brilho})`;
+        c.beginPath(); c.arc(x, y, (0.5 + 0.6 * brilho) * escala, 0, Math.PI * 2); c.fill();
+    }
+}
+
+// ==========================================
+// Prêmios das missões do Halloween (cada um sai de uma missão)
+// ==========================================
+
+// chapéu de bruxa, em volta da cabeça (mesmas medidas do desenharChapeu); a ponta dobrada balança
+function desenharChapeuDeBruxa(c, tempo) {
+    const balanco = Math.sin(tempo / 420) * 2.2;
+    const aba = () => { c.beginPath(); c.ellipse(-7, 0, 10, 21, 0, 0, Math.PI * 2); };
+
+    c.save();
+    c.lineJoin = "round";
+    c.lineCap = "round";
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineWidth = 1.8;
+
+    c.fillStyle = "#7438b8"; // aba larga, com um lado na sombra
+    aba(); c.fill();
+    c.save(); aba(); c.clip(); c.fillStyle = "#4e2287"; c.fillRect(-20, -25, 30, 25); c.restore();
+    c.strokeStyle = "#c9a7ff"; // luz na beira da aba
+    c.beginPath(); c.ellipse(-7, 0, 8.6, 19.4, 0, 0.35, 1.25); c.stroke();
+    c.strokeStyle = TINTA_DE_GIBI;
+    aba(); c.stroke();
+
+    c.fillStyle = "#8a48d6"; // cone deitado pra trás, com a ponta dobrada
+    c.beginPath();
+    c.moveTo(-6, -9);
+    c.quadraticCurveTo(-18, -7, -26, -2 + balanco * 0.3);
+    c.quadraticCurveTo(-32, 2 + balanco, -27.5, 6.5 + balanco);
+    c.quadraticCurveTo(-25.5, 2.5 + balanco * 0.5, -21.5, 3.4);
+    c.quadraticCurveTo(-14, 7, -6, 9);
+    c.closePath();
+    c.fill();
+    c.save(); c.clip(); c.fillStyle = "#5d2a9e"; c.fillRect(-34, -12, 30, 11.2); c.restore();
+    c.stroke();
+
+    c.fillStyle = "#ff8c1a"; // faixa laranja com fivela
+    c.beginPath(); c.moveTo(-6, -9.2); c.lineTo(-10, -8.4); c.lineTo(-10, 8.4); c.lineTo(-6, 9.2); c.closePath(); c.fill();
+    c.lineWidth = 1.2; c.stroke();
+    c.fillStyle = "#ffd23a";
+    c.fillRect(-9.6, -2.6, 3.2, 5.2); c.strokeRect(-9.6, -2.6, 3.2, 5.2);
+    c.fillStyle = "#7438b8";
+    c.fillRect(-8.7, -1.3, 1.4, 2.6);
+
+    desenharBrilho(c, -16, 2.6, 2.4, "#ffe066"); // estrela e lua pintadas no cone
+    c.fillStyle = "#ffe066";
+    c.beginPath(); c.arc(-21, -0.6, 1.9, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#8a48d6";
+    c.beginPath(); c.arc(-20.2, -1.3, 1.6, 0, Math.PI * 2); c.fill();
+
+    for (const lado of [-1, 1]) { // os olhos ficam por cima da aba
+        c.fillStyle = "#ffe066";
+        c.beginPath(); c.arc(-3, lado * 11, 6.6, 0, Math.PI * 2); c.fill();
+        c.lineWidth = 1.2; c.stroke();
+        c.fillStyle = "#2a1200";
+        c.beginPath(); c.ellipse(-1, lado * 11, 1.5, 4.2, 0, 0, Math.PI * 2); c.fill();
+    }
+    c.restore();
+}
+
+// corpo "Esqueleto": costelas e vértebras por cima do corpo escuro (a cabeça vira caveira)
+function desenharOssosDoEsqueleto(c, pontos, largura) {
+    let total = 0;
+    for (let i = 1; i < pontos.length; i++) {
+        const d = Math.hypot(pontos[i].x - pontos[i - 1].x, pontos[i].y - pontos[i - 1].y);
+        if (d <= TAMANHO_CELULA * 1.5) total += d;
+    }
+
+    const passo = largura * 0.5;
+    const grossura = largura / 16.8;
+    const costelas = [];
+    let andado = 0;
+    let proxima = largura * 0.75; // logo atrás da cabeça
+    for (let i = 1; i < pontos.length; i++) {
+        const de = pontos[i - 1];
+        const ate = pontos[i];
+        const distancia = Math.hypot(ate.x - de.x, ate.y - de.y);
+        if (distancia === 0) continue;
+        if (distancia > TAMANHO_CELULA * 1.5) { // atravessou a borda: pula
+            proxima = Math.max(proxima, andado + passo / 2);
+            continue;
+        }
+        while (proxima <= andado + distancia && proxima < total - passo * 0.4) {
+            const t = (proxima - andado) / distancia;
+            costelas.push({
+                x: de.x + (ate.x - de.x) * t, y: de.y + (ate.y - de.y) * t,
+                dx: (ate.x - de.x) / distancia, dy: (ate.y - de.y) / distancia,
+                largo: largura * (0.6 + 0.4 * (1 - proxima / total)),
+            });
+            proxima += passo;
+        }
+        andado += distancia;
+    }
+
+    c.save();
+    c.lineCap = "round";
+    // primeiro o nanquim de tudo, depois o osso por cima (assim o contorno não corta os ossos vizinhos)
+    for (const [cor, extra] of [[TINTA_DE_GIBI, 1.1], ["#ece5d3", 0]]) {
+        c.strokeStyle = cor;
+        c.beginPath();
+        for (const osso of costelas) {
+            const meio = osso.largo * 0.36;
+            for (const lado of [-1, 1]) { // costela curvada pra trás
+                c.moveTo(osso.x, osso.y);
+                c.quadraticCurveTo(
+                    osso.x - osso.dy * lado * meio, osso.y + osso.dx * lado * meio,
+                    osso.x - osso.dy * lado * meio * 1.05 + osso.dx * meio * 0.55, osso.y + osso.dx * lado * meio * 1.05 + osso.dy * meio * 0.55,
+                );
+            }
+        }
+        c.lineWidth = (1.5 + extra) * grossura;
+        c.stroke();
+        c.fillStyle = cor;
+        for (const osso of costelas) { // vértebra no meio
+            c.beginPath(); c.arc(osso.x, osso.y, (1.5 + extra * 0.6) * grossura, 0, Math.PI * 2); c.fill();
+        }
+    }
+    c.restore();
+}
+
+// dentes da caveira na frente da cabeça (coordenadas da cabeça)
+function desenharDentesDaCaveira(c) {
+    c.save();
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineCap = "round";
+    c.lineWidth = 1.1;
+    c.beginPath();
+    c.moveTo(13.5, -5.5); c.quadraticCurveTo(17.5, 0, 13.5, 5.5);
+    for (const y of [-3.6, -1.2, 1.2, 3.6]) { c.moveTo(14.4, y); c.lineTo(16.9, y); }
+    c.stroke();
+    c.restore();
+}
+
+// rastro "Morceguinhos": voam pra cima batendo as asas
+function desenharMorceguinho(c, x, y, tamanho, idade, giro) {
+    desenharMorcego(c, x, y, tamanho, Math.sin(idade / 45 + giro), "#2a1740", "#c9a7ff");
 }

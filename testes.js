@@ -718,6 +718,18 @@ verificar("conquista: Última de pé só vencendo com 4",
     [true, false].map((venceuComQuatro) => conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 0, tamanho: 1, powerUps: 0, venceuComQuatro } }).some((c) => c.id === "ultimaDePe")).join(), "true,false");
 verificar("loja: Última de pé dá a Mascara de ferro (não vendida)", JSON.stringify(ITENS_DA_LOJA.filter((item) => item.conquista === "ultimaDePe").map((item) => [item.id, item.tipo, item.preco ?? null])), JSON.stringify([["mascara", "chapeu", null]]));
 
+// épocas do ano: Halloween
+verificar("época: Halloween de 25/10 a 2/11", ["2026-10-24", "2026-10-25", "2026-10-31", "2026-11-02", "2026-11-03"].map((data) => (epocaDoDia(data) || { id: "-" }).id).join(), "-,halloween,halloween,halloween,-");
+verificar("época: a chave muda a cada ano", [epocaDoDia("2026-10-29").chave, epocaDoDia("2027-10-29").chave].join(), "halloween-2026,halloween-2027");
+const halloweenDeTeste = epocaDoDia("2026-10-29");
+const doHalloween = registrarPartidaNasMissoes(limparMissoes(null, halloweenDeTeste.chave, halloweenDeTeste.missoes), partidaDeMissao({ comidas: 31, pontos: 25 }), halloweenDeTeste.missoes);
+verificar("época: missões do Halloween somam e completam", doHalloween.novas.map((missao) => missao.id).join() + " " + doHalloween.estado.progresso.partidas13, "abobora31,pontos25 1");
+verificar("época: progresso de outro ano começa do zero", JSON.stringify(limparMissoes(doHalloween.estado, "halloween-2027", halloweenDeTeste.missoes).feitas), "[]");
+verificar("época: cada missão dá a sua conquista",
+    ["abobora31", "partidas13", "pontos25"].map((feita) => conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 0, tamanho: 1, powerUps: 0 }, missoesDaEpoca: [feita] }).map((c) => c.id).join()).join(" "),
+    "noiteDasBruxas ateOsOssos revoada");
+verificar("loja: prêmios do Halloween (não vendidos)", ITENS_DA_LOJA.filter((item) => ["noiteDasBruxas", "ateOsOssos", "revoada"].includes(item.conquista)).map((item) => `${item.id}:${item.tipo}:${item.preco ?? "-"}`).join(), "bruxa:chapeu:-,esqueleto:corpo:-,morcegos:rastro:-");
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

@@ -13,6 +13,8 @@ const PONTOS_POR_FASE = 10;
 let faseAtual = 1;
 let corDaCobraId = "azul"; // cor escolhida pro Jogador 1
 let temaDoTabuleiroId = "grama"; // tema escolhido pro tabuleiro
+let enfeitesDeEpoca = true; // Halloween e outras datas: o tabuleiro e a comida mudam sozinhos (dá pra desligar)
+let epocaAtual = epocaDoDia(dataDeHoje()); // conferida de novo no mostrarMissoes (fim de partida, virar o dia)
 let teclasDosJogadores = lerTeclasSalvas(); // [teclas do Jogador 1, teclas do Jogador 2]
 
 // Desafio do dia
@@ -423,6 +425,7 @@ function contextoDasConquistas(extra = {}) {
     return {
         estatisticas,
         missoesSeguidas: sequenciaValendo(lerSequenciaDeMissoes(), dataDeHoje()),
+        missoesDaEpoca: epocaAtual ? lerMissoesDaEpoca().feitas : [],
         partida: {
             pontos: Math.max(0, ...humanos.map((jogador) => jogador.pontuacao)),
             tamanho: Math.max(0, ...humanos.map((jogador) => jogador.cobra.length)),
@@ -613,6 +616,7 @@ function escolherCorDaCobra(id) {
 function temaDoTabuleiro() {
     if (opcoesDeAcessibilidade.altoContraste) return TEMA_ALTO_CONTRASTE; // a opção de acessibilidade ganha do tema
     if (chefao) return TEMA_DO_ABISMO; // o Chefão é sempre no abismo escuro
+    if (epocaAtual && enfeitesDeEpoca) return epocaAtual.tabuleiro; // época do ano: ganha da loja e do tema
     const daLoja = tabuleiroDaLoja();
     if (daLoja) return daLoja; // tabuleiro comprado na loja
     return TEMAS_DO_TABULEIRO.find((tema) => tema.id === temaDoTabuleiroId) || TEMAS_DO_TABULEIRO[0];
@@ -658,6 +662,11 @@ function escolherTemaDoTabuleiro(id) {
 
 aplicarPreferenciasSalvas(); // antes de mostrar os recordes, pra já abrir no modo salvo
 inputModoSemParedes.addEventListener("change", salvarPreferencias);
+document.getElementById("opcaoEnfeitesDeEpoca").addEventListener("change", (evento) => {
+    enfeitesDeEpoca = evento.target.checked;
+    salvarPreferencias();
+    mostrarTemasDoTabuleiro();
+});
 
 aplicarCorDaCobra();
 mostrarCoresDaCobra();

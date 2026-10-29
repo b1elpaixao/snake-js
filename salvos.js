@@ -115,6 +115,8 @@ function aplicarPreferenciasSalvas() {
     seletorNivelBot.value = limparNivelBot(salvas && salvas.nivelBot);
     corDaCobraId = limparCorDaCobra(salvas && salvas.corCobra, conquistasGanhas);
     temaDoTabuleiroId = limparTemaDoTabuleiro(salvas && salvas.temaTabuleiro, conquistasGanhas);
+    enfeitesDeEpoca = !(salvas && salvas.semEnfeitesDeEpoca === true);
+    document.getElementById("opcaoEnfeitesDeEpoca").checked = enfeitesDeEpoca;
     inputModoSemParedes.checked = preferencias.semParedes;
 }
 
@@ -131,6 +133,7 @@ function salvarPreferencias() {
         nivelBot: seletorNivelBot.value,
         corCobra: corDaCobraId,
         temaTabuleiro: temaDoTabuleiroId,
+        semEnfeitesDeEpoca: !enfeitesDeEpoca,
         semParedes: inputModoSemParedes.checked,
     }));
 }

@@ -891,6 +891,10 @@ const CONQUISTAS = [
     { id: "venceuBot", nome: "Mais esperta que o bot", descricao: "Vencer o bot no nível Difícil", condicao: (c) => c.partida.venceuBotDificil === true },
     { id: "veterana", nome: "Veterana", descricao: "Jogar 50 partidas", condicao: (c) => c.estatisticas.partidas >= 50 },
     { id: "maratona", nome: "Maratona", descricao: "Jogar 1 hora no total", condicao: (c) => c.estatisticas.tempoTotalMs >= 3600000 },
+    // de época: só dá pra ganhar nos dias da época, cumprindo a missão dela (missoesDaEpoca = as missões feitas)
+    { id: "noiteDasBruxas", nome: "Noite das bruxas", descricao: "Comer 31 abóboras no Halloween", condicao: (c) => (c.missoesDaEpoca || []).includes("abobora31") },
+    { id: "ateOsOssos", nome: "Até os ossos", descricao: "Jogar 13 partidas no Halloween", condicao: (c) => (c.missoesDaEpoca || []).includes("partidas13") },
+    { id: "revoada", nome: "Revoada", descricao: "Fazer 25 pontos numa partida no Halloween", condicao: (c) => (c.missoesDaEpoca || []).includes("pontos25") },
 ];
 
 // quais conquistas acabaram de ser ganhas (as que já tinha não contam de novo)
@@ -1137,6 +1141,31 @@ const TEMAS_DO_TABULEIRO = [
 function limparTemaDoTabuleiro(id, conquistasGanhas) {
     const tema = TEMAS_DO_TABULEIRO.find((opcao) => opcao.id === id);
     return tema && corEstaLiberada(tema, conquistasGanhas) ? tema.id : "grama";
+}
+
+// ==========================================
+// Épocas do ano (funções puras - testadas em testes.js)
+// ==========================================
+// inicio e fim: "MM-DD". Nesses dias o tabuleiro e a comida mudam sozinhos (dá pra desligar)
+// e aparecem missões que somam todos os dias da época; cada uma dá uma conquista com um prêmio
+const EPOCAS = [
+    {
+        id: "halloween", nome: "Halloween", icone: "🎃", inicio: "10-25", fim: "11-02", comida: "abobora",
+        tabuleiro: { id: "halloween", nome: "Halloween", claro: "#3a2b55", escuro: "#33264c", decoracao: true },
+        missoes: [
+            { id: "abobora31", texto: "Comer 31 abóboras", tipo: "soma", campo: "comidas", alvo: 31, conquista: "noiteDasBruxas" },
+            { id: "partidas13", texto: "Jogar 13 partidas", tipo: "soma", campo: "partidas", alvo: 13, conquista: "ateOsOssos" },
+            { id: "pontos25", texto: "Fazer 25 pontos numa partida", tipo: "partida", campo: "pontos", alvo: 25, conquista: "revoada" },
+        ],
+    },
+];
+
+// a época do dia ("2026-10-29"), ou null. A chave tem o ano: no ano seguinte as missões recomeçam
+function epocaDoDia(data) {
+    const [ano, mes, dia] = data.split("-");
+    const hoje = `${mes}-${dia}`;
+    const epoca = EPOCAS.find((opcao) => hoje >= opcao.inicio && hoje <= opcao.fim);
+    return epoca ? { ...epoca, chave: `${epoca.id}-${ano}` } : null;
 }
 
 // ==========================================
@@ -1421,12 +1450,13 @@ function missoesDoDia(data) {
     return [deSomar[0], dePartida[0], segunda];
 }
 
-// progresso salvo: se for de outro dia (ou estiver estragado), começa o dia do zero
-function limparMissoes(salvo, data) {
+// progresso salvo: se for de outro dia (ou estiver estragado), começa o dia do zero.
+// As missões da época usam a mesma função: data = a chave da época ("halloween-2026") e as missões dela
+function limparMissoes(salvo, data, missoes = MISSOES) {
     const vazio = { data, progresso: {}, feitas: [] };
     if (!salvo || typeof salvo !== "object" || salvo.data !== data) return vazio;
 
-    const ids = MISSOES.map((missao) => missao.id);
+    const ids = missoes.map((missao) => missao.id);
     const progresso = {};
 
     for (const id of ids) {
@@ -1439,11 +1469,11 @@ function limparMissoes(salvo, data) {
 }
 
 // soma a partida no progresso do dia; devolve o estado novo e as missões que acabaram de ser cumpridas
-function registrarPartidaNasMissoes(estado, partida) {
+function registrarPartidaNasMissoes(estado, partida, missoes = missoesDoDia(estado.data)) {
     const novo = { data: estado.data, progresso: { ...estado.progresso }, feitas: [...estado.feitas] };
     const novas = [];
 
-    for (const missao of missoesDoDia(estado.data)) {
+    for (const missao of missoes) {
         if (novo.feitas.includes(missao.id)) continue;
         if (missao.modo && missao.modo !== partida.modo) continue;
 
@@ -1502,6 +1532,7 @@ const ITENS_DA_LOJA = [
     { id: "visor", nome: "Visor de vilã", tipo: "chapeu", conquista: "venceuBot" },
     { id: "coroa", nome: "Coroa", tipo: "chapeu", conquista: "lendaria" },
     { id: "mascara", nome: "Máscara de ferro", tipo: "chapeu", conquista: "ultimaDePe" },
+    { id: "bruxa", nome: "Chapéu de bruxa", tipo: "chapeu", conquista: "noiteDasBruxas" },
     { id: "morango", nome: "Morango", tipo: "comida", preco: 100 },
     { id: "cereja", nome: "Cereja", tipo: "comida", preco: 150 },
     { id: "melancia", nome: "Melancia", tipo: "comida", preco: 250 },
@@ -1513,6 +1544,7 @@ const ITENS_DA_LOJA = [
     { id: "zebra", nome: "Zebra", tipo: "corpo", conquista: "glutona" },
     { id: "dourado", nome: "Dourada brilhante", tipo: "corpo", conquista: "fiel" },
     { id: "magma", nome: "Cobra de magma", tipo: "corpo", conquista: "sobrevivente" },
+    { id: "esqueleto", nome: "Esqueleto", tipo: "corpo", conquista: "ateOsOssos" },
     { id: "espectro", nome: "Espectro", tipo: "corpo", preco: 800, liberaCom: "encarouOAbismo" }, // à venda, mas só depois da conquista
     { id: "bolhas", nome: "Bolhas", tipo: "rastro", preco: 300 },
     { id: "folhas", nome: "Folhas", tipo: "rastro", preco: 350 },
@@ -1520,6 +1552,7 @@ const ITENS_DA_LOJA = [
     { id: "estrelinhas", nome: "Estrelinhas", tipo: "rastro", preco: 800 },
     { id: "fogo", nome: "Fogo", tipo: "rastro", conquista: "comboOito" },
     { id: "faiscas", nome: "Faíscas", tipo: "rastro", conquista: "arsenal" },
+    { id: "morcegos", nome: "Morceguinhos", tipo: "rastro", conquista: "revoada" },
     { id: "praia", nome: "Praia", tipo: "tabuleiro", preco: 300, claro: "#f7e3b0", escuro: "#f0d89a", decoracao: true },
     { id: "doces", nome: "Doces", tipo: "tabuleiro", preco: 450, claro: "#ffd6e8", escuro: "#ffc6df", decoracao: true },
     { id: "espaco", nome: "Espaço", tipo: "tabuleiro", preco: 950, claro: "#161c3d", escuro: "#111632", decoracao: true },
