@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (351 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (357 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -74,7 +74,8 @@ Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 
 
 ## Melhorias pendentes (lista 5)
 
-Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loja.js` + `enfeites.js`: chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer; itens 🏆 só por conquista: Zebra=Glutona, Lava=Saí do labirinto, Fogo=Combo x8, Dourada=Fiel, Faíscas=Arsenal, Máscara de ferro=Última de pé) · 3 modo Arena (zona que fecha, conquista Sobrevivente = corpo exclusivo Cobra de magma). · 4 modo Chefão (`chefao.js`: "os olhos que emergem", estilo aura no abismo; espada; skin Espectro liberada por conquista).
+Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loja.js` + `enfeites.js`: chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer; itens 🏆 só por conquista: Zebra=Glutona, Lava=Saí do labirinto, Fogo=Combo x8, Dourada=Fiel, Faíscas=Arsenal, Máscara de ferro=Última de pé; de época: Chapéu de bruxa=Noite das bruxas, Esqueleto=Até os ossos, Morceguinhos=Revoada) · 3 modo Arena (zona que fecha, conquista Sobrevivente = corpo exclusivo Cobra de magma). · 4 modo Chefão (`chefao.js`: "os olhos que emergem", estilo aura no abismo; espada; skin Espectro liberada por conquista).
 · 5 power-ups Congelar e Bomba (`poderes.js`; Fantasma descartado) + conquista Arsenal (6 power-ups diferentes numa partida, `partidaAtual.tiposDePowerUp`) = rastro exclusivo Faíscas.
 · 6 até 4 jogadores (pedaço 1, base; pedaço 2, botão Pessoa/Bot nas vagas 2-4 (`vagasComBot`, `vagasComBotAtuais`) e bot que foge de bater de frente (`casasPerigosas`); pedaço 3, controle pra 4 (`jogadorDoControle`: cada controle move uma pessoa na ordem, pulando bots); pedaço 4, ajustes nos modos (Contra o tempo ordena por pontos, `classificarPorPontos`; quem congelou e saiu quebra o gelo) + conquista Última de pé (vencer com 4) = chapéu exclusivo Máscara de ferro (`desenharMascaraDeFerro`: estilo gibi anos 80, capuz curto verde, formas em Path2D criadas uma vez só)).
-A fazer: 9 temas de época · 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP · 13 idiomas.
+Em andamento: 9 temas de época (feito: pedaço 1, base + Halloween 25/10 a 2/11: `EPOCAS`/`epocaDoDia` no `logica.js`, `epocaAtual` e `enfeitesDeEpoca` (caixa "Enfeites de época"; tabuleiro e comida da época ganham da loja e do tema), missões da época em `snakeMissoesDaEpoca` (somam a época toda, cada uma dá uma conquista com prêmio); desenhos no fim do `enfeites.js`; falta: Natal e Ano Novo, Carnaval e Páscoa (datas pela Páscoa), Festa Junina).
+A fazer: 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP · 13 idiomas.
