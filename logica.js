@@ -1218,6 +1218,26 @@ function direcaoDoControle(apertados, eixos) {
     return Math.abs(x) > Math.abs(y) ? { x: Math.sign(x), y: 0 } : { x: 0, y: Math.sign(y) };
 }
 
+// cada controle move uma pessoa, na ordem (bots não contam); quem já saiu da partida não anda mais
+function jogadorDoControle(posicao, participantes) {
+    const pessoa = participantes.filter((jogador) => !jogador.bot)[posicao];
+    return pessoa && !pessoa.fora ? pessoa : null;
+}
+
+// quantos jogam quando o A começa a partida: 1 controle = 1 jogador; com mais, um pra cada controle
+// (ou o que estiver escolhido no menu, se for mais); no celular, no máximo 2
+function quantidadePeloControle(controles, escolhida, celular) {
+    if (controles < 2) return 1;
+    if (celular) return 2;
+    return Math.min(MAXIMO_DE_JOGADORES, Math.max(controles, escolhida));
+}
+
+function textoDosControles(controles) {
+    if (controles === 0) return "";
+    if (controles === 1) return "🎮 Controle conectado: setas ou analógico movem, A começa, Start pausa.";
+    return `🎮 ${controles} controles: cada um move um jogador, na ordem (vaga de bot é pulada). A começa, Start pausa.`;
+}
+
 // ==========================================
 // Tutorial (funções puras - testadas em testes.js)
 // ==========================================

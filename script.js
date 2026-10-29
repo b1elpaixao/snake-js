@@ -824,14 +824,12 @@ function mostrarControlesConectados() {
     const aviso = document.getElementById("avisoControle");
 
     aviso.hidden = quantidade === 0;
-    aviso.textContent = quantidade >= 2
-        ? "🎮 2 controles: o 1º é o Jogador 1, o 2º é o Jogador 2. A começa, Start pausa."
-        : "🎮 Controle conectado: setas ou analógico movem, A começa, Start pausa.";
+    aviso.textContent = textoDosControles(quantidade);
 }
 
 window.addEventListener("gamepadconnected", mostrarControlesConectados);
 window.addEventListener("gamepaddisconnected", () => {
-    estadoAnteriorDosControles = [];
+    estadoAnteriorDosControles = {};
     mostrarControlesConectados();
 });
 botaoJogarDeNovo.addEventListener("click", reiniciar);

@@ -699,6 +699,19 @@ verificar("bot: desvia da casa onde a outra cabeça pode chegar", JSON.stringify
 const corredor = { andar: mapaLivre.andar, casaLivre: (p) => p.y === 5 && p.x >= 0 && p.x < 20 };
 verificar("bot: sem outro caminho, arrisca em vez de parar", JSON.stringify(escolherDirecaoBot({ x: 5, y: 5 }, { x: 1, y: 0 }, { x: 9, y: 5 }, corredor.andar, corredor.casaLivre, 3, arriscada)), JSON.stringify({ x: 1, y: 0 }));
 
+// controle pra até 4 jogadores
+const turma = [{ nome: "A" }, { nome: "B", bot: true }, { nome: "C" }, { nome: "D", fora: true }];
+verificar("controle: o 2º controle pula a vaga de bot", jogadorDoControle(1, turma).nome, "C");
+verificar("controle: o 1º controle é o Jogador 1", jogadorDoControle(0, turma).nome, "A");
+verificar("controle: quem saiu da partida não anda", jogadorDoControle(2, turma), null);
+verificar("controle: controle sobrando não move ninguém", jogadorDoControle(5, turma), null);
+verificar("controle: A com 1 controle = 1 jogador", quantidadePeloControle(1, 4, false), 1);
+verificar("controle: A com 3 controles = 3 jogadores", quantidadePeloControle(3, 2, false), 3);
+verificar("controle: A com 2 controles e 4 no menu = 4", quantidadePeloControle(2, 4, false), 4);
+verificar("controle: nunca mais que 4", quantidadePeloControle(6, 2, false), 4);
+verificar("controle: no celular, no máximo 2", quantidadePeloControle(4, 2, true), 2);
+verificar("controle: aviso com 3 controles", textoDosControles(3), "🎮 3 controles: cada um move um jogador, na ordem (vaga de bot é pulada). A começa, Start pausa.");
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";
