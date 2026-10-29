@@ -712,6 +712,12 @@ verificar("controle: nunca mais que 4", quantidadePeloControle(6, 2, false), 4);
 verificar("controle: no celular, no máximo 2", quantidadePeloControle(4, 2, true), 2);
 verificar("controle: aviso com 3 controles", textoDosControles(3), "🎮 3 controles: cada um move um jogador, na ordem (vaga de bot é pulada). A começa, Start pausa.");
 
+// 3-4 jogadores: ordem no Contra o tempo e conquista Última de pé
+verificar("contra o tempo: ordem pelos pontos", classificarPorPontos([{ nome: "A", pontuacao: 3 }, { nome: "B", pontuacao: 9 }, { nome: "C", pontuacao: 5 }]).map((j) => j.nome).join(), "B,C,A");
+verificar("conquista: Última de pé só vencendo com 4",
+    [true, false].map((venceuComQuatro) => conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 0, tamanho: 1, powerUps: 0, venceuComQuatro } }).some((c) => c.id === "ultimaDePe")).join(), "true,false");
+verificar("loja: Última de pé dá a Mascara de ferro (não vendida)", JSON.stringify(ITENS_DA_LOJA.filter((item) => item.conquista === "ultimaDePe").map((item) => [item.id, item.tipo, item.preco ?? null])), JSON.stringify([["mascara", "chapeu", null]]));
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

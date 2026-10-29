@@ -629,6 +629,11 @@ function classificarPorSobrevivencia(todos, saidas) {
     return { ordem, vencedor };
 }
 
+// no Contra o tempo ninguém sai: a ordem é só pelos pontos
+function classificarPorPontos(todos) {
+    return [...todos].sort((a, b) => b.pontuacao - a.pontuacao);
+}
+
 // ==========================================
 // Modo Fases (mapas desenhados - testados em testes.js)
 // ==========================================
@@ -882,6 +887,7 @@ const CONQUISTAS = [
     { id: "encarouOAbismo", nome: "Encarou o abismo", descricao: "Derrotar os olhos que emergem no modo Chefão", condicao: (c) => (c.partida.chefoes || 0) >= 1 },
     { id: "cacadora", nome: "Caçadora do abismo", descricao: "Derrotar os olhos que emergem 3 vezes numa partida", condicao: (c) => (c.partida.chefoes || 0) >= 3 },
     { id: "labirinto", nome: "Saí do labirinto", descricao: "Chegar à fase 4 no modo Fases", condicao: (c) => c.partida.modo === "fases" && c.partida.fase >= 4 },
+    { id: "ultimaDePe", nome: "Última de pé", descricao: "Vencer uma partida com 4 jogadores", condicao: (c) => c.partida.venceuComQuatro === true },
     { id: "venceuBot", nome: "Mais esperta que o bot", descricao: "Vencer o bot no nível Difícil", condicao: (c) => c.partida.venceuBotDificil === true },
     { id: "veterana", nome: "Veterana", descricao: "Jogar 50 partidas", condicao: (c) => c.estatisticas.partidas >= 50 },
     { id: "maratona", nome: "Maratona", descricao: "Jogar 1 hora no total", condicao: (c) => c.estatisticas.tempoTotalMs >= 3600000 },
@@ -1495,6 +1501,7 @@ const ITENS_DA_LOJA = [
     { id: "pirata", nome: "Bandana de pirata", tipo: "chapeu", conquista: "maratona" },
     { id: "visor", nome: "Visor de vilã", tipo: "chapeu", conquista: "venceuBot" },
     { id: "coroa", nome: "Coroa", tipo: "chapeu", conquista: "lendaria" },
+    { id: "mascara", nome: "Máscara de ferro", tipo: "chapeu", conquista: "ultimaDePe" },
     { id: "morango", nome: "Morango", tipo: "comida", preco: 100 },
     { id: "cereja", nome: "Cereja", tipo: "comida", preco: 150 },
     { id: "melancia", nome: "Melancia", tipo: "comida", preco: 250 },

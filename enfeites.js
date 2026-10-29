@@ -117,7 +117,141 @@ function desenharChapeu(c, id, tempo = 0) {
             const angulo = (i / pontas) * Math.PI * 2;
             circulo(-3 + Math.cos(angulo) * 11, Math.sin(angulo) * 11, 1.6, pedras[i % 3]);
         }
+    } else if (id === "mascara") {
+        desenharMascaraDeFerro(c, tempo); // logo abaixo, fora do desenharChapeu
     }
+
+    c.restore();
+}
+
+// ==========================================
+// Máscara de ferro (chapéu da conquista "Última de pé"), estilo gibi anos 80;
+// nanquim grosso, cor chapada, sombra em bloco e retícula. As formas são caminhos
+// SVG num Path2D, criados uma vez só; os pontinhos da retícula também.
+// Os olhos pulsam e a estrelinha da testa pisca.
+// ==========================================
+let formasDaMascara = null;
+
+function criarFormasDaMascara() {
+    const reticula = (x0, y0, x1, y1, passo, raio) => {
+        const pontos = new Path2D();
+        for (let y = y0; y <= y1; y += passo) {
+            for (let x = x0; x <= x1; x += passo) {
+                pontos.moveTo(x + raio, y);
+                pontos.arc(x, y, raio, 0, Math.PI * 2);
+            }
+        }
+        return pontos;
+    };
+    const rebites = new Path2D();
+    for (const [x, y] of [[-9.6, 10.6], [-2, 13.9], [8, 12.6], [14.6, 8.2], [-12, 8]]) {
+        for (const lado of [-1, 1]) {
+            rebites.moveTo(x + 0.65, y * lado);
+            rebites.arc(x, y * lado, 0.65, 0, Math.PI * 2);
+        }
+    }
+
+    return {
+        capuz: new Path2D("M14 -16 C8 -22 -6 -25 -18 -22 C-26 -19 -30 -13 -31 -7 L-28 -4 L-32 0 L-28 3 L-31 7 C-30 13 -26 19 -18 22 C-6 25 8 22 14 16 Z"),
+        sombraDoCapuz: new Path2D("M-40 -1 L20 -5 L20 -30 L-40 -30 Z"),
+        reticulaDoCapuz: reticula(-32, -25, 15, -1, 1.6, 0.45),
+        dobras: new Path2D("M-19 -15 L-28 -10 M-19 15 L-28 10"),
+        luzDoCapuz: new Path2D("M10 20 C0 23.4 -10 23 -18 20.5"),
+        rosto: new Path2D("M-12 -12 L-14 -4 L-11 0 L-14 4 L-12 12 L-4 15.5 L6 14.5 L14 10 L20 4 L20 -4 L14 -10 L6 -14.5 L-4 -15.5 Z"),
+        sombraDoRosto: new Path2D("M-20 0.2 L30 0.2 L30 -20 L-20 -20 Z"),
+        reticulaDoRosto: reticula(-14, -16, 20, 0, 1.5, 0.42),
+        queixo: new Path2D("M10.5 0.2 L30 0.2 L30 20 L10.5 20 Z"),
+        brilhoDaTesta: new Path2D("M-12.6 10.8 L-13.4 5 L-9.4 6.6 L-6.6 12.8 Z"),
+        brilhoDaBochecha: new Path2D("M1.5 13.2 L9 11.8"),
+        emendas: new Path2D("M1 5.5 L9.5 12.5 M1 -5.5 L9.5 -12.5 M10 -11.5 Q12 0 10 11.5"),
+        sobrancelhaClara: new Path2D("M-5.5 1.6 L-10.5 13 L-8 14.6 L-3.2 2.8 Z"),
+        sobrancelhaEscura: new Path2D("M-5.5 -1.6 L-10.5 -13 L-8 -14.6 L-3.2 -2.8 Z"),
+        olhos: new Path2D("M-3 3.4 L-7.2 12.4 L-3.4 13.6 L0.5 4 Z M-3 -3.4 L-7.2 -12.4 L-3.4 -13.6 L0.5 -4 Z"),
+        brilhoDosOlhos: new Path2D("M-2.6 5.4 L-4.8 10.6 L-3.6 11 L-1.4 5.8 Z M-2.6 -5.4 L-4.8 -10.6 L-3.6 -11 L-1.4 -5.8 Z"),
+        narizClaro: new Path2D("M-11 0 L6 2.6 L9.5 0 Z"),
+        narizEscuro: new Path2D("M-11 0 L6 -2.6 L9.5 0 Z"),
+        nariz: new Path2D("M-11 0 L6 -2.6 L9.5 0 L6 2.6 Z"),
+        rebites,
+        estrela: new Path2D("M-10.5 4.6 L-9.8 6.3 L-8.1 7 L-9.8 7.7 L-10.5 9.4 L-11.2 7.7 L-12.9 7 L-11.2 6.3 Z"),
+    };
+}
+
+function desenharMascaraDeFerro(c, tempo) {
+    if (!formasDaMascara) formasDaMascara = criarFormasDaMascara();
+    const f = formasDaMascara;
+    const TINTA = "#141414";
+    const pintar = (forma, cor) => { c.fillStyle = cor; c.fill(forma); };
+    const riscar = (forma, cor, largura) => { c.strokeStyle = cor; c.lineWidth = largura; c.stroke(forma); };
+
+    c.save();
+    c.lineJoin = "round";
+    c.lineCap = "round";
+
+    // capuz curto verde, com a sombra em bloco e retícula
+    pintar(f.capuz, "#2fb04f");
+    c.save();
+    c.clip(f.capuz);
+    pintar(f.sombraDoCapuz, "#14702f");
+    riscar(f.dobras, TINTA, 1);
+    riscar(f.luzDoCapuz, "#b8f5c6", 1.5);
+    c.clip(f.sombraDoCapuz);
+    pintar(f.reticulaDoCapuz, "#06331a");
+    c.restore();
+    riscar(f.capuz, TINTA, 2);
+
+    // vão preto entre o capuz e a máscara
+    c.fillStyle = "#0d0d0d";
+    c.beginPath(); c.ellipse(3, 0, 18, 17.4, 0, 0, Math.PI * 2); c.fill();
+
+    // a máscara: aço claro, um lado em sombra com retícula, queixo meio-tom
+    pintar(f.rosto, "#cbd8e6");
+    c.save();
+    c.clip(f.rosto);
+    pintar(f.queixo, "#9fb3c9");
+    pintar(f.brilhoDaTesta, "#ffffff");
+    riscar(f.brilhoDaBochecha, "#ffffff", 1.2);
+    pintar(f.sombraDoRosto, "#6c84a3");
+    c.clip(f.sombraDoRosto);
+    pintar(f.reticulaDoRosto, "#22324d");
+    c.restore();
+    riscar(f.rosto, TINTA, 2);
+    riscar(f.emendas, TINTA, 1.1);
+
+    // sobrancelhas de aço (cara de brava)
+    pintar(f.sobrancelhaClara, "#eef4fa");
+    pintar(f.sobrancelhaEscura, "#4f6787");
+    riscar(f.sobrancelhaClara, TINTA, 1.2);
+    riscar(f.sobrancelhaEscura, TINTA, 1.2);
+
+    // olhos acesos que pulsam
+    const pulso = 0.5 + 0.5 * Math.sin(tempo / 260);
+    c.globalAlpha = 0.2 + 0.35 * pulso;
+    riscar(f.olhos, "#ffe23a", 2.2 + 1.8 * pulso);
+    c.globalAlpha = 1;
+    pintar(f.olhos, pulso > 0.6 ? "#fff07a" : "#ffe23a");
+    riscar(f.olhos, TINTA, 1.1);
+    pintar(f.brilhoDosOlhos, "#fffbe0");
+
+    // nariz: metade na luz, metade na sombra
+    pintar(f.narizClaro, "#f2f7fb");
+    pintar(f.narizEscuro, "#586f8f");
+    riscar(f.nariz, TINTA, 1.1);
+
+    // grade na boca e rebites
+    c.fillStyle = TINTA;
+    c.fillRect(12.2, -5.7, 6.2, 1.5);
+    c.fillRect(12.2, -2.6, 6.4, 1.5);
+    c.fillRect(12.2, 0.5, 6.4, 1.5);
+    c.fillRect(12.2, 3.6, 6.2, 1.5);
+    c.fill(f.rebites);
+
+    // estrelinha de brilho na testa, piscando
+    const piscada = 0.55 + 0.45 * Math.abs(Math.sin(tempo / 380));
+    c.translate(-10.5, 7);
+    c.scale(piscada, piscada);
+    c.translate(10.5, -7);
+    pintar(f.estrela, "#ffffff");
+    riscar(f.estrela, TINTA, 0.45 / piscada);
 
     c.restore();
 }

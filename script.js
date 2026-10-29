@@ -392,7 +392,11 @@ function registrarFimDePartida(batidas) {
         ? humano.pontuacao > bot.pontuacao
         : batidas.some((batida) => batida.jogador === bot) && !batidas.some((batida) => batida.jogador === humano));
 
-    verificarConquistas({ venceuBotDificil: venceuOBot && seletorNivelBot.value === "dificil"});
+    const vencedor = jogadores.length > 2 ? vencedorComMuitos() : null;
+    verificarConquistas({
+        venceuBotDificil: venceuOBot && seletorNivelBot.value === "dificil",
+        venceuComQuatro: jogadores.length === 4 && Boolean(vencedor) && !vencedor.bot,
+    });
     registrarMissoesDaPartida(); // depois das conquistas: o aviso da missão espera o da conquista sair
     darMoedasDaPartida();
 }

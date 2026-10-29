@@ -45,6 +45,10 @@ function tirarDaPartida(batidas) {
     jogadores = jogadores.filter((jogador) => !quem.includes(jogador));
 
     for (const jogador of quem) {
+        if (jogador.congelarAtivo) { // quem congelou saiu: o gelo quebra e os outros voltam a andar
+            estilhacarGelo(jogador);
+            jogador.congelarAtivo = false;
+        }
         jogador.fora = true;
         placaresDosJogadores[jogador.numero - 1].classList.add("fora");
         eliminacoesRecentes.push({ jogador, ate: performance.now() + 900 });
@@ -55,7 +59,6 @@ function tirarDaPartida(batidas) {
     vibrar(80);
 }
 
-// quem acabou de sair pisca apagado no lugar onde bateu e some
 // com 3 ou mais: quem ganhou (no Contra o tempo, quem fez mais pontos; nos outros, quem durou mais)
 function vencedorComMuitos() {
     return modoAtual === "tempo"
@@ -63,6 +66,7 @@ function vencedorComMuitos() {
         : classificarPorSobrevivencia(jogadores, saidasDaPartida.map((saida) => saida.map((batida) => batida.jogador))).vencedor;
 }
 
+// quem acabou de sair pisca apagado no lugar onde bateu e some
 function desenharQuemSaiu() {
     const agora = performance.now();
     eliminacoesRecentes = eliminacoesRecentes.filter((saida) => saida.ate > agora);

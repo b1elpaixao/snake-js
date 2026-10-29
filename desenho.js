@@ -739,8 +739,10 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
         resultado = "Empate!";
     }
 
-    const textoPontuacao = jogadores.length > 2 && modoAtual !== "tempo"
-        ? classificarPorSobrevivencia(jogadores, saidasDaPartida.map((saida) => saida.map((batida) => batida.jogador))).ordem
+    const textoPontuacao = jogadores.length > 2
+        ? (modoAtual === "tempo"
+            ? classificarPorPontos(jogadores)
+            : classificarPorSobrevivencia(jogadores, saidasDaPartida.map((saida) => saida.map((batida) => batida.jogador))).ordem)
             .map((jogador, indice) => `${indice + 1}º ${jogador.nome}: ${jogador.pontuacao}`)
             .join(" | ")
         : jogadores
