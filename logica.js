@@ -284,7 +284,8 @@ function contarEspacoLivre(inicio, andar, casaLivre, limite) {
 }
 
 // vai atrás do alvo, mas só por caminhos com espaço suficiente para caber a cobra
-function escolherDirecaoBot(cabeca, direcaoAtual, alvo, andar, casaLivre, espacoNecessario) {
+// casaArriscada: onde a cabeça de outra cobra pode chegar (só entra lá se não tiver outro caminho bom)
+function escolherDirecaoBot(cabeca, direcaoAtual, alvo, andar, casaLivre, espacoNecessario, casaArriscada = () => false) {
     const opcoes = DIRECOES
         .filter((direcao) => !(direcao.x === -direcaoAtual.x && direcao.y === -direcaoAtual.y))
         .map((direcao) => ({ direcao, destino: andar(cabeca, direcao) }))
@@ -293,6 +294,7 @@ function escolherDirecaoBot(cabeca, direcaoAtual, alvo, andar, casaLivre, espaco
             ...opcao,
             espaco: contarEspacoLivre(opcao.destino, andar, casaLivre, espacoNecessario),
             distancia: distanciaManhattan(opcao.destino, alvo),
+            arriscada: casaArriscada(opcao.destino),
         }));
     
     if (opcoes.length === 0) {
@@ -300,15 +302,24 @@ function escolherDirecaoBot(cabeca, direcaoAtual, alvo, andar, casaLivre, espaco
     }
     
     const seguras = opcoes.filter((opcao) => opcao.espaco >= espacoNecessario);
+    const tranquilas = seguras.filter((opcao) => !opcao.arriscada);
+    const escolhidas = tranquilas.length > 0 ? tranquilas : seguras;
 
-    if (seguras.length > 0) {
-        seguras.sort((a, b) => a.distancia - b.distancia);
-        return seguras[0].direcao;
+    if (escolhidas.length > 0) {
+        escolhidas.sort((a, b) => a.distancia - b.distancia);
+        return escolhidas[0].direcao;
     }
 
     // nenhuma é segura: vai pra que tiver mais espaço
-    opcoes.sort((a, b) => b.espaco - a.espaco || a.distancia - b.distancia);
+    opcoes.sort((a, b) => b.espaco - a.espaco || a.arriscada - b.arriscada || a.distancia - b.distancia);
     return opcoes[0].direcao;
+}
+
+// casas onde a cabeça das outras cobras pode estar no próximo passo (bater de frente tira as duas)
+function casasPerigosas(outras, andar) {
+    return outras.flatMap((outra) => DIRECOES
+        .filter((direcao) => !(direcao.x === -outra.direcao.x && direcao.y === -outra.direcao.y))
+        .map((direcao) => andar(outra.cobra[0], direcao)));
 }
 
 // ==========================================
@@ -387,6 +398,7 @@ function limparPreferencias(salvas, modosValidos, dificuldadesValidas) {
         nome3: nome(preferencias.nome3),
         nome4: nome(preferencias.nome4),
         quantidade: [2, 3, 4].includes(preferencias.quantidade) ? preferencias.quantidade : 2,
+        vagasComBot: Array.isArray(preferencias.vagasComBot) ? [2, 3, 4].filter((vaga) => preferencias.vagasComBot.includes(vaga)) : [],
         modo: modosValidos.includes(preferencias.modo) ? preferencias.modo : modosValidos[0],
         dificuldade: dificuldadesValidas.includes(preferencias.dificuldade) ? preferencias.dificuldade : "normal",
         semParedes: preferencias.semParedes === true,

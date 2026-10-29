@@ -731,7 +731,7 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
     } else if (jogadores.length === 1) {
         resultado = "Game Over";
     } else if (jogadores.length > 2) {
-        const { vencedor } = classificarPorSobrevivencia(jogadores, saidasDaPartida.map((saida) => saida.map((batida) => batida.jogador)));
+        const vencedor = vencedorComMuitos();
         resultado = vencedor ? `${vencedor.nome} venceu!` : "Empate!";
     } else if (jogadoresVivos.length === 1) {
         resultado = `${jogadoresVivos[0].nome} venceu!`;

@@ -56,6 +56,13 @@ function tirarDaPartida(batidas) {
 }
 
 // quem acabou de sair pisca apagado no lugar onde bateu e some
+// com 3 ou mais: quem ganhou (no Contra o tempo, quem fez mais pontos; nos outros, quem durou mais)
+function vencedorComMuitos() {
+    return modoAtual === "tempo"
+        ? vencedorPorPontos(jogadores)
+        : classificarPorSobrevivencia(jogadores, saidasDaPartida.map((saida) => saida.map((batida) => batida.jogador))).vencedor;
+}
+
 function desenharQuemSaiu() {
     const agora = performance.now();
     eliminacoesRecentes = eliminacoesRecentes.filter((saida) => saida.ate > agora);

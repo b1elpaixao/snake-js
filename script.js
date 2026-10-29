@@ -175,6 +175,7 @@ const inputNomeJogador2 = document.getElementById("inputNomeJogador2");
 const elementoNomeExibido1 = document.getElementById("nomeExibido1");
 const elementoNomeExibido2 = document.getElementById("nomeExibido2");
 const inputsNomesExtras = [document.getElementById("inputNomeJogador3"), document.getElementById("inputNomeJogador4")];
+const botoesDasVagas = [...document.querySelectorAll(".botao-vaga")]; // Pessoa ou Bot, nas vagas 2 a 4
 
 
 // ==========================================
@@ -271,6 +272,7 @@ let pausado = false;
 let noMenu = true;
 let quantidadeJogadoresAtual = 2;
 let modoComBotAtivo = false;
+let vagasComBotAtuais = []; // nos "N Jogadores": quais vagas (2 a 4) são bots
 let modoCooperativo = false; // 2 Juntos: somam pontos e não batem um no outro
 let modoAtual = "normal";
 let semParedesNaPartida = false; // o "Sem paredes" que vale na partida atual (fica fixo até ela acabar)
@@ -384,7 +386,9 @@ function registrarFimDePartida(batidas) {
 
     const bot = jogadores.find((jogador) => jogador.bot);
     const humano = humanos[0];
-    const venceuOBot = Boolean(bot && humano) && (modoAtual === "tempo"
+    const venceuOBot = Boolean(bot && humano) && (jogadores.length > 2
+        ? vencedorComMuitos() === humano
+        : modoAtual === "tempo"
         ? humano.pontuacao > bot.pontuacao
         : batidas.some((batida) => batida.jogador === bot) && !batidas.some((batida) => batida.jogador === humano));
 
@@ -1400,6 +1404,7 @@ function reiniciar() {
     if (modoComBotAtivo) {
         jogadores[1].bot = true;
     }
+    jogadores.forEach((jogador) => { jogador.bot ||= vagasComBotAtuais.includes(jogador.numero); });
 
     jogadores.forEach((jogador) => {
         jogador.elementoPontuacao.textContent = jogador.pontuacao;
@@ -1482,10 +1487,12 @@ function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorM
     quantidadeJogadoresAtual = comBot || comChefao || juntos ? 2 : jogadoresPermitidos(modo, quantidade);
     modoComBotAtivo = comBot && !comChefao;
     modoCooperativo = juntos && !comChefao;
+    vagasComBotAtuais = comBot || comChefao || juntos ? [] : vagasComBotEscolhidas().filter((vaga) => vaga <= quantidadeJogadoresAtual);
 
+    const nomeDaVaga = (vaga, input) => vagasComBotAtuais.includes(vaga) ? `Bot ${vaga}` : (nomeDoCampo(input) || `Jogador ${vaga}`);
     const nome1 = inputNomeJogador1.value.trim() || "Jogador 1";
-    const nome2 = comChefao ? "Os olhos que emergem" : comBot ? "Bot" : (inputNomeJogador2.value.trim() || "Jogador 2");
-    nomesJogadoresAtuais = [nome1, nome2, ...inputsNomesExtras.map((input, indice) => input.value.trim() || `Jogador ${indice + 3}`)];
+    const nome2 = comChefao ? "Os olhos que emergem" : comBot ? "Bot" : nomeDaVaga(2, inputNomeJogador2);
+    nomesJogadoresAtuais = [nome1, nome2, ...inputsNomesExtras.map((input, indice) => nomeDaVaga(indice + 3, input))];
 
     nomesJogadoresAtuais.forEach((nome, indice) => {
         document.getElementById(`nomeExibido${indice + 1}`).textContent = nome;
@@ -1515,8 +1522,44 @@ function quantidadeEscolhida() {
 function mostrarQuantidadeEscolhida() {
     const quantidade = quantidadeEscolhida();
     botaoJogar2.textContent = `${quantidade} Jogadores`;
-    inputsNomesExtras.forEach((input, indice) => { input.parentElement.hidden = indice + 3 > quantidade; });
+    inputsNomesExtras.forEach((input, indice) => { input.closest(".campo").hidden = indice + 3 > quantidade; });
 }
+
+// ==========================================
+// Pessoa ou Bot em cada vaga (só nos "N Jogadores"; no celular é sempre pessoa)
+// ==========================================
+function vagasComBotEscolhidas() {
+    if (window.matchMedia("(pointer: coarse)").matches) return [];
+    return botoesDasVagas.filter((botao) => botao.getAttribute("aria-pressed") === "true").map((botao) => Number(botao.dataset.vaga));
+}
+
+// o nome digitado fica guardado enquanto a vaga é bot e volta quando vira pessoa de novo
+function nomeDoCampo(input) {
+    return (input.disabled ? input.dataset.nome || "" : input.value).trim();
+}
+
+function mostrarVaga(botao, ehBot) {
+    const input = botao.closest(".campo").querySelector("input");
+    if (ehBot && !input.disabled) {
+        input.dataset.nome = input.value;
+        input.value = "";
+    } else if (!ehBot && input.disabled) {
+        input.value = input.dataset.nome || "";
+    }
+    input.disabled = ehBot;
+    input.placeholder = ehBot ? `Bot ${botao.dataset.vaga}` : `Jogador ${botao.dataset.vaga}`;
+    botao.setAttribute("aria-pressed", String(ehBot));
+    botao.textContent = ehBot ? "🤖 Bot" : "👤 Pessoa";
+    botao.setAttribute("aria-label", `Jogador ${botao.dataset.vaga}: ${ehBot ? "bot. Clique pra ser pessoa" : "pessoa. Clique pra ser bot"}`);
+}
+
+botoesDasVagas.forEach((botao) => {
+    botao.hidden = window.matchMedia("(pointer: coarse)").matches;
+    botao.addEventListener("click", () => {
+        mostrarVaga(botao, botao.getAttribute("aria-pressed") !== "true");
+        salvarPreferencias();
+    });
+});
 
 seletorQuantidade.addEventListener("change", () => {
     mostrarQuantidadeEscolhida();

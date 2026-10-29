@@ -108,6 +108,7 @@ function aplicarPreferenciasSalvas() {
     inputNomeJogador2.value = preferencias.nome2;
     inputsNomesExtras[0].value = preferencias.nome3;
     inputsNomesExtras[1].value = preferencias.nome4;
+    botoesDasVagas.forEach((botao) => mostrarVaga(botao, preferencias.vagasComBot.includes(Number(botao.dataset.vaga))));
     seletorQuantidade.value = String(preferencias.quantidade);
     seletorModo.value = preferencias.modo;
     seletorDificuldade.value = preferencias.dificuldade;
@@ -120,10 +121,11 @@ function aplicarPreferenciasSalvas() {
 function salvarPreferencias() {
     salvarNoArmazenamento("snakePreferencias", JSON.stringify({
         nome1: inputNomeJogador1.value.trim(),
-        nome2: inputNomeJogador2.value.trim(),
-        nome3: inputsNomesExtras[0].value.trim(),
-        nome4: inputsNomesExtras[1].value.trim(),
+        nome2: nomeDoCampo(inputNomeJogador2),
+        nome3: nomeDoCampo(inputsNomesExtras[0]),
+        nome4: nomeDoCampo(inputsNomesExtras[1]),
         quantidade: Number(seletorQuantidade.value),
+        vagasComBot: botoesDasVagas.filter((botao) => botao.getAttribute("aria-pressed") === "true").map((botao) => Number(botao.dataset.vaga)),
         modo: seletorModo.value,
         dificuldade: seletorDificuldade.value,
         nivelBot: seletorNivelBot.value,

@@ -363,5 +363,8 @@ function decidirDirecaoBot(jogador) {
     const alvo = jogador.chefao
         ? alvoDoChefao(cabeca, jogadores[0].cobra[0], jogadores[0].direcao, comida, temEspada(jogadores[0]), COLUNAS, LINHAS)
         : escolherAlvoBot(cabeca);
-    return escolherDirecaoBot(cabeca, jogador.direcao, alvo, andar, casaLivre, espaçoNecessario);
+    // foge de bater de frente com outra cobra (o chefão e o bot fácil não ligam pra isso)
+    const perigo = jogador.chefao || nivel.cuidado === 0 ? [] : casasPerigosas(jogadores.filter((outro) => outro !== jogador), andar);
+    const casaArriscada = (posicao) => perigo.some((casa) => mesmaPosicao(casa, posicao));
+    return escolherDirecaoBot(cabeca, jogador.direcao, alvo, andar, casaLivre, espaçoNecessario, casaArriscada);
 }

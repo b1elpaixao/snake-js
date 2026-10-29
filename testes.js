@@ -237,12 +237,12 @@ const prefValidas = limparPreferencias(
     ["normal", "rato"], ["facil", "normal", "dificil"]
 );
 verificar("preferências válidas são mantidas",
-    JSON.stringify(prefValidas), JSON.stringify({ nome1: "Ana", nome2: "Leo", nome3: "", nome4: "", quantidade: 2, modo: "rato",
+    JSON.stringify(prefValidas), JSON.stringify({ nome1: "Ana", nome2: "Leo", nome3: "", nome4: "", quantidade: 2, vagasComBot: [], modo: "rato",
 dificuldade: "dificil", semParedes: true }));
 const prefLixo = limparPreferencias({ nome1: 42, modo: "voador", dificuldade: "impossivel",
 semParedes: "sim" }, ["normal", "rato"], ["facil", "normal", "dificil"]);
 verificar("preferência inválida volta pro padrão",
-    JSON.stringify(prefLixo), JSON.stringify({ nome1: "", nome2: "", nome3: "", nome4: "", quantidade: 2, modo: "normal", dificuldade:
+    JSON.stringify(prefLixo), JSON.stringify({ nome1: "", nome2: "", nome3: "", nome4: "", quantidade: 2, vagasComBot: [], modo: "normal", dificuldade:
 "normal", semParedes: false }));
 verificar("sem nada salvo usa o padrão", limparPreferencias(null, ["normal"], ["normal"]).modo,
 "normal");
@@ -683,6 +683,21 @@ const atingidoA = { cobra: [{ x: 2, y: 2 }] }, atingidoB = { cobra: [{ x: 5, y: 
 verificar("quem foi atingido: acha a dona do corpo", quemFoiAtingido(atingidoA, [atingidoA, atingidoC, atingidoB]), atingidoB);
 verificar("quem foi atingido: ninguém", quemFoiAtingido(atingidoC, [atingidoA, atingidoB, atingidoC]), null);
 verificar("preferências: quantidade 2 a 4 (o resto vira 2)", [3, 7, "4"].map((quantidade) => limparPreferencias({ quantidade }, ["normal"], ["normal"]).quantidade).join(), "3,2,2");
+
+// pessoa ou bot em cada vaga
+verificar("preferências: vagas com bot só de 2 a 4, sem repetir", JSON.stringify(limparPreferencias({ vagasComBot: [4, 1, 3, 3, "2", 9] }, ["normal"], ["normal"]).vagasComBot), "[3,4]");
+verificar("preferências: vagas com bot que não é lista vira vazia", JSON.stringify(limparPreferencias({ vagasComBot: "3" }, ["normal"], ["normal"]).vagasComBot), "[]");
+
+// bot foge de bater de frente
+const mapaLivre = { andar: (p, d) => ({ x: p.x + d.x, y: p.y + d.y }), casaLivre: (p) => p.x >= 0 && p.y >= 0 && p.x < 20 && p.y < 20 };
+const outraCobra = { cobra: [{ x: 7, y: 5 }], direcao: { x: -1, y: 0 } };
+const perigo = casasPerigosas([outraCobra], mapaLivre.andar);
+verificar("casas perigosas: as 3 pra onde a outra cabeça pode ir (não volta)", JSON.stringify(perigo.map((c) => [c.x, c.y]).sort()), JSON.stringify([[6, 5], [7, 4], [7, 6]]));
+const arriscada = (p) => perigo.some((c) => mesmaPosicao(c, p));
+verificar("bot: sem perigo, vai reto até a maçã", JSON.stringify(escolherDirecaoBot({ x: 5, y: 5 }, { x: 1, y: 0 }, { x: 9, y: 5 }, mapaLivre.andar, mapaLivre.casaLivre, 3)), JSON.stringify({ x: 1, y: 0 }));
+verificar("bot: desvia da casa onde a outra cabeça pode chegar", JSON.stringify(escolherDirecaoBot({ x: 5, y: 5 }, { x: 1, y: 0 }, { x: 9, y: 5 }, mapaLivre.andar, mapaLivre.casaLivre, 3, arriscada)) !== JSON.stringify({ x: 1, y: 0 }), true);
+const corredor = { andar: mapaLivre.andar, casaLivre: (p) => p.y === 5 && p.x >= 0 && p.x < 20 };
+verificar("bot: sem outro caminho, arrisca em vez de parar", JSON.stringify(escolherDirecaoBot({ x: 5, y: 5 }, { x: 1, y: 0 }, { x: 9, y: 5 }, corredor.andar, corredor.casaLivre, 3, arriscada)), JSON.stringify({ x: 1, y: 0 }));
 
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;

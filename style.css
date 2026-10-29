@@ -411,6 +411,44 @@ canvas {
     color: var(--texto-apagado);
 }
 
+/* nome + botão Pessoa/Bot lado a lado */
+.campo-linha {
+    display: flex;
+    gap: 6px;
+}
+
+.campo-linha input {
+    flex: 1;
+    min-width: 0;
+}
+
+.campo input:disabled {
+    border-style: dashed;
+    cursor: default;
+}
+
+.botao-vaga {
+    flex: none;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid var(--borda-forte);
+    background: var(--fundo);
+    color: var(--texto-suave);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.botao-vaga[aria-pressed="true"] {
+    border-color: var(--destaque);
+    color: var(--texto);
+}
+
+.botao-vaga:focus-visible {
+    outline: 2px solid var(--destaque);
+    outline-offset: 1px;
+}
+
 .campo input:focus,
 .menu-dificuldade select:focus {
     outline: 2px solid var(--destaque);
