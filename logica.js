@@ -895,6 +895,9 @@ const CONQUISTAS = [
     { id: "noiteDasBruxas", nome: "Noite das bruxas", descricao: "Comer 31 abóboras no Halloween", condicao: (c) => (c.missoesDaEpoca || []).includes("abobora31") },
     { id: "ateOsOssos", nome: "Até os ossos", descricao: "Jogar 13 partidas no Halloween", condicao: (c) => (c.missoesDaEpoca || []).includes("partidas13") },
     { id: "revoada", nome: "Revoada", descricao: "Fazer 25 pontos numa partida no Halloween", condicao: (c) => (c.missoesDaEpoca || []).includes("pontos25") },
+    { id: "hoHoHo", nome: "Ho ho ho!", descricao: "Comer 25 panetones no Natal", condicao: (c) => (c.missoesDaEpoca || []).includes("panetone25") },
+    { id: "luzesDeNatal", nome: "Luzes de Natal", descricao: "Jogar 24 partidas no Natal", condicao: (c) => (c.missoesDaEpoca || []).includes("partidas24") },
+    { id: "nevasca", nome: "Nevasca", descricao: "Fazer 30 pontos numa partida no Natal", condicao: (c) => (c.missoesDaEpoca || []).includes("pontos30") },
 ];
 
 // quais conquistas acabaram de ser ganhas (as que já tinha não contam de novo)
@@ -1146,8 +1149,8 @@ function limparTemaDoTabuleiro(id, conquistasGanhas) {
 // ==========================================
 // Épocas do ano (funções puras - testadas em testes.js)
 // ==========================================
-// inicio e fim: "MM-DD". Nesses dias o tabuleiro e a comida mudam sozinhos (dá pra desligar)
-// e aparecem missões que somam todos os dias da época; cada uma dá uma conquista com um prêmio
+// inicio e fim: "MM-DD" (o fim pode ser no ano seguinte, como no Natal). Nesses dias o tabuleiro e a comida
+// mudam sozinhos (dá pra desligar) e aparecem missões que somam todos os dias da época; cada uma dá uma conquista com um prêmio
 const EPOCAS = [
     {
         id: "halloween", nome: "Halloween", icone: "🎃", inicio: "10-25", fim: "11-02", comida: "abobora",
@@ -1158,14 +1161,30 @@ const EPOCAS = [
             { id: "pontos25", texto: "Fazer 25 pontos numa partida", tipo: "partida", campo: "pontos", alvo: 25, conquista: "revoada" },
         ],
     },
+    {
+        id: "natal", nome: "Natal e Ano Novo", icone: "🎄", inicio: "12-15", fim: "01-06", comida: "panetone",
+        tabuleiro: { id: "natal", nome: "Natal", claro: "#5c1f2a", escuro: "#521b25", decoracao: true },
+        diasDeFogos: ["12-31", "01-01"], // a virada: fogos estourando no tabuleiro
+        missoes: [
+            { id: "panetone25", texto: "Comer 25 panetones", tipo: "soma", campo: "comidas", alvo: 25, conquista: "hoHoHo" },
+            { id: "partidas24", texto: "Jogar 24 partidas", tipo: "soma", campo: "partidas", alvo: 24, conquista: "luzesDeNatal" },
+            { id: "pontos30", texto: "Fazer 30 pontos numa partida", tipo: "partida", campo: "pontos", alvo: 30, conquista: "nevasca" },
+        ],
+    },
 ];
 
-// a época do dia ("2026-10-29"), ou null. A chave tem o ano: no ano seguinte as missões recomeçam
+// a época do dia ("2026-10-29"), ou null. A chave tem o ano em que a época começou: no ano seguinte
+// as missões recomeçam, e em janeiro o Natal continua com o progresso de dezembro
 function epocaDoDia(data) {
     const [ano, mes, dia] = data.split("-");
     const hoje = `${mes}-${dia}`;
-    const epoca = EPOCAS.find((opcao) => hoje >= opcao.inicio && hoje <= opcao.fim);
-    return epoca ? { ...epoca, chave: `${epoca.id}-${ano}` } : null;
+    const epoca = EPOCAS.find((opcao) => opcao.inicio <= opcao.fim
+        ? hoje >= opcao.inicio && hoje <= opcao.fim
+        : hoje >= opcao.inicio || hoje <= opcao.fim); // atravessa a virada do ano
+    if (!epoca) return null;
+    const anoDoComeco = hoje < epoca.inicio ? Number(ano) - 1 : Number(ano);
+    const fogos = (epoca.diasDeFogos || []).includes(hoje);
+    return { ...epoca, chave: `${epoca.id}-${anoDoComeco}`, tabuleiro: fogos ? { ...epoca.tabuleiro, fogos: true } : epoca.tabuleiro };
 }
 
 // ==========================================
@@ -1533,6 +1552,7 @@ const ITENS_DA_LOJA = [
     { id: "coroa", nome: "Coroa", tipo: "chapeu", conquista: "lendaria" },
     { id: "mascara", nome: "Máscara de ferro", tipo: "chapeu", conquista: "ultimaDePe" },
     { id: "bruxa", nome: "Chapéu de bruxa", tipo: "chapeu", conquista: "noiteDasBruxas" },
+    { id: "gorro", nome: "Gorro de Papai Noel", tipo: "chapeu", conquista: "hoHoHo" },
     { id: "morango", nome: "Morango", tipo: "comida", preco: 100 },
     { id: "cereja", nome: "Cereja", tipo: "comida", preco: 150 },
     { id: "melancia", nome: "Melancia", tipo: "comida", preco: 250 },
@@ -1545,6 +1565,7 @@ const ITENS_DA_LOJA = [
     { id: "dourado", nome: "Dourada brilhante", tipo: "corpo", conquista: "fiel" },
     { id: "magma", nome: "Cobra de magma", tipo: "corpo", conquista: "sobrevivente" },
     { id: "esqueleto", nome: "Esqueleto", tipo: "corpo", conquista: "ateOsOssos" },
+    { id: "piscaPisca", nome: "Pisca-pisca", tipo: "corpo", conquista: "luzesDeNatal" },
     { id: "espectro", nome: "Espectro", tipo: "corpo", preco: 800, liberaCom: "encarouOAbismo" }, // à venda, mas só depois da conquista
     { id: "bolhas", nome: "Bolhas", tipo: "rastro", preco: 300 },
     { id: "folhas", nome: "Folhas", tipo: "rastro", preco: 350 },
@@ -1553,6 +1574,7 @@ const ITENS_DA_LOJA = [
     { id: "fogo", nome: "Fogo", tipo: "rastro", conquista: "comboOito" },
     { id: "faiscas", nome: "Faíscas", tipo: "rastro", conquista: "arsenal" },
     { id: "morcegos", nome: "Morceguinhos", tipo: "rastro", conquista: "revoada" },
+    { id: "flocos", nome: "Flocos de neve", tipo: "rastro", conquista: "nevasca" },
     { id: "praia", nome: "Praia", tipo: "tabuleiro", preco: 300, claro: "#f7e3b0", escuro: "#f0d89a", decoracao: true },
     { id: "doces", nome: "Doces", tipo: "tabuleiro", preco: 450, claro: "#ffd6e8", escuro: "#ffc6df", decoracao: true },
     { id: "espaco", nome: "Espaço", tipo: "tabuleiro", preco: 950, claro: "#161c3d", escuro: "#111632", decoracao: true },

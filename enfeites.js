@@ -121,6 +121,8 @@ function desenharChapeu(c, id, tempo = 0) {
         desenharMascaraDeFerro(c, tempo); // logo abaixo, fora do desenharChapeu
     } else if (id === "bruxa") {
         desenharChapeuDeBruxa(c, tempo); // no fim do arquivo (Halloween)
+    } else if (id === "gorro") {
+        desenharGorroDePapaiNoel(c, tempo); // no fim do arquivo (Natal)
     }
 
     c.restore();
@@ -342,6 +344,8 @@ function desenharComida(c, id, cx, cy, r) {
         for (const [x, y] of [[-0.3, -0.25], [0.3, -0.2], [0, 0.35]]) circulo(cx + x * r, cy + y * r, r * 0.19, "#d62828");
     } else if (id === "abobora") {
         desenharAbobora(c, cx, cy, r, performance.now()); // comida do Halloween (no fim do arquivo)
+    } else if (id === "panetone") {
+        desenharPanetone(c, cx, cy, r); // comida do Natal (no fim do arquivo)
     } else {
         // "maca" e qualquer coisa desconhecida: a maçã de sempre
         circulo(cx, cy, r, "#e7471d");
@@ -380,6 +384,7 @@ function corDaCabecaComPadrao(padrao, corCabeca, tempo) {
     if (padrao === "dourado") return "#ffe27a";
     if (padrao === "magma") return "#3a1712";
     if (padrao === "esqueleto") return "#ece5d3"; // caveira
+    if (padrao === "piscaPisca") return "#3c9a5c";
     return corCabeca;
 }
 
@@ -396,6 +401,7 @@ function corDoPedacoComPadrao(padrao, corCauda, corCabeca, posicao, distancia, t
         return `hsl(${Math.round(14 + 30 * calor)}, 100%, ${Math.round(48 + 14 * calor)}%)`;
     }
     if (padrao === "esqueleto") return misturarCores("#1d1a29", "#2e2a40", posicao);
+    if (padrao === "piscaPisca") return misturarCores("#1f6b3e", "#3c9a5c", posicao); // verde de pinheiro
     return misturarCores(corCauda, corCabeca, posicao);
 }
 
@@ -588,6 +594,7 @@ function criarParticula(tipo, x, y, agora) {
     if (tipo === "estrelinhas") Object.assign(particula, { vida: 800, cor: Math.random() < 0.5 ? "#ffe066" : "#ffffff" });
     if (tipo === "fogo") Object.assign(particula, { vy: sorteio(-20, -10), vida: 650, tamanho: sorteio(3, 4.5) });
     if (tipo === "morcegos") Object.assign(particula, { vx: sorteio(-18, 18), vy: sorteio(-34, -20), vida: 1000, tamanho: sorteio(5, 6.5) });
+    if (tipo === "flocos") Object.assign(particula, { vx: sorteio(-22, 22), vy: sorteio(-8, 22), vida: 1400, tamanho: sorteio(3.6, 5) });
     if (tipo === "faiscas") Object.assign(particula, { vx: sorteio(-70, 70), vy: sorteio(-70, 20), vida: 500, tamanho: sorteio(2.5, 3.5), cor: Math.random() < 0.5 ? "#ffe066" : "#ffffff" });
     return particula;
 }
@@ -689,6 +696,8 @@ function desenharParticula(c, p, idade) {
         c.beginPath(); c.moveTo(0, -p.tamanho * 1.4); c.lineTo(p.tamanho, p.tamanho); c.lineTo(-p.tamanho, p.tamanho * 0.6); c.closePath(); c.fill();
     } else if (p.tipo === "morcegos") {
         desenharMorceguinho(c, x, y, p.tamanho, idade, p.giro);
+    } else if (p.tipo === "flocos") {
+        desenharFlocoDoRastro(c, x, y, p.tamanho, p.giro + idade / 700);
     } else if (p.tipo === "coracoes") {
         desenharCoracao(c, x, y, p.tamanho, "#ff4d8d");
     }
@@ -770,6 +779,8 @@ function desenharDecoracaoDoTabuleiro(c, tema, colunas, linhas, lado, tempo, den
                 }
             } else if (tema.id === "halloween") {
                 desenharEnfeiteDoHalloween(c, x, y, sorteio, escala, tempo); // no fim do arquivo
+            } else if (tema.id === "natal") {
+                desenharEnfeiteDoNatal(c, x, y, sorteio, escala); // no fim do arquivo
             } else if (tema.id === "lava") {
                 if (sorteio < 0.18) { // rachadura brilhando
                     const brilho = 0.55 + 0.45 * Math.sin(tempo / 500 + sorteio * 40);
@@ -790,6 +801,8 @@ function desenharDecoracaoDoTabuleiro(c, tema, colunas, linhas, lado, tempo, den
         }
     }
     if (tema.id === "halloween") desenharTeiasDosCantos(c, colunas * lado, linhas * lado, lado, tempo);
+    if (tema.id === "natal") desenharNeveEPiscaPisca(c, colunas * lado, linhas * lado, lado, tempo);
+    if (tema.fogos && !reduzirMovimento) desenharFogosDaVirada(c, colunas * lado, linhas * lado, lado, tempo); // 31/12 e 1/1
     c.restore();
 }
 
@@ -835,6 +848,7 @@ function desenharCorpoDePrevia(c, padrao, tempo) {
     }
     if (padrao === "dourado") desenharBrilhosDourados(c, pontos, 300);
     if (padrao === "esqueleto") desenharOssosDoEsqueleto(c, [...pontos].reverse(), 13); // aqui o caminho vai do rabo pra cabeça
+    if (padrao === "piscaPisca") desenharLuzesDoPiscaPisca(c, [...pontos].reverse(), 13, tempo);
     if (padrao === "magma") {
         desenharPlacasDeMagma(c, [...pontos].reverse(), 13, 0); // aqui o caminho vai do rabo pra cabeça
         [[14, 40, 0.3], [30, 34, 0.55], [22, 30, 0.75], [44, 14, 0.4]].forEach(([x, y, idade]) =>
@@ -1306,4 +1320,381 @@ function desenharDentesDaCaveira(c) {
 // rastro "Morceguinhos": voam pra cima batendo as asas
 function desenharMorceguinho(c, x, y, tamanho, idade, giro) {
     desenharMorcego(c, x, y, tamanho, Math.sin(idade / 45 + giro), "#2a1740", "#c9a7ff");
+}
+
+// ==========================================
+// Época: Natal e Ano Novo (tabuleiro, panetone, gorro, pisca-pisca, flocos e os fogos da virada).
+// Mesmo estilo de gibi do Halloween (usa a TINTA_DE_GIBI de lá).
+// ==========================================
+const CORES_DO_PISCA_PISCA = ["#ff4d4d", "#ffd23a", "#4dabf7", "#7bd389"];
+const CORES_DO_PISCA_APAGADO = ["#6e2626", "#6e5a1c", "#24486b", "#2f5e3c"];
+
+// panetone na forma de papel (comida da época)
+function desenharPanetone(c, cx, cy, r) {
+    c.save();
+    c.lineJoin = "round";
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineWidth = Math.max(0.8, r * 0.12);
+
+    c.fillStyle = "rgba(0, 0, 0, 0.25)"; // sombra no chão
+    c.beginPath(); c.ellipse(cx, cy + r * 0.9, r * 0.85, r * 0.2, 0, 0, Math.PI * 2); c.fill();
+
+    const papel = () => {
+        c.beginPath();
+        c.moveTo(cx - r * 0.82, cy - r * 0.05);
+        c.lineTo(cx + r * 0.82, cy - r * 0.05);
+        c.lineTo(cx + r * 0.72, cy + r * 0.85);
+        c.quadraticCurveTo(cx, cy + r * 0.98, cx - r * 0.72, cy + r * 0.85);
+        c.closePath();
+    };
+    c.fillStyle = "#e9b949"; // forma de papel dourada, com as pregas
+    papel(); c.fill();
+    c.save();
+    papel(); c.clip();
+    c.fillStyle = "#c48f22";
+    for (let i = -3; i <= 3; i += 2) c.fillRect(cx + i * r * 0.2 - r * 0.07, cy - r * 0.1, r * 0.14, r * 1.1);
+    c.fillStyle = "#d62839"; // fitinha vermelha
+    c.fillRect(cx - r, cy + r * 0.28, r * 2, r * 0.2);
+    c.restore();
+    papel(); c.stroke();
+
+    c.fillStyle = "#b8661f"; // a cúpula assada
+    c.beginPath();
+    c.moveTo(cx - r * 0.86, cy - r * 0.02);
+    c.bezierCurveTo(cx - r * 0.95, cy - r * 0.75, cx - r * 0.45, cy - r * 1.02, cx, cy - r * 1.02);
+    c.bezierCurveTo(cx + r * 0.45, cy - r * 1.02, cx + r * 0.95, cy - r * 0.75, cx + r * 0.86, cy - r * 0.02);
+    c.quadraticCurveTo(cx, cy + r * 0.12, cx - r * 0.86, cy - r * 0.02);
+    c.fill();
+    c.stroke();
+
+    c.strokeStyle = "#f2c66d"; // o corte em cruz do topo
+    c.lineWidth = r * 0.12;
+    c.lineCap = "round";
+    c.beginPath();
+    c.moveTo(cx - r * 0.3, cy - r * 0.78); c.lineTo(cx + r * 0.3, cy - r * 0.62);
+    c.moveTo(cx + r * 0.28, cy - r * 0.8); c.lineTo(cx - r * 0.26, cy - r * 0.6);
+    c.stroke();
+
+    for (const [x, y, cor] of [[-0.55, -0.35, "#d62839"], [0.5, -0.4, "#4caf50"], [-0.15, -0.25, "#5a2a1a"], [0.2, -0.22, "#d62839"], [0.62, -0.15, "#5a2a1a"], [-0.62, -0.62, "#4caf50"]]) {
+        c.fillStyle = cor; // frutinhas e uvas-passas
+        c.beginPath(); c.arc(cx + x * r, cy + y * r, r * 0.09, 0, Math.PI * 2); c.fill();
+    }
+    c.fillStyle = "rgba(255, 240, 200, 0.7)"; // brilho
+    c.beginPath(); c.ellipse(cx - r * 0.45, cy - r * 0.62, r * 0.16, r * 0.08, -0.6, 0, Math.PI * 2); c.fill();
+    c.restore();
+}
+
+// floco de neve de 6 pontas (rastro e neve caindo)
+function desenharFloco(c, x, y, tamanho, giro, cor) {
+    c.save();
+    c.translate(x, y);
+    c.rotate(giro);
+    c.strokeStyle = cor;
+    c.lineCap = "round";
+    c.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const angulo = (i / 6) * Math.PI * 2;
+        const dx = Math.cos(angulo);
+        const dy = Math.sin(angulo);
+        c.moveTo(0, 0);
+        c.lineTo(dx * tamanho, dy * tamanho);
+        for (const lado of [-1, 1]) { // os galhinhos em V
+            const meio = tamanho * 0.55;
+            const galho = angulo + lado * 0.7;
+            c.moveTo(dx * meio, dy * meio);
+            c.lineTo(dx * meio + Math.cos(galho) * tamanho * 0.32, dy * meio + Math.sin(galho) * tamanho * 0.32);
+        }
+    }
+    c.stroke();
+    c.restore();
+}
+
+function desenharPinheirinho(c, x, y, escala) {
+    c.save();
+    c.translate(x, y);
+    c.scale(escala, escala);
+    c.lineJoin = "round";
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineWidth = 0.8;
+    c.fillStyle = "#6b3f1f";
+    c.fillRect(-0.9, 3, 1.8, 2);
+    c.strokeRect(-0.9, 3, 1.8, 2);
+    for (const [topo, base, largura] of [[-1.5, 3.4, 4.6], [-3.6, 1, 3.6], [-5.6, -1.4, 2.6]]) {
+        c.fillStyle = "#4caf50";
+        c.beginPath(); c.moveTo(0, topo); c.lineTo(largura, base); c.lineTo(-largura, base); c.closePath(); c.fill(); c.stroke();
+        c.fillStyle = "#eef6ff"; // neve na beirada
+        c.beginPath(); c.ellipse(0, base - 0.3, largura * 0.8, 0.55, 0, 0, Math.PI * 2); c.fill();
+    }
+    desenharBrilho(c, 0, -6, 1.8, "#ffd23a");
+    c.restore();
+}
+
+function desenharPresente(c, x, y, escala, cor) {
+    c.save();
+    c.translate(x, y);
+    c.scale(escala, escala);
+    c.lineJoin = "round";
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineWidth = 0.8;
+    c.fillStyle = cor;
+    c.fillRect(-3, -1.6, 6, 4.6);
+    c.strokeRect(-3, -1.6, 6, 4.6);
+    c.fillStyle = "#ffd23a"; // fita
+    c.fillRect(-0.6, -1.6, 1.2, 4.6);
+    c.beginPath();
+    c.ellipse(-1.2, -2.3, 1.2, 0.7, -0.4, 0, Math.PI * 2);
+    c.ellipse(1.2, -2.3, 1.2, 0.7, 0.4, 0, Math.PI * 2);
+    c.fill();
+    c.stroke();
+    c.restore();
+}
+
+// enfeites de uma casa do tabuleiro do Natal (chamado pelo desenharDecoracaoDoTabuleiro)
+function desenharEnfeiteDoNatal(c, x, y, sorteio, escala) {
+    if (sorteio < 0.02) {
+        desenharPinheirinho(c, x, y, escala * 1.4);
+    } else if (sorteio < 0.034) {
+        desenharPresente(c, x, y, escala * 1.3, sorteio < 0.027 ? "#d62839" : "#3d7ad6");
+    } else if (sorteio < 0.3) { // neve no chão
+        c.fillStyle = "rgba(255, 255, 255, 0.16)";
+        c.beginPath(); c.arc(x, y, (0.6 + sorteio * 2) * escala, 0, Math.PI * 2); c.fill();
+    }
+}
+
+// por cima de tudo do tabuleiro: o fio de pisca-pisca no alto e a neve caindo
+function desenharNeveEPiscaPisca(c, largura, altura, lado, tempo) {
+    const sorteio = (n) => ((Math.imul(n + 1, 2654435761) >>> 0) % 1000) / 1000;
+
+    c.save();
+    const flocos = Math.round((largura * altura) / (lado * lado * 12));
+    for (let i = 0; i < flocos; i++) {
+        const velocidade = lado * (0.6 + sorteio(i * 3) * 0.6) / 1000;
+        const x = sorteio(i * 3 + 1) * largura + Math.sin(tempo / 1300 + i) * lado * 0.35;
+        const y = ((sorteio(i * 3 + 2) * (altura + lado) + tempo * velocidade) % (altura + lado)) - lado / 2;
+        c.lineWidth = lado * 0.035;
+        desenharFloco(c, x, y, lado * (0.1 + sorteio(i * 7) * 0.1), tempo / 2000 + i, "rgba(255, 255, 255, 0.55)");
+    }
+
+    // o fio cai um pouco entre um gancho e outro; as lâmpadas acendem em sequência
+    const vao = lado * 4;
+    const ganchos = Math.ceil(largura / vao);
+    const pontoDoFio = (x) => {
+        const t = (x % vao) / vao;
+        return lado * 0.12 + lado * 0.5 * 4 * t * (1 - t);
+    };
+    c.strokeStyle = "#0e2418";
+    c.lineWidth = lado * 0.06;
+    c.beginPath();
+    for (let g = 0; g < ganchos; g++) {
+        c.moveTo(g * vao, lado * 0.12);
+        c.quadraticCurveTo(g * vao + vao / 2, lado * 1.12, (g + 1) * vao, lado * 0.12);
+    }
+    c.stroke();
+    const passo = Math.floor(tempo / 450);
+    for (let i = 0; (i + 0.5) * lado < largura; i++) {
+        const x = (i + 0.5) * lado;
+        const y = pontoDoFio(x);
+        const cor = i % 4;
+        const acesa = (i + passo) % 4 !== 0;
+        if (acesa) {
+            c.fillStyle = CORES_DO_PISCA_PISCA[cor] + "55";
+            c.beginPath(); c.arc(x, y + lado * 0.2, lado * 0.22, 0, Math.PI * 2); c.fill();
+        }
+        c.fillStyle = "#1c1c1c";
+        c.fillRect(x - lado * 0.06, y - lado * 0.02, lado * 0.12, lado * 0.1);
+        c.fillStyle = acesa ? CORES_DO_PISCA_PISCA[cor] : CORES_DO_PISCA_APAGADO[cor];
+        c.beginPath(); c.ellipse(x, y + lado * 0.2, lado * 0.09, lado * 0.13, 0, 0, Math.PI * 2); c.fill();
+    }
+    c.restore();
+}
+
+// fogos da virada (31/12 e 1/1): 3 foguetes que sobem e estouram, um atrás do outro.
+// Tudo calculado pelo tempo, sem guardar nada
+function desenharFogosDaVirada(c, largura, altura, lado, tempo) {
+    const sorteio = (n) => ((Math.imul(n + 7, 2246822519) >>> 0) % 1000) / 1000;
+    const cores = ["#ffd23a", "#5ce1e6", "#4dabf7", "#7bd389", "#c77dff", "#ffffff"]; // sem vermelho: o tabuleiro já é vermelho
+    const duracao = 2600;
+
+    c.save();
+    c.lineCap = "round";
+    for (let fogo = 0; fogo < 3; fogo++) {
+        const relogio = tempo + fogo * 870;
+        const vez = Math.floor(relogio / duracao) * 3 + fogo;
+        const fase = (relogio % duracao) / duracao;
+        const cx = (0.15 + 0.7 * sorteio(vez)) * largura;
+        const cy = (0.15 + 0.35 * sorteio(vez + 100)) * altura;
+        const cor = cores[Math.floor(sorteio(vez + 200) * cores.length)];
+
+        if (fase < 0.25) { // subindo
+            const subida = fase / 0.25;
+            const y = altura + (cy - altura) * (1 - (1 - subida) * (1 - subida));
+            c.strokeStyle = "rgba(255, 230, 160, 0.5)";
+            c.lineWidth = lado * 0.06;
+            c.beginPath(); c.moveTo(cx, y + lado * 0.8); c.lineTo(cx, y); c.stroke();
+            c.fillStyle = "#fff4c2";
+            c.beginPath(); c.arc(cx, y, lado * 0.08, 0, Math.PI * 2); c.fill();
+            continue;
+        }
+
+        const t = (fase - 0.25) / 0.75; // estouro: abre rápido, cai um pouco e apaga
+        const raio = lado * 3.2 * (1 - (1 - t) * (1 - t));
+        const queda = lado * 1.2 * t * t;
+        c.globalAlpha = 1 - t;
+        if (t < 0.12) {
+            c.fillStyle = "rgba(255, 255, 255, 0.5)";
+            c.beginPath(); c.arc(cx, cy, lado * 0.9 * (1 - t / 0.12), 0, Math.PI * 2); c.fill();
+        }
+        c.strokeStyle = cor;
+        c.fillStyle = cor;
+        c.lineWidth = lado * 0.09;
+        c.beginPath();
+        for (let raioDoFogo = 0; raioDoFogo < 16; raioDoFogo++) {
+            const angulo = (raioDoFogo / 16) * Math.PI * 2 + sorteio(vez + 300);
+            const dx = Math.cos(angulo);
+            const dy = Math.sin(angulo);
+            c.moveTo(cx + dx * raio * 0.72, cy + dy * raio * 0.72 + queda);
+            c.lineTo(cx + dx * raio, cy + dy * raio + queda);
+        }
+        c.stroke();
+        for (let raioDoFogo = 0; raioDoFogo < 16; raioDoFogo += 2) {
+            const angulo = (raioDoFogo / 16) * Math.PI * 2 + sorteio(vez + 300);
+            c.beginPath(); c.arc(cx + Math.cos(angulo) * raio * 1.08, cy + Math.sin(angulo) * raio * 1.08 + queda, lado * 0.06, 0, Math.PI * 2); c.fill();
+        }
+        c.globalAlpha = 1;
+    }
+    c.restore();
+}
+
+// ==========================================
+// Prêmios das missões do Natal (cada um sai de uma missão)
+// ==========================================
+
+// gorro de Papai Noel em volta da cabeça (mesmas medidas do desenharChapeu); o pompom balança
+function desenharGorroDePapaiNoel(c, tempo) {
+    const balanco = Math.sin(tempo / 420) * 2.2;
+    const ponta = { x: -25, y: 6 + balanco };
+
+    c.save();
+    c.lineJoin = "round";
+    c.lineCap = "round";
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineWidth = 1.8;
+
+    c.fillStyle = "#d62839"; // o gorro, deitado pra trás e caído pro lado
+    c.beginPath();
+    c.moveTo(-8, -15);
+    c.quadraticCurveTo(-20, -12, ponta.x + 2, ponta.y - 3);
+    c.quadraticCurveTo(ponta.x - 1, ponta.y + 1, ponta.x + 3, ponta.y + 2);
+    c.quadraticCurveTo(-17, 8, -8, 15);
+    c.closePath();
+    c.fill();
+    c.save(); c.clip(); c.fillStyle = "#9e1b2a"; c.fillRect(-34, -18, 30, 12); c.restore(); // lado na sombra
+    c.stroke();
+    c.strokeStyle = "#ff8a8a"; // luz na dobra
+    c.lineWidth = 1.2;
+    c.beginPath(); c.moveTo(-12, 6); c.quadraticCurveTo(-17, 5, ponta.x + 4, ponta.y); c.stroke();
+
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineWidth = 1.8;
+    const pelo = () => { // a barra de pelo branca, fofinha
+        c.beginPath();
+        for (let i = 0; i <= 8; i++) {
+            const y = -19 + i * 4.75;
+            c.arc(-6 + (i % 2) * 0.8, y, 3.4, 0, Math.PI * 2);
+        }
+    };
+    c.fillStyle = "#f4f1ea";
+    c.beginPath(); c.ellipse(-6, 0, 4.6, 19.5, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+    pelo(); c.fill();
+    c.fillStyle = "#cfd6e0";
+    c.beginPath(); c.ellipse(-7.5, 0, 2, 17, 0, 0, Math.PI * 2); c.fill();
+
+    c.fillStyle = "#f4f1ea"; // pompom
+    c.beginPath(); c.arc(ponta.x, ponta.y, 4.4, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.fillStyle = "#cfd6e0";
+    c.beginPath(); c.arc(ponta.x - 1.2, ponta.y + 1.2, 2, 0, Math.PI * 2); c.fill();
+
+    for (const lado of [-1, 1]) { // os olhos ficam por cima do pelo
+        c.fillStyle = "#ffe066";
+        c.beginPath(); c.arc(-3, lado * 11, 6.6, 0, Math.PI * 2); c.fill();
+        c.lineWidth = 1.2; c.stroke();
+        c.fillStyle = "#2a1200";
+        c.beginPath(); c.ellipse(-1, lado * 11, 1.5, 4.2, 0, 0, Math.PI * 2); c.fill();
+    }
+    c.restore();
+}
+
+// corpo "Pisca-pisca": a cobra vira um galho de pinheiro enrolado num fio de luzinhas
+function desenharLuzesDoPiscaPisca(c, pontos, largura, tempo) {
+    const passo = largura * 0.95; // de uma lâmpada pra outra
+    const onda = largura * 0.24; // o fio vai de um lado pro outro do corpo, como se estivesse enrolado
+    const fio = [[]];
+    const luzes = [];
+    let andado = 0;
+    for (let i = 1; i < pontos.length; i++) {
+        const de = pontos[i - 1];
+        const ate = pontos[i];
+        const distancia = Math.hypot(ate.x - de.x, ate.y - de.y);
+        if (distancia === 0) continue;
+        if (distancia > TAMANHO_CELULA * 1.5) { // atravessou a borda: o fio recomeça do outro lado
+            fio.push([]);
+            continue;
+        }
+        const nx = -(ate.y - de.y) / distancia;
+        const ny = (ate.x - de.x) / distancia;
+        const desvio = Math.sin((andado / passo) * Math.PI) * onda;
+        fio[fio.length - 1].push({ x: de.x + nx * desvio, y: de.y + ny * desvio });
+
+        const proxima = (Math.floor(andado / passo - 0.5) + 1.5) * passo; // as lâmpadas ficam nas curvas do fio
+        if (proxima >= largura * 0.6 && proxima < andado + distancia) {
+            const lado = Math.round(proxima / passo - 0.5) % 2 === 0 ? 1 : -1;
+            const t = (proxima - andado) / distancia;
+            luzes.push({ x: de.x + (ate.x - de.x) * t + nx * lado * onda, y: de.y + (ate.y - de.y) * t + ny * lado * onda, nx: nx * lado, ny: ny * lado });
+        }
+        andado += distancia;
+    }
+
+    c.save();
+    c.lineJoin = "round";
+    c.lineCap = "round";
+    c.strokeStyle = "#0e2418";
+    c.lineWidth = largura / 12;
+    c.beginPath();
+    for (const trecho of fio) trecho.forEach((ponto, i) => (i === 0 ? c.moveTo(ponto.x, ponto.y) : c.lineTo(ponto.x, ponto.y)));
+    c.stroke();
+
+    const sequencia = Math.floor(tempo / 450);
+    luzes.forEach((luz, i) => {
+        const cor = i % 4;
+        const acesa = (i + sequencia) % 4 !== 0;
+        const bx = luz.x + luz.nx * largura * 0.13;
+        const by = luz.y + luz.ny * largura * 0.13;
+        if (acesa) {
+            c.fillStyle = CORES_DO_PISCA_PISCA[cor] + "44";
+            c.beginPath(); c.arc(bx, by, largura * 0.3, 0, Math.PI * 2); c.fill();
+        }
+        c.save();
+        c.translate(bx, by);
+        c.rotate(Math.atan2(luz.ny, luz.nx));
+        c.fillStyle = "#1c1c1c"; // soquete
+        c.fillRect(-largura * 0.15, -largura * 0.07, largura * 0.08, largura * 0.14);
+        c.fillStyle = acesa ? CORES_DO_PISCA_PISCA[cor] : CORES_DO_PISCA_APAGADO[cor];
+        c.strokeStyle = TINTA_DE_GIBI;
+        c.lineWidth = largura / 24;
+        c.beginPath(); c.ellipse(0, 0, largura * 0.17, largura * 0.12, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+        if (acesa) {
+            c.fillStyle = "rgba(255, 255, 255, 0.85)";
+            c.beginPath(); c.arc(largura * 0.04, -largura * 0.04, largura * 0.04, 0, Math.PI * 2); c.fill();
+        }
+        c.restore();
+    });
+    c.restore();
+}
+
+// rastro "Flocos de neve": caem devagar girando
+function desenharFlocoDoRastro(c, x, y, tamanho, giro) {
+    c.lineWidth = tamanho * 0.5;
+    desenharFloco(c, x, y, tamanho, giro, "rgba(60, 110, 170, 0.55)"); // contorninho azul pra aparecer na grama
+    c.lineWidth = tamanho * 0.22;
+    desenharFloco(c, x, y, tamanho, giro, "#ffffff");
 }

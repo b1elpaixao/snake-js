@@ -730,6 +730,17 @@ verificar("época: cada missão dá a sua conquista",
     "noiteDasBruxas ateOsOssos revoada");
 verificar("loja: prêmios do Halloween (não vendidos)", ITENS_DA_LOJA.filter((item) => ["noiteDasBruxas", "ateOsOssos", "revoada"].includes(item.conquista)).map((item) => `${item.id}:${item.tipo}:${item.preco ?? "-"}`).join(), "bruxa:chapeu:-,esqueleto:corpo:-,morcegos:rastro:-");
 
+// épocas do ano: Natal e Ano Novo (atravessa a virada)
+verificar("época: Natal de 15/12 a 6/1", ["2026-12-14", "2026-12-15", "2026-12-25", "2027-01-01", "2027-01-06", "2027-01-07"].map((data) => (epocaDoDia(data) || { id: "-" }).id).join(), "-,natal,natal,natal,natal,-");
+verificar("época: em janeiro o Natal continua com a chave de dezembro", [epocaDoDia("2026-12-20").chave, epocaDoDia("2027-01-03").chave].join(), "natal-2026,natal-2026");
+verificar("época: fogos só na virada", ["2026-12-30", "2026-12-31", "2027-01-01", "2027-01-02"].map((data) => Boolean(epocaDoDia(data).tabuleiro.fogos)).join(), "false,true,true,false");
+verificar("época: os fogos não mudam o tabuleiro guardado", EPOCAS.find((epoca) => epoca.id === "natal").tabuleiro.fogos, undefined);
+verificar("época: Halloween continua igual", [epocaDoDia("2026-10-31").chave, epocaDoDia("2026-10-31").tabuleiro.fogos].join(), "halloween-2026,");
+verificar("época: cada missão do Natal dá a sua conquista",
+    ["panetone25", "partidas24", "pontos30"].map((feita) => conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 0, tamanho: 1, powerUps: 0 }, missoesDaEpoca: [feita] }).map((c) => c.id).join()).join(" "),
+    "hoHoHo luzesDeNatal nevasca");
+verificar("loja: prêmios do Natal (não vendidos)", ITENS_DA_LOJA.filter((item) => ["hoHoHo", "luzesDeNatal", "nevasca"].includes(item.conquista)).map((item) => `${item.id}:${item.tipo}:${item.preco ?? "-"}`).join(), "gorro:chapeu:-,piscaPisca:corpo:-,flocos:rastro:-");
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";
