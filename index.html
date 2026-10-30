@@ -471,6 +471,18 @@
             </div>
 
             <div class="cartao">
+                <p class="rotulo">Som</p>
+                <label class="volume-som"><span>Música</span><input type="range" id="volumeMusica" min="0" max="100" step="5" value="50" /><output id="valorVolumeMusica">50%</output></label>
+                <label class="volume-som"><span>Efeitos</span><input type="range" id="volumeEfeitos" min="0" max="100" step="5" value="50" /><output id="valorVolumeEfeitos">50%</output></label>
+                <div class="escolha-musica">
+                    <label for="seletorMusica">Música da partida</label>
+                    <select id="seletorMusica"></select>
+                    <button id="botaoOuvirMusica" class="botao-secundario" type="button" aria-pressed="false">▶ Ouvir</button>
+                </div>
+                <p class="dica-acessibilidade">50% é o volume normal; dá pra subir até o dobro. No Chefão toca sempre a Abismo.</p>
+            </div>
+
+            <div class="cartao">
                 <p class="rotulo">Acessibilidade</p>
                 <label class="opcao-acessibilidade">
                     <input type="checkbox" id="opcaoAltoContraste" />

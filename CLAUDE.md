@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (376 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (386 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -23,7 +23,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 1. `logica.js` - funções puras (testadas em `testes.js`)
 2. `itens.js` - pedras, comida, maçã dourada, ratos
 3. `desenho.js` - desenho do tabuleiro, da cobra (movimento por trilha), telas e contagem
-4. `som.js` - efeitos, música, vibração
+4. `som.js` - efeitos, música (agendada no relógio do áudio: `loopMusicaFundo`, `tocarPassoDaMusica`), volume (`ganhoMusica`/`ganhoEfeitos`), vibração e o cartão Som ("Ouvir")
 5. `movimento.js` - mover, colisão, recordes, power-ups, bot, pausa
 6. `modos.js` - Contra o tempo, Fases, 2 Juntos, 3-4 jogadores (`tirarDaPartida`) e Arena (zona que fecha a cada 15 s: `zonaArena`, `atualizarZonaDaArena`)
 7. `chefao.js` - modo Chefão: "os olhos que emergem" (o Jogador 2 vira o chefão, `chefao`), espada, golpes, vida no placar, pulsos de luz; tabuleiro `TEMA_DO_ABISMO`
@@ -78,4 +78,5 @@ Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loj
 · 5 power-ups Congelar e Bomba (`poderes.js`; Fantasma descartado) + conquista Arsenal (6 power-ups diferentes numa partida, `partidaAtual.tiposDePowerUp`) = rastro exclusivo Faíscas.
 · 6 até 4 jogadores (pedaço 1, base; pedaço 2, botão Pessoa/Bot nas vagas 2-4 (`vagasComBot`, `vagasComBotAtuais`) e bot que foge de bater de frente (`casasPerigosas`); pedaço 3, controle pra 4 (`jogadorDoControle`: cada controle move uma pessoa na ordem, pulando bots); pedaço 4, ajustes nos modos (Contra o tempo ordena por pontos, `classificarPorPontos`; quem congelou e saiu quebra o gelo) + conquista Última de pé (vencer com 4) = chapéu exclusivo Máscara de ferro (`desenharMascaraDeFerro`: estilo gibi anos 80, capuz curto verde, formas em Path2D criadas uma vez só)).
 · 9 temas de época (pedaço 1, base + Halloween 25/10 a 2/11: `EPOCAS`/`epocaDoDia` no `logica.js`, `epocaAtual` e `enfeitesDeEpoca` (caixa "Enfeites de época"; tabuleiro e comida da época ganham da loja e do tema), missões da época em `snakeMissoesDaEpoca` (somam a época toda, cada uma dá uma conquista com prêmio); desenhos no fim do `enfeites.js`; pedaço 2, Natal e Ano Novo 15/12 a 6/1 (tabuleiro vermelho, panetone; atravessa a virada: a chave usa o ano em que começou; `diasDeFogos` 31/12 e 1/1 põe `fogos` no tabuleiro); pedaço 3, Carnaval (Páscoa -51 a -46) e Páscoa (-7 a +1): `diasDaPascoa` no lugar de inicio/fim, `domingoDePascoa`/`diaDaPascoaMais`; pedaço 4, Festa Junina em junho; chapéu de palha com palhinha na boca, escondendo os olhos).
-A fazer: 10 volume ajustável e mais músicas · 11 replay e GIF · 12 nível e XP. (13 idiomas descartado: depois do 12 o projeto fecha.)
+· 10 volume ajustável e mais músicas (cartão Som: barrinhas `volumeMusica`/`volumeEfeitos` 0-100, 50 = volume antigo; `MUSICAS` no `logica.js` em notas MIDI: Clássica, Arcade, Aventura, Calma e Abismo, que é só do Chefão; "Sortear a cada partida"; salvos nas preferências).
+A fazer: 11 replay e GIF · 12 nível e XP. (13 idiomas descartado: depois do 12 o projeto fecha.)

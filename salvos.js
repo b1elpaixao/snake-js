@@ -117,6 +117,10 @@ function aplicarPreferenciasSalvas() {
     temaDoTabuleiroId = limparTemaDoTabuleiro(salvas && salvas.temaTabuleiro, conquistasGanhas);
     enfeitesDeEpoca = !(salvas && salvas.semEnfeitesDeEpoca === true);
     document.getElementById("opcaoEnfeitesDeEpoca").checked = enfeitesDeEpoca;
+    volumeMusica = limparVolume(salvas && salvas.volumeMusica);
+    volumeEfeitos = limparVolume(salvas && salvas.volumeEfeitos);
+    musicaEscolhida = limparMusicaEscolhida(salvas && salvas.musica);
+    mostrarControlesDeSom();
     inputModoSemParedes.checked = preferencias.semParedes;
 }
 
@@ -134,6 +138,9 @@ function salvarPreferencias() {
         corCobra: corDaCobraId,
         temaTabuleiro: temaDoTabuleiroId,
         semEnfeitesDeEpoca: !enfeitesDeEpoca,
+        volumeMusica,
+        volumeEfeitos,
+        musica: musicaEscolhida,
         semParedes: inputModoSemParedes.checked,
     }));
 }

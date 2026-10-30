@@ -1255,6 +1255,139 @@ function epocaDoDia(data) {
 }
 
 // ==========================================
+// Músicas (funções puras - testadas em testes.js): cada uma é um loop em semicolcheias (16 passos por compasso).
+// Notas em MIDI (60 = dó do meio do piano, 69 = lá 440 Hz); null = pausa.
+// Cada voz tem uma nota a cada "passoPorNota" passos (2 = colcheia, 4 = semínima, 16 = semibreve)
+// ==========================================
+const MUSICAS = [
+    {
+        id: "classica", nome: "Clássica", descricao: "A de sempre", bpm: 107,
+        vozes: [
+            { onda: "triangle", volume: 0.1, passoPorNota: 2, notas: [57, 59, 60, 59, 57, 55, 57, 59] },
+        ],
+    },
+    {
+        id: "arcade", nome: "Arcade", descricao: "Rápida e animada", bpm: 150,
+        vozes: [
+            {
+                onda: "square", volume: 0.03, passoPorNota: 2, notas: [
+                    76, 79, 84, 83, 79, 76, 77, 79,
+                    81, 79, 76, 72, 74, 76, 72, 69,
+                    77, 81, 84, 81, 79, 77, 76, 74,
+                    74, 76, 79, 83, 86, 83, 79, null,
+                ],
+            },
+            {
+                onda: "triangle", volume: 0.09, passoPorNota: 2, notas: [
+                    36, 48, 36, 48, 36, 48, 36, 48,
+                    45, 57, 45, 57, 45, 57, 45, 57,
+                    41, 53, 41, 53, 41, 53, 41, 53,
+                    43, 55, 43, 55, 43, 55, 43, 55,
+                ],
+            },
+        ],
+        bateria: { bumbo: [0, 8], caixa: [4, 12], chimbal: [0, 2, 4, 6, 8, 10, 12, 14] },
+    },
+    {
+        id: "aventura", nome: "Aventura", descricao: "Heroica, em tom menor", bpm: 120,
+        vozes: [
+            {
+                onda: "square", volume: 0.03, passoPorNota: 2, notas: [
+                    69, null, 72, 76, 74, null, 72, null,
+                    77, null, 76, 74, 72, null, 74, null,
+                    76, null, 79, null, 77, 76, 74, 72,
+                    74, null, 71, null, 67, null, null, null,
+                ],
+            },
+            {
+                onda: "triangle", volume: 0.09, passoPorNota: 2, notas: [
+                    45, 45, 52, 45, 45, 45, 52, 45,
+                    41, 41, 48, 41, 41, 41, 48, 41,
+                    48, 48, 55, 48, 48, 48, 55, 48,
+                    43, 43, 50, 43, 43, 43, 50, 43,
+                ],
+            },
+        ],
+        bateria: { bumbo: [0, 6, 8], caixa: [4, 12], chimbal: [0, 2, 4, 6, 8, 10, 12, 14] },
+    },
+    {
+        id: "calma", nome: "Calma", descricao: "Devagar, sem bateria", bpm: 84,
+        vozes: [
+            {
+                onda: "sine", volume: 0.06, passoPorNota: 2, notas: [
+                    62, 66, 69, 74, 69, 66, 69, 74,
+                    59, 62, 66, 71, 66, 62, 66, 71,
+                    55, 59, 62, 67, 62, 59, 62, 67,
+                    57, 61, 64, 69, 64, 61, 64, 69,
+                ],
+            },
+            { onda: "triangle", volume: 0.045, passoPorNota: 8, notas: [78, 76, 74, 73, 71, 74, 76, null] },
+            { onda: "sine", volume: 0.08, passoPorNota: 16, notas: [38, 35, 31, 33] },
+        ],
+    },
+    {
+        id: "abismo", nome: "Abismo", descricao: "Só no Chefão", bpm: 70, soChefao: true,
+        vozes: [
+            { onda: "triangle", volume: 0.1, passoPorNota: 16, notas: [40, 40, 41, 40] },
+            { onda: "sine", volume: 0.05, passoPorNota: 4, notas: [null, null, 76, null, null, 77, null, null, 79, null, 77, null, 76, null, 75, null] },
+        ],
+        bateria: { bumbo: [0, 3] },
+    },
+];
+
+// quantos passos tem o loop (a voz mais comprida manda)
+function passosDaMusica(musica) {
+    return Math.max(...musica.vozes.map((voz) => voz.notas.length * voz.passoPorNota));
+}
+
+// duração de um passo (semicolcheia) em segundos
+function duracaoDoPassoDaMusica(musica) {
+    return 60 / musica.bpm / 4;
+}
+
+// as notas que começam neste passo: [{ nota, onda, volume, duracao (em passos) }]
+function notasDoPasso(musica, passo) {
+    const notas = [];
+    for (const voz of musica.vozes) {
+        const passoNaVoz = passo % (voz.notas.length * voz.passoPorNota);
+        if (passoNaVoz % voz.passoPorNota !== 0) continue;
+        const nota = voz.notas[passoNaVoz / voz.passoPorNota];
+        if (nota !== null) notas.push({ nota, onda: voz.onda, volume: voz.volume, duracao: voz.passoPorNota });
+    }
+    return notas;
+}
+
+// as batidas deste passo: ["bumbo", "caixa", "chimbal"] (o padrão da bateria se repete a cada compasso)
+function batidasDoPasso(musica, passo) {
+    if (!musica.bateria) return [];
+    return ["bumbo", "caixa", "chimbal"].filter((peca) => (musica.bateria[peca] || []).includes(passo % 16));
+}
+
+// nota MIDI -> frequência em Hz
+function frequenciaDaNota(nota) {
+    return 440 * Math.pow(2, (nota - 69) / 12);
+}
+
+// volume das barrinhas (0 a 100); 50 = o volume de antes, 100 = o dobro
+const VOLUME_PADRAO = 50;
+function limparVolume(valor) {
+    return typeof valor === "number" && Number.isFinite(valor) ? Math.min(100, Math.max(0, Math.round(valor))) : VOLUME_PADRAO;
+}
+
+// a música escolhida no menu ("sortear" ou o id de uma que não seja só do Chefão)
+function limparMusicaEscolhida(valor) {
+    return valor === "sortear" || MUSICAS.some((musica) => musica.id === valor && !musica.soChefao) ? valor : "classica";
+}
+
+// a música da partida: no Chefão é sempre a Abismo; "sortear" pega uma das outras (sorteio de 0 a 1)
+function escolherMusica(escolhida, noChefao, sorteio) {
+    if (noChefao) return MUSICAS.find((musica) => musica.id === "abismo");
+    const opcoes = MUSICAS.filter((musica) => !musica.soChefao);
+    if (escolhida === "sortear") return opcoes[Math.min(opcoes.length - 1, Math.floor(sorteio * opcoes.length))];
+    return opcoes.find((musica) => musica.id === escolhida) || opcoes[0];
+}
+
+// ==========================================
 // Tabuleiros no celular (função pura - testada em testes.js)
 // ==========================================
 const COLUNAS_NO_CELULAR = 15;

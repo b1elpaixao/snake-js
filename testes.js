@@ -761,6 +761,18 @@ verificar("época: cada missão da Festa Junina dá a sua conquista",
 verificar("loja: prêmios da Festa Junina (não vendidos)", ITENS_DA_LOJA.filter((item) => ["arraia", "olhaACobra", "balance"].includes(item.conquista)).map((item) => `${item.id}:${item.tipo}:${item.preco ?? "-"}`).join(), "palha:chapeu:-,xadrez:corpo:-,pipoca:rastro:-");
 verificar("época: as 5 épocas do ano, cada uma na sua data", ["2027-02-05", "2027-03-21", "2027-06-15", "2027-10-31", "2027-12-31"].map((data) => epocaDoDia(data).id).join(), "carnaval,pascoa,junina,halloween,natal");
 
+// músicas e volume
+verificar("música: todas as vozes fecham o loop junto", MUSICAS.every((musica) => musica.vozes.every((voz) => voz.notas.length * voz.passoPorNota === passosDaMusica(musica))), true);
+verificar("música: lá 440 e dó do meio", [frequenciaDaNota(69), frequenciaDaNota(60).toFixed(2)].join(), "440,261.63");
+verificar("música: notas do primeiro passo da Arcade", notasDoPasso(MUSICAS.find((musica) => musica.id === "arcade"), 0).map((nota) => nota.nota).join(), "76,36");
+verificar("música: no meio da colcheia não começa nota", notasDoPasso(MUSICAS.find((musica) => musica.id === "arcade"), 1).length, 0);
+verificar("música: bateria repete a cada compasso", [0, 4, 16, 20, 2].map((passo) => batidasDoPasso(MUSICAS.find((musica) => musica.id === "arcade"), passo).join("+")).join(), "bumbo+chimbal,caixa+chimbal,bumbo+chimbal,caixa+chimbal,chimbal");
+verificar("música: Calma não tem bateria", batidasDoPasso(MUSICAS.find((musica) => musica.id === "calma"), 0).length, 0);
+verificar("música: no Chefão é sempre a Abismo", [escolherMusica("arcade", true, 0).id, escolherMusica("sortear", true, 0.9).id].join(), "abismo,abismo");
+verificar("música: sortear nunca dá a Abismo", [0, 0.3, 0.6, 0.99].map((sorteio) => escolherMusica("sortear", false, sorteio).id).join(), "classica,arcade,aventura,calma");
+verificar("música: escolha salva estragada volta pra Clássica", [limparMusicaEscolhida("abismo"), limparMusicaEscolhida("rock"), limparMusicaEscolhida("calma"), limparMusicaEscolhida("sortear")].join(), "classica,classica,calma,sortear");
+verificar("volume: entre 0 e 100, padrão 50", [limparVolume(80), limparVolume(-5), limparVolume(250), limparVolume("70"), limparVolume(undefined), limparVolume(33.6)].join(), "80,0,100,50,50,34");
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

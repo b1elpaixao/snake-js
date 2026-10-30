@@ -167,6 +167,7 @@ const elementoModoRecordes = document.getElementById("modoRecordes");
 const botaoPausa = document.getElementById("botaoPausa");
 const botaoMudo = document.getElementById("botaoMudo");
 const botaoMusica = document.getElementById("botaoMusica");
+const botaoOuvirMusica = document.getElementById("botaoOuvirMusica");
 const botaoCima = document.getElementById("botaoCima");
 const botaoBaixo = document.getElementById("botaoBaixo");
 const botaoEsquerda = document.getElementById("botaoEsquerda");
@@ -298,6 +299,9 @@ let eliminacoesRecentes = [];   // { jogador, ate }: quem acabou de sair pisca u
 let mudo = lerDoArmazenamento("snakeMudo") === "true"; // "mudo" agora vale só para os efeitos que já tinha desligado o som antes continua sem música
 const musicaSalva = lerDoArmazenamento("snakeMusicaDesligada");
 let musicaDesligada = musicaSalva === null ? mudo : musicaSalva === "true";
+let volumeMusica = VOLUME_PADRAO;  // barrinhas do cartão Som (0 a 100; salvas nas preferências)
+let volumeEfeitos = VOLUME_PADRAO;
+let musicaEscolhida = "classica"; // ou "sortear"
 let tempoPausadoTotal= 0;
 let pausadoDesde = null;
 
@@ -691,6 +695,30 @@ botaoMusica.addEventListener("click", () => {
     salvarNoArmazenamento("snakeMusicaDesligada", musicaDesligada);
     atualizarBotaoMusica();
 });
+
+// cartão Som: as barrinhas mudam na hora; ao soltar, salva (e a de efeitos toca um som pra testar)
+for (const [id, guardar] of [["volumeMusica", (valor) => { volumeMusica = valor; }], ["volumeEfeitos", (valor) => { volumeEfeitos = valor; }]]) {
+    const barrinha = document.getElementById(id);
+    barrinha.addEventListener("input", () => {
+        guardar(Number(barrinha.value));
+        aplicarVolumes();
+        mostrarControlesDeSom();
+    });
+    barrinha.addEventListener("change", () => {
+        salvarPreferencias();
+        if (id === "volumeEfeitos") tocarSomComer();
+    });
+}
+
+document.getElementById("seletorMusica").addEventListener("change", (evento) => {
+    musicaEscolhida = evento.target.value;
+    salvarPreferencias();
+    if (ouvindoNoMenu) { // trocou ouvindo: já toca a nova
+        pararDeOuvirMusica();
+        alternarOuvirMusica();
+    }
+});
+botaoOuvirMusica.addEventListener("click", alternarOuvirMusica);
 
 function alternarPausa() {
     if (pausado) {

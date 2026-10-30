@@ -1703,6 +1703,54 @@ body.menos-movimento *::after {
     font-weight: 700;
 }
 
+/* cartão Som: barrinhas de volume e a música da partida */
+.volume-som {
+    display: grid;
+    grid-template-columns: 64px 1fr 42px;
+    gap: 10px;
+    align-items: center;
+    margin: 6px 0;
+    font-size: 14px;
+}
+
+.volume-som input {
+    width: 100%;
+    accent-color: var(--destaque);
+}
+
+.volume-som output {
+    text-align: right;
+    font-family: var(--fonte-numeros);
+    font-size: 12px;
+    color: var(--texto-suave);
+}
+
+.escolha-musica {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 4px;
+    font-size: 14px;
+}
+
+.escolha-musica select {
+    flex: 1 1 160px;
+    min-width: 0;
+    padding: 6px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.25);
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+}
+
+.escolha-musica button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
 /* missões da época (Halloween...), embaixo das do dia */
 .missao-epoca-titulo {
     padding-top: 10px;
