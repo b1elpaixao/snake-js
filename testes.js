@@ -741,6 +741,18 @@ verificar("época: cada missão do Natal dá a sua conquista",
     "hoHoHo luzesDeNatal nevasca");
 verificar("loja: prêmios do Natal (não vendidos)", ITENS_DA_LOJA.filter((item) => ["hoHoHo", "luzesDeNatal", "nevasca"].includes(item.conquista)).map((item) => `${item.id}:${item.tipo}:${item.preco ?? "-"}`).join(), "gorro:chapeu:-,piscaPisca:corpo:-,flocos:rastro:-");
 
+// épocas do ano: Carnaval e Páscoa (contadas a partir do domingo de Páscoa)
+verificar("época: domingo de Páscoa", [2025, 2026, 2027, 2028].map(domingoDePascoa).join(), "04-20,04-05,03-28,04-16");
+verificar("época: dias antes e depois da Páscoa", [diaDaPascoaMais(2027, -51), diaDaPascoaMais(2027, -46), diaDaPascoaMais(2026, 1)].join(), "02-05,02-10,04-06");
+verificar("época: Carnaval de 2027 (5 a 10/2)", ["2027-02-04", "2027-02-05", "2027-02-09", "2027-02-10", "2027-02-11"].map((data) => (epocaDoDia(data) || { id: "-" }).id).join(), "-,carnaval,carnaval,carnaval,-");
+verificar("época: Carnaval de 2026 em outra data (13 a 18/2)", ["2026-02-12", "2026-02-13", "2026-02-18", "2026-02-19"].map((data) => (epocaDoDia(data) || { id: "-" }).id).join(), "-,carnaval,carnaval,-");
+verificar("época: Páscoa de 2027 (21 a 29/3)", ["2027-03-20", "2027-03-21", "2027-03-28", "2027-03-29", "2027-03-30"].map((data) => (epocaDoDia(data) || { id: "-" }).id).join(), "-,pascoa,pascoa,pascoa,-");
+verificar("época: Páscoa mostra até quando vai", [epocaDoDia("2027-03-25").fim, epocaDoDia("2027-03-25").chave].join(), "03-29,pascoa-2027");
+verificar("época: cada missão do Carnaval e da Páscoa dá a sua conquista",
+    ["algodao20", "partidas8", "combo5", "ovos30", "partidas10", "tamanho20"].map((feita) => conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 0, tamanho: 1, powerUps: 0 }, missoesDaEpoca: [feita] }).map((c) => c.id).join()).join(" "),
+    "folia brilhoNaAvenida blocoNaRua cacaAosOvos chocolatra cestaCheia");
+verificar("loja: prêmios do Carnaval e da Páscoa (não vendidos)", ITENS_DA_LOJA.filter((item) => ["folia", "brilhoNaAvenida", "blocoNaRua", "cacaAosOvos", "chocolatra", "cestaCheia"].includes(item.conquista)).map((item) => `${item.id}:${item.tipo}:${item.preco ?? "-"}`).join(), "baile:chapeu:-,orelhas:chapeu:-,lantejoulas:corpo:-,chocolate:corpo:-,serpentinas:rastro:-,ovinhos:rastro:-");
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

@@ -682,6 +682,8 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
     if (padrao === "magma") desenharPlacasDeMagma(ctx, pontos, larguraBase, tempo);
     if (padrao === "esqueleto") desenharOssosDoEsqueleto(ctx, pontos, larguraBase);
     if (padrao === "piscaPisca") desenharLuzesDoPiscaPisca(ctx, pontos, larguraBase, reduzirMovimento ? 0 : tempo);
+    if (padrao === "lantejoulas") desenharLantejoulas(ctx, pontos, larguraBase, reduzirMovimento ? 0 : tempo);
+    if (padrao === "chocolate") desenharBrilhoDeChocolate(ctx, pontos, larguraBase);
 
     // a cabeça sempre olha pra onde está indo
     const angulo = Math.atan2(direcao.y, direcao.x);

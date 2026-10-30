@@ -898,6 +898,12 @@ const CONQUISTAS = [
     { id: "hoHoHo", nome: "Ho ho ho!", descricao: "Comer 25 panetones no Natal", condicao: (c) => (c.missoesDaEpoca || []).includes("panetone25") },
     { id: "luzesDeNatal", nome: "Luzes de Natal", descricao: "Jogar 24 partidas no Natal", condicao: (c) => (c.missoesDaEpoca || []).includes("partidas24") },
     { id: "nevasca", nome: "Nevasca", descricao: "Fazer 30 pontos numa partida no Natal", condicao: (c) => (c.missoesDaEpoca || []).includes("pontos30") },
+    { id: "folia", nome: "Folia", descricao: "Comer 20 algodões-doces no Carnaval", condicao: (c) => (c.missoesDaEpoca || []).includes("algodao20") },
+    { id: "brilhoNaAvenida", nome: "Brilho na avenida", descricao: "Jogar 8 partidas no Carnaval", condicao: (c) => (c.missoesDaEpoca || []).includes("partidas8") },
+    { id: "blocoNaRua", nome: "Bloco na rua", descricao: "Fazer um combo x5 no Carnaval", condicao: (c) => (c.missoesDaEpoca || []).includes("combo5") },
+    { id: "cacaAosOvos", nome: "Caça aos ovos", descricao: "Comer 30 ovos de chocolate na Páscoa", condicao: (c) => (c.missoesDaEpoca || []).includes("ovos30") },
+    { id: "chocolatra", nome: "Chocólatra", descricao: "Jogar 10 partidas na Páscoa", condicao: (c) => (c.missoesDaEpoca || []).includes("partidas10") },
+    { id: "cestaCheia", nome: "Cesta cheia", descricao: "Chegar a 20 pedaços na Páscoa", condicao: (c) => (c.missoesDaEpoca || []).includes("tamanho20") },
 ];
 
 // quais conquistas acabaram de ser ganhas (as que já tinha não contam de novo)
@@ -1149,8 +1155,10 @@ function limparTemaDoTabuleiro(id, conquistasGanhas) {
 // ==========================================
 // Épocas do ano (funções puras - testadas em testes.js)
 // ==========================================
-// inicio e fim: "MM-DD" (o fim pode ser no ano seguinte, como no Natal). Nesses dias o tabuleiro e a comida
-// mudam sozinhos (dá pra desligar) e aparecem missões que somam todos os dias da época; cada uma dá uma conquista com um prêmio
+// inicio e fim: "MM-DD" (o fim pode ser no ano seguinte, como no Natal). Carnaval e Páscoa mudam todo ano:
+// no lugar de inicio e fim têm diasDaPascoa (quantos dias antes/depois do domingo de Páscoa).
+// Nesses dias o tabuleiro e a comida mudam sozinhos (dá pra desligar) e aparecem missões que somam
+// todos os dias da época; cada uma dá uma conquista com um prêmio
 const EPOCAS = [
     {
         id: "halloween", nome: "Halloween", icone: "🎃", inicio: "10-25", fim: "11-02", comida: "abobora",
@@ -1171,14 +1179,61 @@ const EPOCAS = [
             { id: "pontos30", texto: "Fazer 30 pontos numa partida", tipo: "partida", campo: "pontos", alvo: 30, conquista: "nevasca" },
         ],
     },
+    {
+        id: "carnaval", nome: "Carnaval", icone: "🎭", diasDaPascoa: [-51, -46], comida: "algodao", // da sexta à Quarta de Cinzas
+        tabuleiro: { id: "carnaval", nome: "Carnaval", claro: "#14606a", escuro: "#115761", decoracao: true },
+        missoes: [
+            { id: "algodao20", texto: "Comer 20 algodões-doces", tipo: "soma", campo: "comidas", alvo: 20, conquista: "folia" },
+            { id: "partidas8", texto: "Jogar 8 partidas", tipo: "soma", campo: "partidas", alvo: 8, conquista: "brilhoNaAvenida" },
+            { id: "combo5", texto: "Fazer um combo x5", tipo: "partida", campo: "maiorCombo", alvo: 5, conquista: "blocoNaRua" },
+        ],
+    },
+    {
+        id: "pascoa", nome: "Páscoa", icone: "🐰", diasDaPascoa: [-7, 1], comida: "ovoDeChocolate", // do Domingo de Ramos à segunda
+        tabuleiro: { id: "pascoa", nome: "Páscoa", claro: "#e6d9f5", escuro: "#ddcdf0", decoracao: true },
+        missoes: [
+            { id: "ovos30", texto: "Comer 30 ovos de chocolate", tipo: "soma", campo: "comidas", alvo: 30, conquista: "cacaAosOvos" },
+            { id: "partidas10", texto: "Jogar 10 partidas", tipo: "soma", campo: "partidas", alvo: 10, conquista: "chocolatra" },
+            { id: "tamanho20", texto: "Chegar a 20 pedaços", tipo: "partida", campo: "tamanho", alvo: 20, conquista: "cestaCheia" },
+        ],
+    },
 ];
+
+// domingo de Páscoa do ano ("04-05" em 2026), pelo cálculo de Meeus
+function domingoDePascoa(ano) {
+    const a = ano % 19;
+    const b = Math.floor(ano / 100);
+    const c = ano % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const mes = Math.floor((h + l - 7 * m + 114) / 31);
+    const dia = ((h + l - 7 * m + 114) % 31) + 1;
+    return `${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+}
+
+// "MM-DD" de tantos dias antes (negativo) ou depois do domingo de Páscoa
+function diaDaPascoaMais(ano, dias) {
+    const [mes, dia] = domingoDePascoa(ano).split("-").map(Number);
+    const data = new Date(Date.UTC(ano, mes - 1, dia + dias));
+    return `${String(data.getUTCMonth() + 1).padStart(2, "0")}-${String(data.getUTCDate()).padStart(2, "0")}`;
+}
 
 // a época do dia ("2026-10-29"), ou null. A chave tem o ano em que a época começou: no ano seguinte
 // as missões recomeçam, e em janeiro o Natal continua com o progresso de dezembro
 function epocaDoDia(data) {
     const [ano, mes, dia] = data.split("-");
     const hoje = `${mes}-${dia}`;
-    const epoca = EPOCAS.find((opcao) => opcao.inicio <= opcao.fim
+    const comDatas = EPOCAS.map((opcao) => opcao.diasDaPascoa
+        ? { ...opcao, inicio: diaDaPascoaMais(Number(ano), opcao.diasDaPascoa[0]), fim: diaDaPascoaMais(Number(ano), opcao.diasDaPascoa[1]) }
+        : opcao);
+    const epoca = comDatas.find((opcao) => opcao.inicio <= opcao.fim
         ? hoje >= opcao.inicio && hoje <= opcao.fim
         : hoje >= opcao.inicio || hoje <= opcao.fim); // atravessa a virada do ano
     if (!epoca) return null;
@@ -1553,6 +1608,8 @@ const ITENS_DA_LOJA = [
     { id: "mascara", nome: "Máscara de ferro", tipo: "chapeu", conquista: "ultimaDePe" },
     { id: "bruxa", nome: "Chapéu de bruxa", tipo: "chapeu", conquista: "noiteDasBruxas" },
     { id: "gorro", nome: "Gorro de Papai Noel", tipo: "chapeu", conquista: "hoHoHo" },
+    { id: "baile", nome: "Máscara de baile", tipo: "chapeu", conquista: "folia" },
+    { id: "orelhas", nome: "Orelhas de coelho", tipo: "chapeu", conquista: "cacaAosOvos" },
     { id: "morango", nome: "Morango", tipo: "comida", preco: 100 },
     { id: "cereja", nome: "Cereja", tipo: "comida", preco: 150 },
     { id: "melancia", nome: "Melancia", tipo: "comida", preco: 250 },
@@ -1566,6 +1623,8 @@ const ITENS_DA_LOJA = [
     { id: "magma", nome: "Cobra de magma", tipo: "corpo", conquista: "sobrevivente" },
     { id: "esqueleto", nome: "Esqueleto", tipo: "corpo", conquista: "ateOsOssos" },
     { id: "piscaPisca", nome: "Pisca-pisca", tipo: "corpo", conquista: "luzesDeNatal" },
+    { id: "lantejoulas", nome: "Lantejoulas", tipo: "corpo", conquista: "brilhoNaAvenida" },
+    { id: "chocolate", nome: "Chocolate", tipo: "corpo", conquista: "chocolatra" },
     { id: "espectro", nome: "Espectro", tipo: "corpo", preco: 800, liberaCom: "encarouOAbismo" }, // à venda, mas só depois da conquista
     { id: "bolhas", nome: "Bolhas", tipo: "rastro", preco: 300 },
     { id: "folhas", nome: "Folhas", tipo: "rastro", preco: 350 },
@@ -1575,6 +1634,8 @@ const ITENS_DA_LOJA = [
     { id: "faiscas", nome: "Faíscas", tipo: "rastro", conquista: "arsenal" },
     { id: "morcegos", nome: "Morceguinhos", tipo: "rastro", conquista: "revoada" },
     { id: "flocos", nome: "Flocos de neve", tipo: "rastro", conquista: "nevasca" },
+    { id: "serpentinas", nome: "Serpentinas", tipo: "rastro", conquista: "blocoNaRua" },
+    { id: "ovinhos", nome: "Ovinhos", tipo: "rastro", conquista: "cestaCheia" },
     { id: "praia", nome: "Praia", tipo: "tabuleiro", preco: 300, claro: "#f7e3b0", escuro: "#f0d89a", decoracao: true },
     { id: "doces", nome: "Doces", tipo: "tabuleiro", preco: 450, claro: "#ffd6e8", escuro: "#ffc6df", decoracao: true },
     { id: "espaco", nome: "Espaço", tipo: "tabuleiro", preco: 950, claro: "#161c3d", escuro: "#111632", decoracao: true },
