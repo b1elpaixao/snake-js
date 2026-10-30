@@ -904,6 +904,9 @@ const CONQUISTAS = [
     { id: "cacaAosOvos", nome: "Caça aos ovos", descricao: "Comer 30 ovos de chocolate na Páscoa", condicao: (c) => (c.missoesDaEpoca || []).includes("ovos30") },
     { id: "chocolatra", nome: "Chocólatra", descricao: "Jogar 10 partidas na Páscoa", condicao: (c) => (c.missoesDaEpoca || []).includes("partidas10") },
     { id: "cestaCheia", nome: "Cesta cheia", descricao: "Chegar a 20 pedaços na Páscoa", condicao: (c) => (c.missoesDaEpoca || []).includes("tamanho20") },
+    { id: "arraia", nome: "Arraiá", descricao: "Comer 40 milhos na Festa Junina", condicao: (c) => (c.missoesDaEpoca || []).includes("milho40") },
+    { id: "olhaACobra", nome: "Olha a cobra!", descricao: "Jogar 20 partidas na Festa Junina", condicao: (c) => (c.missoesDaEpoca || []).includes("partidas20") },
+    { id: "balance", nome: "Balancê", descricao: "Pegar 10 power-ups na Festa Junina", condicao: (c) => (c.missoesDaEpoca || []).includes("powerups10") },
 ];
 
 // quais conquistas acabaram de ser ganhas (as que já tinha não contam de novo)
@@ -1195,6 +1198,15 @@ const EPOCAS = [
             { id: "ovos30", texto: "Comer 30 ovos de chocolate", tipo: "soma", campo: "comidas", alvo: 30, conquista: "cacaAosOvos" },
             { id: "partidas10", texto: "Jogar 10 partidas", tipo: "soma", campo: "partidas", alvo: 10, conquista: "chocolatra" },
             { id: "tamanho20", texto: "Chegar a 20 pedaços", tipo: "partida", campo: "tamanho", alvo: 20, conquista: "cestaCheia" },
+        ],
+    },
+    {
+        id: "junina", nome: "Festa Junina", icone: "🌽", inicio: "06-01", fim: "06-30", comida: "milho",
+        tabuleiro: { id: "junina", nome: "Festa Junina", claro: "#6b4423", escuro: "#623e1f", decoracao: true },
+        missoes: [
+            { id: "milho40", texto: "Comer 40 milhos", tipo: "soma", campo: "comidas", alvo: 40, conquista: "arraia" },
+            { id: "partidas20", texto: "Jogar 20 partidas", tipo: "soma", campo: "partidas", alvo: 20, conquista: "olhaACobra" },
+            { id: "powerups10", texto: "Pegar 10 power-ups", tipo: "soma", campo: "powerUps", alvo: 10, conquista: "balance" },
         ],
     },
 ];
@@ -1610,6 +1622,7 @@ const ITENS_DA_LOJA = [
     { id: "gorro", nome: "Gorro de Papai Noel", tipo: "chapeu", conquista: "hoHoHo" },
     { id: "baile", nome: "Máscara de baile", tipo: "chapeu", conquista: "folia" },
     { id: "orelhas", nome: "Orelhas de coelho", tipo: "chapeu", conquista: "cacaAosOvos" },
+    { id: "palha", nome: "Chapéu de palha", tipo: "chapeu", conquista: "arraia" },
     { id: "morango", nome: "Morango", tipo: "comida", preco: 100 },
     { id: "cereja", nome: "Cereja", tipo: "comida", preco: 150 },
     { id: "melancia", nome: "Melancia", tipo: "comida", preco: 250 },
@@ -1625,6 +1638,7 @@ const ITENS_DA_LOJA = [
     { id: "piscaPisca", nome: "Pisca-pisca", tipo: "corpo", conquista: "luzesDeNatal" },
     { id: "lantejoulas", nome: "Lantejoulas", tipo: "corpo", conquista: "brilhoNaAvenida" },
     { id: "chocolate", nome: "Chocolate", tipo: "corpo", conquista: "chocolatra" },
+    { id: "xadrez", nome: "Xadrez", tipo: "corpo", conquista: "olhaACobra" },
     { id: "espectro", nome: "Espectro", tipo: "corpo", preco: 800, liberaCom: "encarouOAbismo" }, // à venda, mas só depois da conquista
     { id: "bolhas", nome: "Bolhas", tipo: "rastro", preco: 300 },
     { id: "folhas", nome: "Folhas", tipo: "rastro", preco: 350 },
@@ -1636,6 +1650,7 @@ const ITENS_DA_LOJA = [
     { id: "flocos", nome: "Flocos de neve", tipo: "rastro", conquista: "nevasca" },
     { id: "serpentinas", nome: "Serpentinas", tipo: "rastro", conquista: "blocoNaRua" },
     { id: "ovinhos", nome: "Ovinhos", tipo: "rastro", conquista: "cestaCheia" },
+    { id: "pipoca", nome: "Pipoca", tipo: "rastro", conquista: "balance" },
     { id: "praia", nome: "Praia", tipo: "tabuleiro", preco: 300, claro: "#f7e3b0", escuro: "#f0d89a", decoracao: true },
     { id: "doces", nome: "Doces", tipo: "tabuleiro", preco: 450, claro: "#ffd6e8", escuro: "#ffc6df", decoracao: true },
     { id: "espaco", nome: "Espaço", tipo: "tabuleiro", preco: 950, claro: "#161c3d", escuro: "#111632", decoracao: true },

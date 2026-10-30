@@ -753,6 +753,14 @@ verificar("época: cada missão do Carnaval e da Páscoa dá a sua conquista",
     "folia brilhoNaAvenida blocoNaRua cacaAosOvos chocolatra cestaCheia");
 verificar("loja: prêmios do Carnaval e da Páscoa (não vendidos)", ITENS_DA_LOJA.filter((item) => ["folia", "brilhoNaAvenida", "blocoNaRua", "cacaAosOvos", "chocolatra", "cestaCheia"].includes(item.conquista)).map((item) => `${item.id}:${item.tipo}:${item.preco ?? "-"}`).join(), "baile:chapeu:-,orelhas:chapeu:-,lantejoulas:corpo:-,chocolate:corpo:-,serpentinas:rastro:-,ovinhos:rastro:-");
 
+// épocas do ano: Festa Junina
+verificar("época: Festa Junina em junho", ["2027-05-31", "2027-06-01", "2027-06-24", "2027-06-30", "2027-07-01"].map((data) => (epocaDoDia(data) || { id: "-" }).id).join(), "-,junina,junina,junina,-");
+verificar("época: cada missão da Festa Junina dá a sua conquista",
+    ["milho40", "partidas20", "powerups10"].map((feita) => conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 0, tamanho: 1, powerUps: 0 }, missoesDaEpoca: [feita] }).map((c) => c.id).join()).join(" "),
+    "arraia olhaACobra balance");
+verificar("loja: prêmios da Festa Junina (não vendidos)", ITENS_DA_LOJA.filter((item) => ["arraia", "olhaACobra", "balance"].includes(item.conquista)).map((item) => `${item.id}:${item.tipo}:${item.preco ?? "-"}`).join(), "palha:chapeu:-,xadrez:corpo:-,pipoca:rastro:-");
+verificar("época: as 5 épocas do ano, cada uma na sua data", ["2027-02-05", "2027-03-21", "2027-06-15", "2027-10-31", "2027-12-31"].map((data) => epocaDoDia(data).id).join(), "carnaval,pascoa,junina,halloween,natal");
+
 const linhaResumo = document.createElement("p");
 linhaResumo.textContent = `${totalTestes - testesComFalha}/${totalTestes} testes passaram`;
 linhaResumo.style.fontWeight = "bold";

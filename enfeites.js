@@ -127,6 +127,8 @@ function desenharChapeu(c, id, tempo = 0) {
         desenharMascaraDeBaile(c, tempo); // no fim do arquivo (Carnaval)
     } else if (id === "orelhas") {
         desenharOrelhasDeCoelho(c, tempo); // no fim do arquivo (Páscoa)
+    } else if (id === "palha") {
+        desenharChapeuDePalha(c, tempo); // no fim do arquivo (Festa Junina)
     }
 
     c.restore();
@@ -354,6 +356,8 @@ function desenharComida(c, id, cx, cy, r) {
         desenharAlgodaoDoce(c, cx, cy, r); // comida do Carnaval (no fim do arquivo)
     } else if (id === "ovoDeChocolate") {
         desenharOvoDeChocolate(c, cx, cy, r); // comida da Páscoa (no fim do arquivo)
+    } else if (id === "milho") {
+        desenharMilho(c, cx, cy, r); // comida da Festa Junina (no fim do arquivo)
     } else {
         // "maca" e qualquer coisa desconhecida: a maçã de sempre
         circulo(cx, cy, r, "#e7471d");
@@ -395,6 +399,7 @@ function corDaCabecaComPadrao(padrao, corCabeca, tempo) {
     if (padrao === "piscaPisca") return "#3c9a5c";
     if (padrao === "lantejoulas") return "#6a1fa0";
     if (padrao === "chocolate") return "#7b4320";
+    if (padrao === "xadrez") return "#e74c3c";
     return corCabeca;
 }
 
@@ -414,6 +419,7 @@ function corDoPedacoComPadrao(padrao, corCauda, corCabeca, posicao, distancia, t
     if (padrao === "piscaPisca") return misturarCores("#1f6b3e", "#3c9a5c", posicao); // verde de pinheiro
     if (padrao === "lantejoulas") return misturarCores("#3d1466", "#6a1fa0", posicao);
     if (padrao === "chocolate") return misturarCores("#3f1f0e", "#7b4320", posicao);
+    if (padrao === "xadrez") return misturarCores("#a8281c", "#e74c3c", posicao);
     return misturarCores(corCauda, corCabeca, posicao);
 }
 
@@ -609,6 +615,7 @@ function criarParticula(tipo, x, y, agora) {
     if (tipo === "flocos") Object.assign(particula, { vx: sorteio(-22, 22), vy: sorteio(-8, 22), vida: 1400, tamanho: sorteio(3.6, 5) });
     if (tipo === "serpentinas") Object.assign(particula, { vx: sorteio(-30, 30), vy: sorteio(-40, -15), vida: 1100, tamanho: sorteio(5.5, 7), cor: CORES_DO_CARNAVAL[Math.floor(Math.random() * 5)] });
     if (tipo === "ovinhos") Object.assign(particula, { vx: sorteio(-25, 25), vy: sorteio(-45, -25), vida: 1000, tamanho: sorteio(3.6, 4.6), cor: CORES_DOS_OVINHOS[Math.floor(Math.random() * 5)] });
+    if (tipo === "pipoca") Object.assign(particula, { vx: sorteio(-30, 30), vy: sorteio(-60, -35), vida: 900, tamanho: sorteio(3.4, 4.2) });
     if (tipo === "faiscas") Object.assign(particula, { vx: sorteio(-70, 70), vy: sorteio(-70, 20), vida: 500, tamanho: sorteio(2.5, 3.5), cor: Math.random() < 0.5 ? "#ffe066" : "#ffffff" });
     return particula;
 }
@@ -657,7 +664,7 @@ function desenharParticulas() {
 function desenharParticula(c, p, idade) {
     const t = idade / 1000;
     const vida = idade / p.vida; // 0 = nasceu, 1 = sumiu
-    const gravidade = p.tipo === "confete" ? 90 : p.tipo === "ovinhos" ? 120 : p.tipo === "estilhaco" || p.tipo === "gelo" ? 260 : 0;
+    const gravidade = p.tipo === "confete" ? 90 : p.tipo === "ovinhos" ? 120 : p.tipo === "pipoca" ? 160 : p.tipo === "estilhaco" || p.tipo === "gelo" ? 260 : 0;
     const x = p.x + p.vx * t;
     const y = p.y + p.vy * t + 0.5 * gravidade * t * t;
 
@@ -716,6 +723,8 @@ function desenharParticula(c, p, idade) {
         desenharSerpentina(c, x, y, p.tamanho, p.giro + idade / 300, p.cor);
     } else if (p.tipo === "ovinhos") {
         desenharOvinho(c, x, y, p.tamanho, p.cor, p.giro + idade / 250);
+    } else if (p.tipo === "pipoca") {
+        desenharPipoca(c, x, y, p.tamanho, p.giro + idade / 200);
     } else if (p.tipo === "coracoes") {
         desenharCoracao(c, x, y, p.tamanho, "#ff4d8d");
     }
@@ -803,6 +812,8 @@ function desenharDecoracaoDoTabuleiro(c, tema, colunas, linhas, lado, tempo, den
                 desenharEnfeiteDoCarnaval(c, x, y, sorteio, escala); // no fim do arquivo
             } else if (tema.id === "pascoa") {
                 desenharEnfeiteDaPascoa(c, x, y, sorteio, escala); // no fim do arquivo
+            } else if (tema.id === "junina") {
+                desenharEnfeiteJunino(c, x, y, sorteio, escala, tempo); // no fim do arquivo
             } else if (tema.id === "lava") {
                 if (sorteio < 0.18) { // rachadura brilhando
                     const brilho = 0.55 + 0.45 * Math.sin(tempo / 500 + sorteio * 40);
@@ -825,6 +836,7 @@ function desenharDecoracaoDoTabuleiro(c, tema, colunas, linhas, lado, tempo, den
     if (tema.id === "halloween") desenharTeiasDosCantos(c, colunas * lado, linhas * lado, lado, tempo);
     if (tema.id === "natal") desenharNeveEPiscaPisca(c, colunas * lado, linhas * lado, lado, tempo);
     if (tema.id === "carnaval") desenharConfeteCaindo(c, colunas * lado, linhas * lado, lado, tempo);
+    if (tema.id === "junina") desenharBandeirinhas(c, colunas * lado, linhas * lado, lado, tempo);
     if (tema.fogos && !reduzirMovimento) desenharFogosDaVirada(c, colunas * lado, linhas * lado, lado, tempo); // 31/12 e 1/1
     c.restore();
 }
@@ -874,6 +886,7 @@ function desenharCorpoDePrevia(c, padrao, tempo) {
     if (padrao === "piscaPisca") desenharLuzesDoPiscaPisca(c, [...pontos].reverse(), 13, tempo);
     if (padrao === "lantejoulas") desenharLantejoulas(c, [...pontos].reverse(), 13, tempo);
     if (padrao === "chocolate") desenharBrilhoDeChocolate(c, [...pontos].reverse(), 13);
+    if (padrao === "xadrez") desenharXadrez(c, [...pontos].reverse(), 13);
     if (padrao === "magma") {
         desenharPlacasDeMagma(c, [...pontos].reverse(), 13, 0); // aqui o caminho vai do rabo pra cabeça
         [[14, 40, 0.3], [30, 34, 0.55], [22, 30, 0.75], [44, 14, 0.4]].forEach(([x, y, idade]) =>
@@ -2123,5 +2136,314 @@ function desenharBrilhoDeChocolate(c, pontos, largura) {
     c.beginPath();
     for (const trecho of brilho) trecho.forEach((ponto, i) => (i === 0 ? c.moveTo(ponto.x, ponto.y) : c.lineTo(ponto.x, ponto.y)));
     c.stroke();
+    c.restore();
+}
+
+// ==========================================
+// Época: Festa Junina (tabuleiro de terra com bandeirinhas, milho, chapéu de palha, xadrez e pipoca).
+// Mesmo estilo de gibi do Halloween (usa a TINTA_DE_GIBI de lá).
+// ==========================================
+const CORES_DAS_BANDEIRINHAS = ["#ff4d4d", "#ffd23a", "#4dabf7", "#7bd389", "#ff8fd8", "#ffffff"];
+
+// espiga de milho cozido, um pouco deitada (comida da época)
+function desenharMilho(c, cx, cy, r) {
+    c.save();
+    c.translate(cx, cy);
+    c.rotate(-0.6);
+    c.lineJoin = "round";
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineWidth = Math.max(0.8, r * 0.12);
+
+    c.fillStyle = "#6ab04c"; // a palha verde aberta embaixo
+    for (const lado of [-1, 1]) {
+        c.beginPath();
+        c.moveTo(0, r * 0.75);
+        c.quadraticCurveTo(lado * r * 0.75, r * 0.55, lado * r * 0.55, -r * 0.1);
+        c.quadraticCurveTo(lado * r * 0.25, r * 0.3, 0, r * 0.75);
+        c.fill();
+        c.stroke();
+    }
+
+    const espiga = () => { c.beginPath(); c.ellipse(0, -r * 0.12, r * 0.4, r * 0.92, 0, 0, Math.PI * 2); };
+    c.fillStyle = "#ffd23a";
+    espiga(); c.fill();
+    c.save();
+    espiga(); c.clip();
+    c.fillStyle = "#e9a90b"; // os grãos
+    for (let linha = -5; linha <= 4; linha++) {
+        for (let coluna = -1; coluna <= 1; coluna++) {
+            const x = coluna * r * 0.26 + (linha % 2 === 0 ? r * 0.13 : 0);
+            c.beginPath(); c.ellipse(x, linha * r * 0.19, r * 0.08, r * 0.06, 0, 0, Math.PI * 2); c.fill();
+        }
+    }
+    c.fillStyle = "rgba(255, 250, 210, 0.75)"; // a manteiga brilhando
+    c.beginPath(); c.ellipse(-r * 0.15, -r * 0.4, r * 0.08, r * 0.35, 0, 0, Math.PI * 2); c.fill();
+    c.restore();
+    espiga(); c.stroke();
+    c.restore();
+}
+
+// fogueirinha (enfeite do tabuleiro): lenha cruzada e o fogo tremendo
+function desenharFogueirinha(c, x, y, escala, tempo) {
+    const chama = 0.85 + 0.15 * Math.sin(tempo / 70 + x) * Math.sin(tempo / 43 + y);
+    c.save();
+    c.translate(x, y);
+    c.scale(escala, escala);
+    c.fillStyle = `rgba(255, 150, 40, ${0.18 * chama})`; // luz no chão
+    c.beginPath(); c.arc(0, 0.5, 7, 0, Math.PI * 2); c.fill();
+    c.lineCap = "round";
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineWidth = 2.2;
+    c.beginPath(); c.moveTo(-4, 3); c.lineTo(4, 0.5); c.moveTo(4, 3); c.lineTo(-4, 0.5); c.stroke();
+    c.strokeStyle = "#8a5a2b";
+    c.lineWidth = 1.4;
+    c.beginPath(); c.moveTo(-4, 3); c.lineTo(4, 0.5); c.moveTo(4, 3); c.lineTo(-4, 0.5); c.stroke();
+    for (const [cor, altura, largura] of [["#ff6b1a", 6.5, 3.2], ["#ffd23a", 4, 1.8]]) {
+        c.fillStyle = cor;
+        c.beginPath();
+        c.moveTo(-largura, 1.5);
+        c.quadraticCurveTo(-largura, -altura * 0.4 * chama, 0, -altura * chama);
+        c.quadraticCurveTo(largura, -altura * 0.4 * chama, largura, 1.5);
+        c.closePath();
+        c.fill();
+    }
+    c.restore();
+}
+
+// enfeites de uma casa do tabuleiro da Festa Junina (chamado pelo desenharDecoracaoDoTabuleiro)
+function desenharEnfeiteJunino(c, x, y, sorteio, escala, tempo) {
+    if (sorteio < 0.012) {
+        desenharFogueirinha(c, x, y, escala * 1.2, tempo);
+    } else if (sorteio < 0.025) { // bandeirinha que caiu no chão
+        c.save();
+        c.translate(x, y);
+        c.rotate(sorteio * 300);
+        c.fillStyle = CORES_DAS_BANDEIRINHAS[Math.floor(sorteio * 1000) % CORES_DAS_BANDEIRINHAS.length];
+        c.globalAlpha = 0.7;
+        c.beginPath(); c.moveTo(-2.4 * escala, -1.6 * escala); c.lineTo(2.4 * escala, -1.6 * escala); c.lineTo(0, 2.4 * escala); c.closePath(); c.fill();
+        c.restore();
+    } else if (sorteio < 0.28) { // palhinha no chão de terra
+        c.strokeStyle = "rgba(240, 200, 120, 0.22)";
+        c.lineWidth = 0.8 * escala;
+        c.lineCap = "round";
+        const angulo = sorteio * 40;
+        c.beginPath();
+        c.moveTo(x - Math.cos(angulo) * 2.5 * escala, y - Math.sin(angulo) * 2.5 * escala);
+        c.lineTo(x + Math.cos(angulo) * 2.5 * escala, y + Math.sin(angulo) * 2.5 * escala);
+        c.stroke();
+    }
+}
+
+// por cima de tudo do tabuleiro: o varal de bandeirinhas balançando no alto
+function desenharBandeirinhas(c, largura, altura, lado, tempo) {
+    const vao = lado * 6; // o varal cai um pouco entre um prego e outro
+    const alturaDoVaral = (x) => {
+        const t = (x % vao) / vao;
+        return lado * 0.1 + lado * 0.8 * 4 * t * (1 - t);
+    };
+
+    c.save();
+    c.lineJoin = "round";
+    c.strokeStyle = "#2b1a0c";
+    c.lineWidth = lado * 0.05;
+    c.beginPath();
+    for (let x = 0; x <= largura; x += lado / 4) {
+        if (x === 0) c.moveTo(x, alturaDoVaral(x)); else c.lineTo(x, alturaDoVaral(x));
+    }
+    c.stroke();
+    for (let i = 0; (i + 0.5) * lado * 0.75 < largura; i++) {
+        const x = (i + 0.5) * lado * 0.75;
+        c.save();
+        c.translate(x, alturaDoVaral(x));
+        c.rotate(Math.sin(tempo / 600 + i * 0.9) * 0.15);
+        c.fillStyle = CORES_DAS_BANDEIRINHAS[i % CORES_DAS_BANDEIRINHAS.length];
+        c.strokeStyle = TINTA_DE_GIBI;
+        c.lineWidth = lado * 0.03;
+        c.beginPath();
+        c.moveTo(-lado * 0.28, 0);
+        c.lineTo(lado * 0.28, 0);
+        c.lineTo(lado * 0.28, lado * 0.42);
+        c.lineTo(0, lado * 0.28); // o recorte em V embaixo
+        c.lineTo(-lado * 0.28, lado * 0.42);
+        c.closePath();
+        c.fill();
+        c.stroke();
+        c.restore();
+    }
+    c.restore();
+}
+
+// ==========================================
+// Prêmios das missões da Festa Junina
+// ==========================================
+
+// chapéu de palha de aba larga, puxado por cima dos olhos (a sombra cai no focinho), com a palhinha no canto da boca
+function desenharChapeuDePalha(c, tempo) {
+    desenharPalhinhaNaBoca(c, tempo);
+    const aba = () => { c.beginPath(); c.ellipse(-4, 0, 14, 23, 0, 0, Math.PI * 2); };
+
+    c.save();
+    c.lineJoin = "round";
+    c.lineCap = "round";
+
+    c.fillStyle = "rgba(0, 0, 0, 0.28)"; // a sombra da aba na frente da cabeça
+    c.beginPath(); c.ellipse(-1, 0, 14.5, 22, 0, 0, Math.PI * 2); c.fill();
+
+    c.strokeStyle = "#c9a24a"; // fiapos de palha soltos em volta da aba
+    c.lineWidth = 1.2;
+    c.beginPath();
+    for (let i = 0; i < 16; i++) {
+        const angulo = (i / 16) * Math.PI * 2 + (i % 3) * 0.08;
+        const comprimento = 1.6 + (i % 4) * 0.7;
+        const x = -4 + Math.cos(angulo) * 14;
+        const y = Math.sin(angulo) * 23;
+        c.moveTo(x, y);
+        c.lineTo(x + Math.cos(angulo) * comprimento, y + Math.sin(angulo) * comprimento * 1.3);
+    }
+    c.stroke();
+
+    c.fillStyle = "#e8c46a";
+    aba(); c.fill();
+    c.save();
+    aba(); c.clip();
+    c.strokeStyle = "rgba(150, 100, 30, 0.45)"; // a palha trançada: voltas e raios
+    c.lineWidth = 0.8;
+    for (const raio of [0.55, 0.72, 0.88]) {
+        c.beginPath(); c.ellipse(-4, 0, 14 * raio, 23 * raio, 0, 0, Math.PI * 2); c.stroke();
+    }
+    c.beginPath();
+    for (let i = 0; i < 16; i++) {
+        const angulo = (i / 16) * Math.PI * 2;
+        c.moveTo(-4 + Math.cos(angulo) * 7, Math.sin(angulo) * 11.5);
+        c.lineTo(-4 + Math.cos(angulo) * 14, Math.sin(angulo) * 23);
+    }
+    c.stroke();
+    c.fillStyle = "rgba(150, 100, 30, 0.22)"; // lado na sombra
+    c.fillRect(-20, -25, 32, 22);
+    c.restore();
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineWidth = 1.8;
+    aba(); c.stroke();
+
+    c.fillStyle = "#d9ad4a"; // a copa, com a fita vermelha
+    c.lineWidth = 1.6;
+    c.beginPath(); c.ellipse(-5, 0, 7, 11.5, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.strokeStyle = "#d62839";
+    c.lineWidth = 2.2;
+    c.beginPath(); c.ellipse(-5, 0, 7.8, 12.6, 0, 0, Math.PI * 2); c.stroke();
+    c.fillStyle = "#c4963a"; // o amassado no meio da copa
+    c.beginPath(); c.ellipse(-5.5, 0, 2.2, 6, 0, 0, Math.PI * 2); c.fill();
+
+    c.save(); // remendo de chita na aba
+    c.translate(-12, 14);
+    c.rotate(0.35);
+    c.fillStyle = "#4dabf7";
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineWidth = 1;
+    c.fillRect(-3, -3, 6, 6); c.strokeRect(-3, -3, 6, 6);
+    c.fillStyle = "#ff8fd8";
+    for (const [x, y] of [[-1.4, -1.2], [1.4, 1.2]]) { c.beginPath(); c.arc(x, y, 1, 0, Math.PI * 2); c.fill(); }
+    c.restore();
+    c.restore();
+}
+
+// palhinha de capim no canto da boca, balançando (vai junto com o chapéu de palha)
+function desenharPalhinhaNaBoca(c, tempo) {
+    const balanco = Math.sin(tempo / 500) * 0.12;
+    c.save();
+    c.translate(16, 5);
+    c.rotate(0.45 + balanco);
+    c.strokeStyle = TINTA_DE_GIBI;
+    c.lineCap = "round";
+    c.lineWidth = 2.6;
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(13, 0); c.stroke();
+    c.strokeStyle = "#e8c46a";
+    c.lineWidth = 1.3;
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(13, 0); c.stroke();
+    c.strokeStyle = "#b8862e"; // a pontinha de semente
+    c.lineWidth = 1;
+    c.beginPath(); c.moveTo(13, 0); c.lineTo(16, -1.6); c.moveTo(13, 0); c.lineTo(16, 1.4); c.stroke();
+    c.restore();
+}
+
+// corpo "Xadrez": camisa de quadrilha, faixas claras e escuras cruzando o corpo vermelho
+function desenharXadrez(c, pontos, largura) {
+    let total = 0;
+    for (let i = 1; i < pontos.length; i++) {
+        const d = Math.hypot(pontos[i].x - pontos[i - 1].x, pontos[i].y - pontos[i - 1].y);
+        if (d <= TAMANHO_CELULA * 1.5) total += d;
+    }
+
+    const passo = largura * 0.55;
+    const faixas = [];
+    const linhas = [[], []];
+    let andado = 0;
+    let proxima = largura * 0.7;
+    for (let i = 1; i < pontos.length; i++) {
+        const de = pontos[i - 1];
+        const ate = pontos[i];
+        const distancia = Math.hypot(ate.x - de.x, ate.y - de.y);
+        if (distancia === 0) continue;
+        if (distancia > TAMANHO_CELULA * 1.5) { // atravessou a borda
+            linhas.forEach((linha) => linha.push(null));
+            continue;
+        }
+        const nx = -(ate.y - de.y) / distancia;
+        const ny = (ate.x - de.x) / distancia;
+        const largo = largura * (0.6 + 0.4 * (1 - andado / total)); // o corpo afina no rabo
+        [-0.2, 0.2].forEach((lado, k) => linhas[k].push({ x: de.x + nx * largo * lado, y: de.y + ny * largo * lado }));
+        while (proxima <= andado + distancia) {
+            const t = (proxima - andado) / distancia;
+            faixas.push({ x: de.x + (ate.x - de.x) * t, y: de.y + (ate.y - de.y) * t, nx, ny, largo, clara: faixas.length % 2 === 0 });
+            proxima += passo;
+        }
+        andado += distancia;
+    }
+
+    c.save();
+    c.lineCap = "butt";
+    for (const clara of [false, true]) { // as faixas atravessadas
+        c.strokeStyle = clara ? "rgba(255, 240, 230, 0.4)" : "rgba(60, 10, 10, 0.3)";
+        c.lineWidth = largura * (clara ? 0.16 : 0.1);
+        c.beginPath();
+        for (const faixa of faixas.filter((outra) => outra.clara === clara)) {
+            c.moveTo(faixa.x - faixa.nx * faixa.largo * 0.42, faixa.y - faixa.ny * faixa.largo * 0.42);
+            c.lineTo(faixa.x + faixa.nx * faixa.largo * 0.42, faixa.y + faixa.ny * faixa.largo * 0.42);
+        }
+        c.stroke();
+    }
+    c.strokeStyle = "rgba(255, 240, 230, 0.4)"; // as faixas no comprido
+    c.lineWidth = largura * 0.1;
+    c.lineJoin = "round";
+    c.beginPath();
+    for (const linha of linhas) {
+        let comecou = false;
+        for (const ponto of linha) {
+            if (!ponto) { comecou = false; continue; }
+            if (comecou) c.lineTo(ponto.x, ponto.y); else c.moveTo(ponto.x, ponto.y);
+            comecou = true;
+        }
+    }
+    c.stroke();
+    c.restore();
+}
+
+// rastro "Pipoca": pipoquinhas que pulam do rabo e caem
+function desenharPipoca(c, x, y, tamanho, giro) {
+    c.save();
+    c.translate(x, y);
+    c.rotate(giro);
+    c.fillStyle = "#fff8e6";
+    c.strokeStyle = "rgba(120, 80, 20, 0.6)";
+    c.lineWidth = tamanho * 0.18;
+    c.beginPath();
+    for (const [px, py, raio] of [[-0.45, 0.1, 0.55], [0.4, 0.15, 0.55], [0, -0.4, 0.6], [0.05, 0.45, 0.45]]) {
+        c.moveTo(px * tamanho + raio * tamanho, py * tamanho);
+        c.arc(px * tamanho, py * tamanho, raio * tamanho, 0, Math.PI * 2);
+    }
+    c.stroke();
+    c.fill();
+    c.fillStyle = "#f5c04a"; // o miolinho amarelo
+    c.beginPath(); c.arc(0.05 * tamanho, 0.1 * tamanho, tamanho * 0.22, 0, Math.PI * 2); c.fill();
     c.restore();
 }
