@@ -42,7 +42,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 19. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último; carregado pelo `plataforma.js`)
 
 Os arquivos 2 a 17 só tem funções e valores fixos (e o `plataforma.js` só liga o SDK); o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-v18`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
+Outros: `style.css`, `sw.js` (service worker, cache `snake-v19`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
 **Ao criar um arquivo .js novo:** incluir no `index.html` antes do `plataforma.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 

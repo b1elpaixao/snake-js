@@ -628,7 +628,9 @@ function traduzirPagina() {
 
 // primeira coisa do script.js: tudo que ele monta depois já sai no idioma certo
 function aplicarIdioma() {
-    idioma = escolherIdioma(lerDoArmazenamento("snakeIdioma"), navigator.language);
+    // na plataforma vale o locale do SDK (regra deles); sem locale, cai no inglês
+    const idiomaDoSistema = sdkDaPlataforma ? sdkDaPlataforma.user?.systemInfo?.locale : navigator.language;
+    idioma = escolherIdioma(lerDoArmazenamento("snakeIdioma"), idiomaDoSistema);
     if (idioma === "pt") return;
 
     document.documentElement.lang = "en";
