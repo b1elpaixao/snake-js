@@ -46,6 +46,7 @@ const TRADUCOES = {
     // ---------- menu ----------
     "Novo jogo": "New game",
     "Quem vai jogar?": "Who's playing?",
+    "Snake Brawl": "Snake Brawl",
     "Criar fase": "Create level",
     "Loja": "Shop",
     "Como jogar": "How to play",

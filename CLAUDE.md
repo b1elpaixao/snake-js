@@ -42,7 +42,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 19. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último; carregado pelo `plataforma.js`)
 
 Os arquivos 2 a 17 só tem funções e valores fixos (e o `plataforma.js` só liga o SDK); o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-v17`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
+Outros: `style.css`, `sw.js` (service worker, cache `snake-v18`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
 **Ao criar um arquivo .js novo:** incluir no `index.html` antes do `plataforma.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
@@ -84,5 +84,7 @@ Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loj
 Ficaram de fora (o projeto fechou aqui): 11 replay e GIF · 12 nível e XP.
 
 ## CrazyGames (depois de encerrar)
+
+Lá o jogo se chama **Snake Brawl** ("Snake Showdown" já estava em uso); o site continua Snake. O nome aparece no menu só na plataforma (`.so-na-plataforma`). O zip pro envio fica em `marketing/crazygames/jogo_para_enviar.zip`, versionado pra baixar pelo celular: gerar de novo se o código mudar.
 
 Inglês (`idiomas.js`: quem não usa português vê em inglês; botão no menu troca). **Texto novo pra pessoa ler: passar por `tr()` e pôr no `TRADUCOES`.** Na plataforma (`.na-plataforma` no fim do `style.css`): janela deitada com tabuleiro à esquerda e painel rolando à direita; o menu tem que caber em 800x450 sem rolar. Sem tela cheia, compartilhar, instalar e copiar link. `confirm()` trocado por `pedirConfirmacao` (dentro de iframe o do navegador pode não funcionar).

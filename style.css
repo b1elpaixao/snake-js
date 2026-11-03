@@ -1915,6 +1915,10 @@ html[lang="en"] .recordes ol:empty::after {
     display: none !important;
 }
 
+html:not(.na-plataforma) .so-na-plataforma {
+    display: none;
+}
+
 @media (min-aspect-ratio: 5/4) {
     .na-plataforma {
         --altura-placar: 58px;

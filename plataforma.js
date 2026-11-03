@@ -52,6 +52,7 @@ async function abrirNaPlataforma() {
         if (sdk.environment === "crazygames" || sdk.environment === "local") {
             sdkDaPlataforma = sdk;
             document.documentElement.classList.add("na-plataforma"); // o CSS esconde o que lá não pode
+            document.title = "Snake Brawl"; // o nome do jogo no CrazyGames (o site continua Snake)
             sdk.game.loadingStart();
         }
     } catch {
