@@ -179,12 +179,12 @@ function explodirBomba(jogador) {
 
     obstaculos = ficam;
     pedrasDestruidas += explodidas.length;
-    if (!jogador.bot) anunciar(`Bomba: ${explodidas.length} ${explodidas.length === 1 ? "pedra explodida" : "pedras explodidas"}`);
+    if (!jogador.bot) anunciar(tr(explodidas.length === 1 ? "Bomba: {n} pedra explodida" : "Bomba: {n} pedras explodidas", { n: explodidas.length }));
 
     // no Chefão, pegar ele na explosão tira 1 de vida
     if (chefao && jogador !== chefao && !estaAtordoado(chefao)) {
         const atingido = chefao.cobra.find((pedaco) => Math.max(Math.abs(pedaco.x - centro.x), Math.abs(pedaco.y - centro.y)) <= RAIO_DA_BOMBA);
-        if (atingido) acertarChefao(atingido, "Bum!");
+        if (atingido) acertarChefao(atingido, tr("Bum!"));
     }
 
     // som: estrondo grave

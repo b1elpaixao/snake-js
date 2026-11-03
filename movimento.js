@@ -9,7 +9,7 @@ function moverJogador(jogador) {
 
     if (deuAVolta && !semParedesNaPartida) {
         jogador.portalAtivo = false; // o portal vale uma vez só
-        adicionarTextoFlutuante(novaCabeca, "Portal!", CORES_POWERUP.portal);
+        adicionarTextoFlutuante(novaCabeca, tr("Portal!"), CORES_POWERUP.portal);
     }
     
     jogador.cobra.unshift(novaCabeca);
@@ -62,7 +62,7 @@ function moverJogador(jogador) {
 
     if (pegouPowerUp) {
         if (!jogador.bot) {
-            anunciar(`Pegou ${NOMES_DOS_POWERUPS[powerUp.tipo]}`);
+            anunciar(tr("Pegou {nome}", { nome: NOMES_DOS_POWERUPS[powerUp.tipo] }));
             estatisticas.powerUps++;
             partidaAtual.powerUps++;
             if (!partidaAtual.tiposDePowerUp.includes(powerUp.tipo)) partidaAtual.tiposDePowerUp.push(powerUp.tipo);
@@ -91,7 +91,7 @@ function moverJogador(jogador) {
         } else if (powerUp.tipo === "congelar") {
             jogador.congelarAtivo = true;
             jogador.congelarAte = agoraDoJogo() + DURACAO_CONGELAR_MS;
-            adicionarTextoFlutuante(novaCabeca, "Congelou!", CORES_POWERUP.congelar);
+            adicionarTextoFlutuante(novaCabeca, tr("Congelou!"), CORES_POWERUP.congelar);
             tocarSom(1200, 0.15, "triangle");
         } else if (powerUp.tipo === "bomba") {
             explodirBomba(jogador);
@@ -124,7 +124,10 @@ function comerAlimento(jogador, pontosBase) {
     atualizarRecordeSeNecessario(jogador.pontuacao);
     adicionarObstaculosSeNecessario();
     if (!jogador.bot) {
-        anunciar(`${jogadores.length > 1 ? jogador.nome + ": " : ""}${jogador.pontuacao} ${jogador.pontuacao === 1 ? "ponto" : "pontos"}`);
+        const umPonto = jogador.pontuacao === 1;
+        anunciar(jogadores.length > 1
+            ? tr(umPonto ? "{nome}: {n} ponto" : "{nome}: {n} pontos", { nome: jogador.nome, n: jogador.pontuacao })
+            : tr(umPonto ? "{n} ponto" : "{n} pontos", { n: jogador.pontuacao }));
     }
     tocarSomComer();
 
@@ -253,7 +256,7 @@ function segurarComEscudo(jogador) {
     jogador.cobra = jogador.cobraAnterior.map((segmento) => ({ ...segmento }));
     jogador.filaDirecoes = [];
     jogador.atordoadoAte = agoraDoJogo() + DURACAO_SUSTO_ESCUDO_MS;
-    adicionarTextoFlutuante(jogador.cobra[0], "Escudo!", CORES_POWERUP.escudo);
+    adicionarTextoFlutuante(jogador.cobra[0], tr("Escudo!"), CORES_POWERUP.escudo);
     tocarSom(520, 0.12, "triangle");
     return true;
 }

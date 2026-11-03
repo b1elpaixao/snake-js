@@ -62,17 +62,17 @@ function chamarProximoChefao() {
     chefao.atordoadoAte = agoraDoJogo() + 2000;
     proximaEspadaEm = agoraDoJogo() + ESPADA_VOLTA_EM_MS;
 
-    adicionarTextoFlutuante(toca, numeroDoChefao === 1 ? "Os olhos emergem!" : `Os olhos emergem! (${numeroDoChefao})`, "#ff8a80");
-    anunciar(`Os olhos que emergem chegaram (${numeroDoChefao})`);
+    adicionarTextoFlutuante(toca, numeroDoChefao === 1 ? tr("Os olhos emergem!") : tr("Os olhos emergem! ({n})", { n: numeroDoChefao }), "#ff8a80");
+    anunciar(tr("Os olhos que emergem chegaram ({n})", { n: numeroDoChefao }));
     tocarSom(110, 0.5, "sawtooth");
     atualizarPlacarDoChefao();
 }
 
 function atualizarPlacarDoChefao() {
-    elementoNomeExibido2.textContent = numeroDoChefao === 1 ? "Os olhos que emergem" : `Os olhos que emergem · ${numeroDoChefao}`;
+    elementoNomeExibido2.textContent = numeroDoChefao === 1 ? tr("Os olhos que emergem") : tr("Os olhos que emergem · {n}", { n: numeroDoChefao });
     chefao.elementoVida = chefao.elementoVida || document.getElementById("score2");
     chefao.elementoVida.textContent = "♥".repeat(Math.max(0, chefao.vida));
-    chefao.elementoVida.title = `Vida dos olhos que emergem: ${chefao.vida}`;
+    chefao.elementoVida.title = tr("Vida dos olhos que emergem: {n}", { n: chefao.vida });
 }
 
 // a cada passo: espada nasce, é pega, e o golpe acontece quando a sua cabeça (com espada) encosta no chefão
@@ -88,15 +88,15 @@ function atualizarChefao() {
         espada = null;
         jogador.espadaAte = agora + DURACAO_ESPADA_MS;
         proximaEspadaEm = agora + DURACAO_ESPADA_MS + ESPADA_VOLTA_EM_MS;
-        adicionarTextoFlutuante(jogador.cobra[0], "Espada!", "#9be7ff");
-        anunciar("Pegou a espada: acerte os olhos que emergem");
+        adicionarTextoFlutuante(jogador.cobra[0], tr("Espada!"), "#9be7ff");
+        anunciar(tr("Pegou a espada: acerte os olhos que emergem"));
         tocarSom(988, 0.15, "triangle");
         vibrar(50);
     }
 
     const acertou = temEspada(jogador) && !estaAtordoado(chefao) &&
         chefao.cobra.some((pedaco) => mesmaPosicao(pedaco, jogador.cobra[0]));
-    if (acertou) acertarChefao(jogador.cobra[0], "Golpe!");
+    if (acertou) acertarChefao(jogador.cobra[0], tr("Golpe!"));
 }
 
 // o chefão não morre de uma batida: volta pra onde estava e perde 1 de vida
@@ -105,7 +105,7 @@ function tratarBatidasDoChefao(batidas) {
         if (jogador !== chefao || estaAtordoado(chefao)) continue;
         chefao.cobra = chefao.cobraAnterior.map((pedaco) => ({ ...pedaco }));
         chefao.bateu = false;
-        acertarChefao(chefao.cobra[0], "Bateu!");
+        acertarChefao(chefao.cobra[0], tr("Bateu!"));
     }
     // quem encostou neles: pulso de luz
     batidas
@@ -142,8 +142,8 @@ function derrotarChefao() {
     jogador.pontuacao += bonus;
     jogador.elementoPontuacao.textContent = jogador.pontuacao;
     atualizarRecordeSeNecessario(jogador.pontuacao);
-    adicionarTextoFlutuante(chefao.cobra[0], `Derrotados! +${bonus}`, "#f5c451");
-    anunciar(`Os olhos que emergem foram derrotados! Mais ${bonus} pontos`);
+    adicionarTextoFlutuante(chefao.cobra[0], tr("Derrotados! +{n}", { n: bonus }), "#f5c451");
+    anunciar(tr("Os olhos que emergem foram derrotados! Mais {n} pontos", { n: bonus }));
 
     // a sombra se desfaz em brilhos
     if (!reduzirMovimento) {

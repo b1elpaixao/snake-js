@@ -48,8 +48,8 @@ function darMoedasDaPartida() {
 
     ganharMoedas(ganhas);
     elemento.textContent = ganhas > 0
-        ? `+${ganhas} 🪙 · você tem ${carteira.moedas}`
-        : `Faça 2 pontos pra ganhar moedas · você tem ${carteira.moedas} 🪙`;
+        ? tr("+{n} 🪙 · você tem {total}", { n: ganhas, total: carteira.moedas })
+        : tr("Faça 2 pontos pra ganhar moedas · você tem {total} 🪙", { total: carteira.moedas });
     elemento.hidden = false;
 }
 
@@ -146,24 +146,24 @@ function mostrarLoja() {
 
         if (temOItem) {
             botao.className = "botao-usar";
-            botao.textContent = equipado ? "Usando ✓" : "Usar";
+            botao.textContent = equipado ? tr("Usando ✓") : tr("Usar");
             botao.addEventListener("click", () => usarItem(item));
         } else if (conquista) {
             botao.className = "botao-conquista";
             botao.disabled = true;
             botao.textContent = `🏆 ${conquista.nome}`;
-            botao.title = `Só ganhando a conquista: ${conquista.descricao}`;
+            botao.title = tr("Só ganhando a conquista: {descricao}", { descricao: conquista.descricao });
         } else if (item.liberaCom && !conquistasGanhas.includes(item.liberaCom)) {
             const liberacao = CONQUISTAS.find((opcao) => opcao.id === item.liberaCom);
             botao.className = "botao-conquista";
             botao.disabled = true;
             botao.textContent = `🔒 ${liberacao.nome}`;
-            botao.title = `Libera pra comprar com a conquista: ${liberacao.descricao}`;
+            botao.title = tr("Libera pra comprar com a conquista: {descricao}", { descricao: liberacao.descricao });
         } else {
             botao.className = "botao-comprar";
             botao.textContent = `🪙 ${item.preco}`;
             botao.disabled = carteira.moedas < item.preco;
-            botao.title = botao.disabled ? `Faltam ${item.preco - carteira.moedas} moedas` : `Comprar por ${item.preco} moedas`;
+            botao.title = botao.disabled ? tr("Faltam {n} moedas", { n: item.preco - carteira.moedas }) : tr("Comprar por {n} moedas", { n: item.preco });
             botao.addEventListener("click", () => comprarNaLoja(item));
         }
 
@@ -175,14 +175,14 @@ function mostrarLoja() {
 function comprarNaLoja(item) {
     const nova = comprarItem(carteira, item, conquistasGanhas);
     if (!nova) return; // sem moedas, já comprado, é de conquista ou ainda não liberou
-    if (!confirm(`Comprar ${item.nome} por ${item.preco} moedas?`)) return;
-
-    carteira = equiparItem(nova, item, conquistasGanhas) || nova; // já sai usando
-    salvarCarteira();
-    mostrarLoja();
-    mostrarTemasDoTabuleiro();
-    tocarSom(880, 0.1, "triangle");
-    anunciar(`Comprou ${item.nome}`);
+    pedirConfirmacao(tr("Comprar {item} por {preco} moedas?", { item: item.nome, preco: item.preco }), () => {
+        carteira = equiparItem(nova, item, conquistasGanhas) || nova; // já sai usando
+        salvarCarteira();
+        mostrarLoja();
+        mostrarTemasDoTabuleiro();
+        tocarSom(880, 0.1, "triangle");
+        anunciar(tr("Comprou {item}", { item: item.nome }));
+    });
 }
 
 // clicar em "Usar" coloca; clicar em "Usando" tira
@@ -201,5 +201,5 @@ function premioDaConquista(conquistaId) {
     const item = ITENS_DA_LOJA.find((opcao) => opcao.conquista === conquistaId);
     if (item) return item.nome;
     const liberado = ITENS_DA_LOJA.find((opcao) => opcao.liberaCom === conquistaId);
-    return liberado ? `libera ${liberado.nome} na loja` : null;
+    return liberado ? tr("libera {item} na loja", { item: liberado.nome }) : null;
 }

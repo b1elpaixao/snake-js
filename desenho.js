@@ -705,6 +705,7 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
 
 function loopRenderizacao() {
     lerControles(); // controle de videogame: o navegador só conta quando a gente pergunta
+    avisarPlataformaSeEstaJogando(jogoAtivo && !noMenu && !pausado && !contagemAtiva && !animacaoMorte);
     // o jogo anda no mesmo compasso do desenho: o passo acontece no quadro em que a cobra chega na casa
     while (jogoAtivo && !pausado && !contagemAtiva && agoraDoJogo() >= proximoLoopEm) {
         loop();
@@ -722,34 +723,36 @@ function loopRenderizacao() {
 function mostrarTelaGameOver(jogadoresVivos, batidas) {
     let resultado;
 
+    pedirAnuncioDoIntervalo();
+
     guardarFantasmaDaPartida();
 
     if (modoCooperativo) {
         const juntos = jogadores.reduce((total, jogador) => total + jogador.pontuacao, 0);
-        resultado = `Juntos: ${juntos} ${juntos === 1 ? "ponto" : "pontos"}`;
+        resultado = tr(juntos === 1 ? "Juntos: {n} ponto" : "Juntos: {n} pontos", { n: juntos });
     } else if (chefao) {
         resultado = chefoesDerrotados === 0
-            ? "Os olhos venceram!"
-            : `Derrotou os olhos ${chefoesDerrotados} ${chefoesDerrotados === 1 ? "vez" : "vezes"}!`;
+            ? tr("Os olhos venceram!")
+            : tr(chefoesDerrotados === 1 ? "Derrotou os olhos {n} vez!" : "Derrotou os olhos {n} vezes!", { n: chefoesDerrotados });
     } else if (modoAtual === "tempo") {
         const vencedor = vencedorPorPontos(jogadores);
-        resultado = jogadores.length === 1 ? "Tempo esgotado!" : vencedor ? `${vencedor.nome} venceu!` : "Empate!";
+        resultado = jogadores.length === 1 ? tr("Tempo esgotado!") : vencedor ? tr("{nome} venceu!", { nome: vencedor.nome }) : tr("Empate!");
     } else if (jogadores.length === 1) {
-        resultado = "Game Over";
+        resultado = tr("Game Over");
     } else if (jogadores.length > 2) {
         const vencedor = vencedorComMuitos();
-        resultado = vencedor ? `${vencedor.nome} venceu!` : "Empate!";
+        resultado = vencedor ? tr("{nome} venceu!", { nome: vencedor.nome }) : tr("Empate!");
     } else if (jogadoresVivos.length === 1) {
-        resultado = `${jogadoresVivos[0].nome} venceu!`;
+        resultado = tr("{nome} venceu!", { nome: jogadoresVivos[0].nome });
     } else {
-        resultado = "Empate!";
+        resultado = tr("Empate!");
     }
 
     const textoPontuacao = jogadores.length > 2
         ? (modoAtual === "tempo"
             ? classificarPorPontos(jogadores)
             : classificarPorSobrevivencia(jogadores, saidasDaPartida.map((saida) => saida.map((batida) => batida.jogador))).ordem)
-            .map((jogador, indice) => `${indice + 1}º ${jogador.nome}: ${jogador.pontuacao}`)
+            .map((jogador, indice) => tr("{n}º {nome}: {pontos}", { n: indice + 1, nome: jogador.nome, pontos: jogador.pontuacao }))
             .join(" | ")
         : jogadores
           .filter((jogador) => !jogador.chefao) // os pontos do chefão não contam
@@ -759,14 +762,14 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
     elementoResultadoFinal.textContent = resultado;
     elementoCausaMorte.textContent = batidas
         .map(({ jogador, motivo, outro }) => {
-            const nome = jogadores.length === 1 || chefao ? "Você" : jogador.nome; // no Chefão, o chefão não conta como jogador
-            if (chefao && motivo === "outroJogador") return `${nome} foi pego pelos olhos que emergem`;
-            return descreverBatida(nome, motivo, outro || "outra cobra");
+            const nome = jogadores.length === 1 || chefao ? tr("Você") : jogador.nome; // no Chefão, o chefão não conta como jogador
+            if (chefao && motivo === "outroJogador") return tr("{nome} foi pego pelos olhos que emergem", { nome });
+            return descreverBatida(nome, motivo, outro || tr("outra cobra"));
         })
         .join(" · ");
 
     if (batidas.length === 0) {
-        elementoCausaMorte.textContent = "Acabou o tempo";
+        elementoCausaMorte.textContent = tr("Acabou o tempo");
     }
     elementoPontuacaoFinal.textContent = textoPontuacao;
 
@@ -789,10 +792,10 @@ function mostrarConquista(conquista) {
     elementoAvisoRecorde.hidden = conquista === null;
 
     if (conquista === "recorde") {
-        elementoAvisoRecorde.textContent = "Novo recorde!";
+        elementoAvisoRecorde.textContent = tr("Novo recorde!");
         tocarFanfarra();
     } else if (conquista === "top") {
-        elementoAvisoRecorde.textContent = "Entrou no Top 5!";
+        elementoAvisoRecorde.textContent = tr("Entrou no Top 5!");
     }
 }
 
@@ -856,7 +859,7 @@ function atualizarBarrasEfeitos() {
 }
 
 // aoTerminar: o que fazer depois do "Vai!" (começar o loop, ou sair da pausa)
-function iniciarContagem(aoTerminar = loop, passos = ["3", "2", "1", "Vai!"]) {
+function iniciarContagem(aoTerminar = loop, passos = ["3", "2", "1", tr("Vai!")]) {
     let indice = 0;
 
     contagemAtiva = true;

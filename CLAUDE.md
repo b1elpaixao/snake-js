@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (386 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (391 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -20,6 +20,7 @@ Testes: abrir `testes.html` no navegador; tem que dar todos passando (386 na úl
 
 Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módulos, para funcionar abrindo o arquivo direto no computador):
 
+0. `idiomas.js` - português e inglês: `tr("texto em português", { valores })`, dicionário `TRADUCOES` (a chave é o texto em português), `aplicarIdioma` (roda no começo do `script.js`), `snakeIdioma`
 1. `logica.js` - funções puras (testadas em `testes.js`)
 2. `itens.js` - pedras, comida, maçã dourada, ratos
 3. `desenho.js` - desenho do tabuleiro, da cobra (movimento por trilha), telas e contagem
@@ -37,11 +38,12 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 15. `enfeites.js` - desenho dos itens da loja: chapéus, comidas, padrões do corpo, rastros e efeitos (partículas), tabuleiros com enfeites, as prévias e o estilo "aura" (`desenharSombraViva`: chefão e skin Espectro; sem `ctx.filter`, rascunho nem `createPattern` — travavam: a aura são camadas transparentes e o granulado são pontinhos num Path2D)
 16. `loja.js` - moedas (`snakeCarteira`: moedas, comprados, equipados), tela da loja com abas, desenho dos chapéus e das comidas
 17. `salvos.js` - tudo que é guardado no navegador: `lerDoArmazenamento`/`salvarNoArmazenamento`, recordes, estatísticas, conquistas, teclas e preferências
-18. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último)
+18. `plataforma.js` - CrazyGames: SDK, anúncio no fim da partida (`pedirAnuncioDoIntervalo`), saves na conta (`sdkDaPlataforma.data`), classe `na-plataforma` no `<html>`. É a última tag do `index.html`: espera o SDK e só depois carrega o `script.js`. Testar com `?useLocalSdk=true` em http://127.0.0.1
+19. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último; carregado pelo `plataforma.js`)
 
-Os arquivos 2 a 17 só tem funções e valores fixos; o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-v16`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
-**Ao criar um arquivo .js novo:** incluir no `index.html` antes do `script.js`, na lista `ARQUIVOS`
+Os arquivos 2 a 17 só tem funções e valores fixos (e o `plataforma.js` só liga o SDK); o que executa ao carregar fica no `script.js`.
+Outros: `style.css`, `sw.js` (service worker, cache `snake-v17`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
+**Ao criar um arquivo .js novo:** incluir no `index.html` antes do `plataforma.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
 ## Economia da loja (combinado com o usuário)
@@ -74,9 +76,13 @@ Feito: 1 movimento por trilha / delay nas teclas · 2 compartilhar resultado · 
 
 ## Melhorias (lista 5) — projeto encerrado em 30/10/2026
 
-Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loja.js` + `enfeites.js`: chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer; itens 🏆 só por conquista: Zebra=Glutona, Lava=Saí do labirinto, Fogo=Combo x8, Dourada=Fiel, Faíscas=Arsenal, Máscara de ferro=Última de pé; de época: Chapéu de bruxa=Noite das bruxas, Esqueleto=Até os ossos, Morceguinhos=Revoada, Gorro de Papai Noel=Ho ho ho!, Pisca-pisca=Luzes de Natal, Flocos de neve=Nevasca, Máscara de baile=Folia, Lantejoulas=Brilho na avenida, Serpentinas=Bloco na rua, Orelhas de coelho=Caça aos ovos, Chocolate=Chocólatra, Ovinhos=Cesta cheia, Chapéu de palha=Arraiá, Xadrez=Olha a cobra!, Pipoca=Balancê) · 3 modo Arena (zona que fecha, conquista Sobrevivente = corpo exclusivo Cobra de magma). · 4 modo Chefão (`chefao.js`: "os olhos que emergem", estilo aura no abismo; espada; skin Espectro liberada por conquista).
+Feito: 1 missões diárias (`missoes.js`) · 2 moedas e loja, partes 1 e 2 (`loja.js` + `enfeites.js`: chapéus, comidas, padrões do corpo, rastros, tabuleiros e efeitos ao comer; itens 🏆 só por conquista: Zebra=Glutona, Lava=Saí do labirinto, Fogo=Combo x8, Dourada=Fiel, Faíscas=Arsenal, Capacete de samurai=Última de pé; de época: Chapéu de bruxa=Noite das bruxas, Esqueleto=Até os ossos, Morceguinhos=Revoada, Gorro de Papai Noel=Ho ho ho!, Pisca-pisca=Luzes de Natal, Flocos de neve=Nevasca, Máscara de baile=Folia, Lantejoulas=Brilho na avenida, Serpentinas=Bloco na rua, Orelhas de coelho=Caça aos ovos, Chocolate=Chocólatra, Ovinhos=Cesta cheia, Chapéu de palha=Arraiá, Xadrez=Olha a cobra!, Pipoca=Balancê) · 3 modo Arena (zona que fecha, conquista Sobrevivente = corpo exclusivo Cobra de magma). · 4 modo Chefão (`chefao.js`: "os olhos que emergem", estilo aura no abismo; espada; skin Espectro liberada por conquista).
 · 5 power-ups Congelar e Bomba (`poderes.js`; Fantasma descartado) + conquista Arsenal (6 power-ups diferentes numa partida, `partidaAtual.tiposDePowerUp`) = rastro exclusivo Faíscas.
-· 6 até 4 jogadores (pedaço 1, base; pedaço 2, botão Pessoa/Bot nas vagas 2-4 (`vagasComBot`, `vagasComBotAtuais`) e bot que foge de bater de frente (`casasPerigosas`); pedaço 3, controle pra 4 (`jogadorDoControle`: cada controle move uma pessoa na ordem, pulando bots); pedaço 4, ajustes nos modos (Contra o tempo ordena por pontos, `classificarPorPontos`; quem congelou e saiu quebra o gelo) + conquista Última de pé (vencer com 4) = chapéu exclusivo Máscara de ferro (`desenharMascaraDeFerro`: estilo gibi anos 80, capuz curto verde, formas em Path2D criadas uma vez só)).
+· 6 até 4 jogadores (pedaço 1, base; pedaço 2, botão Pessoa/Bot nas vagas 2-4 (`vagasComBot`, `vagasComBotAtuais`) e bot que foge de bater de frente (`casasPerigosas`); pedaço 3, controle pra 4 (`jogadorDoControle`: cada controle move uma pessoa na ordem, pulando bots); pedaço 4, ajustes nos modos (Contra o tempo ordena por pontos, `classificarPorPontos`; quem congelou e saiu quebra o gelo) + conquista Última de pé (vencer com 4) = chapéu exclusivo Capacete de samurai (`desenharCapaceteDeSamurai`; o id continua `mascara` pra quem já ganhou)).
 · 9 temas de época (pedaço 1, base + Halloween 25/10 a 2/11: `EPOCAS`/`epocaDoDia` no `logica.js`, `epocaAtual` e `enfeitesDeEpoca` (caixa "Enfeites de época"; tabuleiro e comida da época ganham da loja e do tema), missões da época em `snakeMissoesDaEpoca` (somam a época toda, cada uma dá uma conquista com prêmio); desenhos no fim do `enfeites.js`; pedaço 2, Natal e Ano Novo 15/12 a 6/1 (tabuleiro vermelho, panetone; atravessa a virada: a chave usa o ano em que começou; `diasDeFogos` 31/12 e 1/1 põe `fogos` no tabuleiro); pedaço 3, Carnaval (Páscoa -51 a -46) e Páscoa (-7 a +1): `diasDaPascoa` no lugar de inicio/fim, `domingoDePascoa`/`diaDaPascoaMais`; pedaço 4, Festa Junina em junho; chapéu de palha com palhinha na boca, escondendo os olhos).
 · 10 volume ajustável e mais músicas (cartão Som: barrinhas `volumeMusica`/`volumeEfeitos` 0-100, 50 = volume antigo; `MUSICAS` no `logica.js` em notas MIDI: Clássica, Arcade, Aventura, Calma e Abismo, que é só do Chefão; "Sortear a cada partida"; salvos nas preferências).
-Ficaram de fora (o projeto fechou aqui): 11 replay e GIF · 12 nível e XP · 13 idiomas.
+Ficaram de fora (o projeto fechou aqui): 11 replay e GIF · 12 nível e XP.
+
+## CrazyGames (depois de encerrar)
+
+Inglês (`idiomas.js`: quem não usa português vê em inglês; botão no menu troca). **Texto novo pra pessoa ler: passar por `tr()` e pôr no `TRADUCOES`.** Na plataforma (`.na-plataforma` no fim do `style.css`): janela deitada com tabuleiro à esquerda e painel rolando à direita; o menu tem que caber em 800x450 sem rolar. Sem tela cheia, compartilhar, instalar e copiar link. `confirm()` trocado por `pedirConfirmacao` (dentro de iframe o do navegador pode não funcionar).

@@ -75,7 +75,7 @@
                 <div class="controle-pausa">
                     Pausar <kbd class="tecla-larga">ESPAÇO</kbd> <kbd>ESC</kbd>
                 </div>
-                <div class="controle-pausa">
+                <div class="controle-pausa so-fora-da-plataforma">
                     Tela cheia <kbd>F</kbd>
                 </div>
             </div>
@@ -191,6 +191,7 @@
                          <h2>Quem vai jogar?</h2>
                     </div>
                     <div class="menu-links">
+                        <button id="botaoIdioma" class="botao-link" type="button">English</button>
                         <button id="botaoCriarFase" class="botao-link" type="button">Criar fase</button>
                         <button id="botaoLoja" class="botao-link" type="button">Loja</button>
                         <button id="botaoComoJogar" class="botao-link" type="button">Como jogar</button>
@@ -320,7 +321,7 @@
                             <li><b>Trocar teclas:</b> clique numa tecla no painel Controles e aperte a nova. Elas ficam salvas.</li>
                             <li><b>Espaço ou Esc:</b> pausa e abre o menu (Continuar, Reiniciar, Voltar ao menu). O jogo também pausa sozinho se você trocar de aba.</li>
                             <li><b>Esc:</b> no fim de jogo, volta ao menu.</li>
-                            <li><b>F:</b> tela cheia (ou o botão ao lado do recorde). Aperte F de novo pra sair.</li>
+                            <li class="so-fora-da-plataforma"><b>F:</b> tela cheia (ou o botão ao lado do recorde). Aperte F de novo pra sair.</li>
                         </ul>
                     </section>
 
@@ -338,7 +339,7 @@
                             <li><b>Dificuldade:</b> muda a velocidade e a quantidade de pedras. A cobra também acelera conforme come, cada vez menos, até no máximo 1,6x no Fácil, 2x no Normal e 2,4x no Difícil. No Difícil, 3 pedras azuladas andam de um lado para o outro.</li>
                             <li><b>Fantasma do recorde:</b> jogando sozinho, uma cobra transparente refaz a sua melhor partida de hoje naquele modo. Faça mais pontos que ela e a sua partida vira o novo fantasma. Zera todo dia.</li>
                             <li><b>2 Juntos:</b> cooperativo. Os dois somam pontos, e uma cobra passa por dentro da outra. Quem bater volta pro começo em 3 segundos; o jogo só acaba se os dois baterem ao mesmo tempo.</li>
-                            <li><b>Criar fase:</b> desenhe suas paredes e mande o link pros amigos jogarem a mesma fase. Sem Top 5, porque cada fase é diferente.</li>
+                            <li><b>Criar fase:</b> desenhe suas paredes e jogue nelas. Sem Top 5, porque cada fase é diferente. <span class="so-fora-da-plataforma">Mande o link pros amigos jogarem a mesma fase.</span></li>
                             <li><b>Desafio do dia:</b> o mesmo mapa e a mesma sequência de maçãs para todo mundo que jogar no mesmo dia. Velocidade sempre Normal e sem "Sem paredes", pra ser justo. O Top 5 do desafio zera todo dia.</li>
                         </ul>
                     </section>
@@ -380,6 +381,12 @@
                     </div>
                     <ul id="itensLoja" class="itens-loja"></ul>
                     <p class="dica-loja">1 moeda a cada 2 pontos · 15 por missão · +30 se fizer as 3 do dia, e mais 5 por dia seguido 🔥. Os itens com 🏆 só saem ganhando a conquista.</p>
+                </div>
+
+                <div id="telaConfirmar" class="overlay overlay-game-over" role="alertdialog" aria-labelledby="textoConfirmar" hidden>
+                    <p id="textoConfirmar" class="texto-confirmar"></p>
+                    <button id="botaoConfirmarSim" class="botao-principal" type="button">Confirmar</button>
+                    <button id="botaoConfirmarNao" class="botao-secundario" type="button">Cancelar</button>
                 </div>
 
                 <p id="avisoConquista" class="aviso-conquista" role="status" hidden></p>
@@ -516,6 +523,7 @@
         </aside>
     </main>
 
+    <script src="idiomas.js"></script>
     <script src="logica.js"></script>
     <script src="itens.js"></script>
     <script src="desenho.js"></script>
@@ -533,6 +541,6 @@
     <script src="enfeites.js"></script>
     <script src="loja.js"></script>
     <script src="salvos.js"></script>
-    <script src="script.js"></script>
+    <script src="plataforma.js"></script> <!-- ele carrega o script.js -->
 </body>
 </html>

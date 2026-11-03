@@ -1,3 +1,5 @@
+aplicarIdioma(); // antes de tudo: o resto já monta os textos no idioma certo
+
 // ==========================================
 // Configuração e elementos do DOM
 // ==========================================
@@ -232,7 +234,7 @@ const CORES_DOS_OUTROS_JOGADORES = [
     { cabeca: "#b98bff", corpo: "#6d3fd1" }, // roxo
 ];
 
-function criarJogadores(quantidade = 2, nomes = ["Jogador 1", "Jogador 2", "Jogador 3", "Jogador 4"]) {
+function criarJogadores(quantidade = 2, nomes = [tr("Jogador 1"), tr("Jogador 2"), tr("Jogador 3"), tr("Jogador 4")]) {
     return posicoesIniciais(quantidade, COLUNAS, LINHAS).map((inicio, indice) => {
         const cor = indice === 0 ? corDaCobra() : CORES_DOS_OUTROS_JOGADORES[indice - 1];
         const jogador = criarJogador({
@@ -268,7 +270,7 @@ let reduzirMovimento = movimentoReduzidoNoSistema; // também liga pela opção 
 let textosFlutuantes = []; // os "=3" que sobem ao comer
 const DURACAO_TEXTO_FLUTUANTE_MS = 800;
 const MODOS_DE_JOGO = ["normal", "clássico", "rato", "tempo", "arena", "chefao", "fases", "desafio"];
-const NOMES_MODOS = { normal: "Normal", "clássico": "Clássico", rato: "Rato", tempo: "Contra o tempo", arena: "Arena", chefao: "Chefão", fases: "Fases", desafio: "Desafio de hoje", personalizada: "Fase criada" };
+const NOMES_MODOS = { normal: tr("Normal"), "clássico": tr("Clássico"), rato: tr("Rato"), tempo: tr("Contra o tempo"), arena: tr("Arena"), chefao: tr("Chefão"), fases: tr("Fases"), desafio: tr("Desafio de hoje"), personalizada: tr("Fase criada") };
 
 let jogoAtivo = false; // só fica true quando a partida começa ( o loopRenderizacao anda o jogo sempre que for true)
 let pausado = false;
@@ -292,7 +294,7 @@ let partidaAtual = { powerUps: 0, tiposDePowerUp: [], comidas: 0, douradas: 0, m
 let temporizadorAvisoConquista = null;
 let tempoDaPartidaMs = 0;
 let velocidadeMostrada = null;  
-let nomesJogadoresAtuais = ["Jogador 1", "Jogador 2", "Jogador 3", "Jogador 4"];
+let nomesJogadoresAtuais = [tr("Jogador 1"), tr("Jogador 2"), tr("Jogador 3"), tr("Jogador 4")];
 let participantes = [];         // todos que começaram a partida (jogadores = só quem ainda está nela)
 let saidasDaPartida = [];       // com 3 ou mais: [[quem saiu primeiro], [depois]...], cada um { jogador, motivo, outro }
 let eliminacoesRecentes = [];   // { jogador, ate }: quem acabou de sair pisca um pouco antes de sumir
@@ -323,6 +325,7 @@ function agoraDoJogo() {
 // Tela Cheia
 // ==========================================
 function alternarTelaCheia() {
+    if (sdkDaPlataforma) return; // na plataforma, a tela cheia é a do site dela
     if (!document.fullscreenEnabled) return;
 
     if (document.fullscreenElement) {
@@ -334,7 +337,7 @@ function alternarTelaCheia() {
 
 function atualizarBotaoTelaCheia() {
     const cheia = Boolean(document.fullscreenElement);
-    const texto = cheia ? "Sair da tela cheia (F)" : "Tela cheia (F)";
+    const texto = cheia ? tr("Sair da tela cheia (F)") : tr("Tela cheia (F)");
 
     botaoTelaCheia.setAttribute("aria-pressed", String(cheia));
     botaoTelaCheia.setAttribute("aria-label", texto);
@@ -358,7 +361,7 @@ document.addEventListener("keydown", (evento) => {
 // ==========================================
 // Estatisticas (só de quem joga de verdade, não do bot)
 // ==========================================
-const NOMES_MORTES = { parede: "Parede", proprioCorpo: "Próprio corpo", pedra: "Pedra", outroJogador: "Outra cobra" };
+const NOMES_MORTES = { parede: tr("Parede"), proprioCorpo: tr("Próprio corpo"), pedra: tr("Pedra"), outroJogador: tr("Outra cobra") };
 
 function mostrarEstatisticas() {
     const morte = morteMaisComum(estatisticas.mortes);
@@ -408,13 +411,14 @@ function registrarFimDePartida(batidas) {
 }
 
 document.getElementById("botaoZerarEstatisticas").addEventListener("click", () => {
-    if (confirm("Apagar todas as estatísticas e o histórico? Isso não dá pra desfazer.")) {
+    if (jogoAtivo && !pausado) entrarNaPausa(); // a pergunta aparece em cima do tabuleiro
+    pedirConfirmacao(tr("Apagar todas as estatísticas e o histórico? Isso não dá pra desfazer."), () => {
         estatisticas = estatisticasVazias();
         salvarEstatisticas();
         mostrarEstatisticas();
         salvarNoArmazenamento("snakeHistorico", "[]");
         mostrarHistorico();
-    }
+    });
 });
 
 mostrarEstatisticas();
@@ -470,7 +474,7 @@ function mostrarConquistas() {
         item.className = ganhou ? "ganhou" : "bloqueada";
         nome.textContent = conquista.nome;
         const premio = premioDaConquista(conquista.id);
-        descricao.textContent = premio ? `${conquista.descricao} · Prêmio: ${premio}` : conquista.descricao;
+        descricao.textContent = premio ? tr("{descricao} · Prêmio: {premio}", { descricao: conquista.descricao, premio }) : conquista.descricao;
         textos.append(nome, descricao);
         item.append(textos);
         lista.append(item);
@@ -482,7 +486,7 @@ function mostrarConquistas() {
 function avisarConquistas(novas) {
     const aviso = document.getElementById("avisoConquista");
 
-    aviso.textContent = `Conquista: ${novas.map((conquista) => conquista.nome).join(" · ")}`;
+    aviso.textContent = tr("Conquista: {nomes}", { nomes: novas.map((conquista) => conquista.nome).join(" · ") });
     // esconde e mostra de novo pra animação recomeçar
     aviso.hidden = true;
     void aviso.offsetWidth;
@@ -517,7 +521,9 @@ function mostrarTeclas() {
             botao.type = "button";
             botao.className = esperando ? "tecla-botao esperando" : "tecla-botao";
             botao.textContent = esperando ? ".." : nome;
-            botao.setAttribute("aria-label", `Jogador ${jogador + 1}, ${direcao}: ${esperando ? "aperte a nova tecla" : nome + ". Clique para trocar"}`);
+            botao.setAttribute("aria-label", esperando
+                ? tr("Jogador {n}, {direcao}: aperte a nova tecla", { n: jogador + 1, direcao: tr(direcao) })
+                : tr("Jogador {n}, {direcao}: {tecla}. Clique para trocar", { n: jogador + 1, direcao: tr(direcao), tecla: nome }));
             botao.addEventListener("click", () => comecarTrocaDeTecla(jogador, direcao));
             caixa.append(botao);
         }
@@ -526,7 +532,7 @@ function mostrarTeclas() {
     teclasDosJogadores.forEach((teclas, indice) => {
         document.getElementById(`resumoTeclas${indice + 1}`).textContent = resumoDasTeclas(teclas);
     });
-    document.getElementById("dicaTeclas").textContent = teclaSendoTrocada ? "Aperte a nova tecla · Esc cancela" : "Clique numa tecla pra trocar";
+    document.getElementById("dicaTeclas").textContent = teclaSendoTrocada ? tr("Aperte a nova tecla · Esc cancela") : tr("Clique numa tecla pra trocar");
 }
 
 function comecarTrocaDeTecla(jogador, direcao) {
@@ -594,13 +600,13 @@ function mostrarCoresDaCobra() {
         botao.style.setProperty("--cor-corpo", cor.corpo);
         botao.disabled = !liberada;
         botao.setAttribute("aria-pressed", String(cor.id === corDaCobraId));
-        botao.title = liberada ? cor.nome : `${cor.nome}: ganhe a conquista "${conquista.nome}"`;
+        botao.title = liberada ? cor.nome : tr("{nome}: ganhe a conquista \"{conquista}\"", { nome: cor.nome, conquista: conquista.nome });
         botao.setAttribute("aria-label", botao.title);
         botao.addEventListener("click", () => escolherCorDaCobra(cor.id));
         caixa.append(botao);
     }
 
-    document.getElementById("nomeCorDaCobra").textContent = `${corDaCobra().nome} · as apagadas liberam com conquistas`;
+    document.getElementById("nomeCorDaCobra").textContent = tr("{nome} · as apagadas liberam com conquistas", { nome: corDaCobra().nome });
 }
 
 function escolherCorDaCobra(id) {
@@ -641,13 +647,13 @@ function mostrarTemasDoTabuleiro() {
         botao.style.setProperty("--cor-corpo", tema.escuro);
         botao.disabled = !liberado;
         botao.setAttribute("aria-pressed", String(tema.id === temaDoTabuleiroId && !carteira.equipados.tabuleiro));
-        botao.title = liberado ? tema.nome : `${tema.nome}: ganhe a conquista "${conquista.nome}"`;
+        botao.title = liberado ? tema.nome : tr("{nome}: ganhe a conquista \"{conquista}\"", { nome: tema.nome, conquista: conquista.nome });
         botao.setAttribute("aria-label", botao.title);
         botao.addEventListener("click", () => escolherTemaDoTabuleiro(tema.id));
         caixa.append(botao);
     }
 
-    document.getElementById("nomeTemaDoTabuleiro").textContent = `${temaDoTabuleiro().nome} · os apagados liberam com conquistas`;
+    document.getElementById("nomeTemaDoTabuleiro").textContent = tr("{nome} · os apagados liberam com conquistas", { nome: temaDoTabuleiro().nome });
 }
 
 function escolherTemaDoTabuleiro(id) {
@@ -730,10 +736,10 @@ function alternarPausa() {
 }
 
 function entrarNaPausa() {
-    anunciar("Jogo pausado");
+    anunciar(tr("Jogo pausado"));
     pausado = true;
     pausadoDesde = performance.now();
-    botaoPausa.textContent = "Continuar";
+    botaoPausa.textContent = tr("Continuar");
     tocarSom(300, 0.08, "sine");
     mostrarMenuPausa();
 }
@@ -763,7 +769,7 @@ function sairPelaPausa() {
     pausado = false;
     pausadoDesde = null;
     menuPausa.hidden = true;
-    botaoPausa.textContent = "Pausar";
+    botaoPausa.textContent = tr("Pausar");
     travarSemParedes(false);
     pararMusicaFundo();
     voltarAoMenu();
@@ -773,14 +779,14 @@ function sairDaPausa() {
     tempoPausadoTotal += performance.now() - pausadoDesde;
     pausadoDesde = null;
     pausado = false;
-    botaoPausa.textContent = "Pausar";
+    botaoPausa.textContent = tr("Pausar");
 }
 
 // ==========================================
 // Controle: teclado
 // ==========================================
 function mudarDirecao(evento) {
-    if (noMenu || animacaoMorte) return;
+    if (noMenu || animacaoMorte || anuncioAberto) return;
     if (!jogoAtivo) {
         if (evento.key === "Escape") {
             voltarAoMenu();
@@ -886,7 +892,7 @@ function linkDoJogo() {
 
 function avisarNoBotao(texto) {
     botaoCompartilhar.textContent = texto;
-    setTimeout(() => { botaoCompartilhar.textContent = "Compartilhar resultado"; }, 2000);
+    setTimeout(() => { botaoCompartilhar.textContent = tr("Compartilhar resultado"); }, 2000);
 }
 
 async function compartilharResultado() {
@@ -901,7 +907,7 @@ async function compartilharResultado() {
             return;
         }
         await navigator.clipboard.writeText(texto);
-        avisarNoBotao("✓ Copiado! Cole no WhatsApp");
+        avisarNoBotao(tr("✓ Copiado! Cole no WhatsApp"));
     } catch (erro) {
         if (erro.name === "AbortError") return; // fechou o menu de compartilhar sem escolher
         // não deu pra copiar sozinho: mostra o texto pra pessoa copiar na mão
@@ -973,6 +979,34 @@ for (const aba of document.querySelectorAll(".aba-loja")) {
     });
 }
 
+// pergunta dentro do jogo: o confirm() do navegador pode não funcionar dentro do site de uma plataforma
+let aoConfirmar = null;
+
+function pedirConfirmacao(texto, acao) {
+    aoConfirmar = acao;
+    document.getElementById("textoConfirmar").textContent = texto;
+    document.getElementById("telaConfirmar").hidden = false;
+    document.getElementById("botaoConfirmarNao").focus({ preventScroll: true });
+}
+
+function fecharConfirmacao(confirmou) {
+    document.getElementById("telaConfirmar").hidden = true;
+    if (confirmou) aoConfirmar();
+    aoConfirmar = null;
+}
+
+document.getElementById("botaoConfirmarSim").addEventListener("click", () => fecharConfirmacao(true));
+document.getElementById("botaoConfirmarNao").addEventListener("click", () => fecharConfirmacao(false));
+
+// com a pergunta aberta, as teclas só servem pra ela
+window.addEventListener("keydown", (evento) => {
+    if (document.getElementById("telaConfirmar").hidden) return;
+    evento.stopImmediatePropagation();
+    if (evento.key === "Escape") fecharConfirmacao(false);
+}, true);
+
+document.getElementById("botaoIdioma").addEventListener("click", trocarIdioma);
+
 // com a loja aberta, as teclas não mexem no jogo (no fim de jogo, qualquer tecla recomeçaria)
 window.addEventListener("keydown", (evento) => {
     if (document.getElementById("telaLoja").hidden) return;
@@ -1013,7 +1047,7 @@ document.getElementById("botaoPularTutorial").addEventListener("click", (evento)
 
 document.getElementById("botaoRefazerTutorial").addEventListener("click", (evento) => {
     salvarNoArmazenamento("snakeTutorialVisto", "");
-    evento.currentTarget.textContent = "✓ O tutorial aparece na próxima partida";
+    evento.currentTarget.textContent = tr("✓ O tutorial aparece na próxima partida");
 });
 botaoFecharComoJogar.addEventListener("click", fecharComoJogar);
 
@@ -1117,15 +1151,15 @@ async function copiarLinkDaFase() {
 
     try {
         if (ehCelular && navigator.share) {
-            await navigator.share({ text: "Fiz uma fase no Snake. Tenta passar:", url: link });
+            await navigator.share({ text: tr("Fiz uma fase no Snake. Tenta passar:"), url: link });
             return;
         }
         await navigator.clipboard.writeText(link);
-        botaoCopiarFase.textContent = "✓ Link copiado!";
-        setTimeout(() => { botaoCopiarFase.textContent = "Copiar link"; }, 2000);
+        botaoCopiarFase.textContent = tr("✓ Link copiado!");
+        setTimeout(() => { botaoCopiarFase.textContent = tr("Copiar link"); }, 2000);
     } catch (erro) {
         if (erro.name === "AbortError") return;
-        window.prompt("Copie o link da fase:", link); // não deu pra copiar sozinho
+        window.prompt(tr("Copie o link da fase:"), link); // não deu pra copiar sozinho
     }
 }
 
@@ -1136,9 +1170,12 @@ document.getElementById("botaoJogarFase").addEventListener("click", () => {
     comecarJogo(1, false, false, "personalizada");
 });
 document.getElementById("botaoLimparFase").addEventListener("click", () => {
-    if (paredesDaFaseCriada.length > 0 && !confirm("Apagar todas as paredes?")) return;
-    paredesDaFaseCriada = [];
-    salvarFaseCriada();
+    const limpar = () => {
+        paredesDaFaseCriada = [];
+        salvarFaseCriada();
+    };
+    if (paredesDaFaseCriada.length > 0) pedirConfirmacao(tr("Apagar todas as paredes?"), limpar);
+    else limpar();
 });
 document.getElementById("botaoSairEditor").addEventListener("click", () => {
     fecharEditorDeFase();
@@ -1419,10 +1456,11 @@ function atualizarVelocidadeNoPlacar() {
 // "Sem paredes" só muda fora da partida (antes dava pra marcar no meio e escapar de uma batida)
 function travarSemParedes(travado) {
     inputModoSemParedes.disabled = travado;
-    inputModoSemParedes.parentElement.title = travado ? "Só dá pra mudar fora da partida" : "";
+    inputModoSemParedes.parentElement.title = travado ? tr("Só dá pra mudar fora da partida") : "";
 }
 
 function reiniciar() {
+    if (anuncioAberto) return;
     particulas = []; // rastro e efeitos da partida anterior
     clearTimeout(temporizadorAnimacaoMorte);
     elementoTextoCompartilhar.hidden = true;
@@ -1456,7 +1494,7 @@ function reiniciar() {
     }
     if (modoAtual === "personalizada") {
         obstaculos = paredesDaFaseCriada.map((parede) => ({ x: parede.x, y: parede.y }));
-        elementoFase.textContent = "Fase criada";
+        elementoFase.textContent = tr("Fase criada");
     }
     desafioDoDia = null;
     if (modoAtual === "desafio") {
@@ -1464,7 +1502,7 @@ function reiniciar() {
         desafioDoDia = gerarDesafioDoDia(hoje, COLUNAS, LINHAS, PEDRAS_NO_DESAFIO, jogadores.map((jogador) => jogador.cobra[0]), 400);
         obstaculos = desafioDoDia.pedras.map((pedra) => ({ x: pedra.x, y: pedra.y }));
         indiceComidaDesafio = 0;
-        elementoFase.textContent = `Desafio de ${hoje.slice(8, 10)}/${hoje.slice(5, 7)}`;
+        elementoFase.textContent = tr("Desafio de {dia}/{mes}", { dia: hoje.slice(8, 10), mes: hoje.slice(5, 7) });
     }
     comida = gerarComida();
     criarRatosIniciais();
@@ -1486,7 +1524,7 @@ function reiniciar() {
     pausadoDesde = null;
     telaGameOver.hidden = true;
     jogoAtivo = true;
-    botaoPausa.textContent = "Pausar";
+    botaoPausa.textContent = tr("Pausar");
     prepararFantasma();
     iniciarContagem();
 }
@@ -1528,9 +1566,9 @@ function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorM
     modoCooperativo = juntos && !comChefao;
     vagasComBotAtuais = comBot || comChefao || juntos ? [] : vagasComBotEscolhidas().filter((vaga) => vaga <= quantidadeJogadoresAtual);
 
-    const nomeDaVaga = (vaga, input) => vagasComBotAtuais.includes(vaga) ? `Bot ${vaga}` : (nomeDoCampo(input) || `Jogador ${vaga}`);
-    const nome1 = inputNomeJogador1.value.trim() || "Jogador 1";
-    const nome2 = comChefao ? "Os olhos que emergem" : comBot ? "Bot" : nomeDaVaga(2, inputNomeJogador2);
+    const nomeDaVaga = (vaga, input) => vagasComBotAtuais.includes(vaga) ? `Bot ${vaga}` : (nomeDoCampo(input) || tr(`Jogador ${vaga}`));
+    const nome1 = inputNomeJogador1.value.trim() || tr("Jogador 1");
+    const nome2 = comChefao ? tr("Os olhos que emergem") : comBot ? "Bot" : nomeDaVaga(2, inputNomeJogador2);
     nomesJogadoresAtuais = [nome1, nome2, ...inputsNomesExtras.map((input, indice) => nomeDaVaga(indice + 3, input))];
 
     nomesJogadoresAtuais.forEach((nome, indice) => {
@@ -1560,7 +1598,7 @@ function quantidadeEscolhida() {
 
 function mostrarQuantidadeEscolhida() {
     const quantidade = quantidadeEscolhida();
-    botaoJogar2.textContent = `${quantidade} Jogadores`;
+    botaoJogar2.textContent = tr("{n} Jogadores", { n: quantidade });
     inputsNomesExtras.forEach((input, indice) => { input.closest(".campo").hidden = indice + 3 > quantidade; });
 }
 
@@ -1586,10 +1624,10 @@ function mostrarVaga(botao, ehBot) {
         input.value = input.dataset.nome || "";
     }
     input.disabled = ehBot;
-    input.placeholder = ehBot ? `Bot ${botao.dataset.vaga}` : `Jogador ${botao.dataset.vaga}`;
+    input.placeholder = ehBot ? `Bot ${botao.dataset.vaga}` : tr(`Jogador ${botao.dataset.vaga}`);
     botao.setAttribute("aria-pressed", String(ehBot));
-    botao.textContent = ehBot ? "🤖 Bot" : "👤 Pessoa";
-    botao.setAttribute("aria-label", `Jogador ${botao.dataset.vaga}: ${ehBot ? "bot. Clique pra ser pessoa" : "pessoa. Clique pra ser bot"}`);
+    botao.textContent = ehBot ? tr("🤖 Bot") : tr("👤 Pessoa");
+    botao.setAttribute("aria-label", tr(ehBot ? "Jogador {n}: bot. Clique pra ser pessoa" : "Jogador {n}: pessoa. Clique pra ser bot", { n: botao.dataset.vaga }));
 }
 
 botoesDasVagas.forEach((botao) => {
@@ -1616,7 +1654,7 @@ const botaoInstalar = document.getElementById("botaoInstalar");
 let pedidoDeInstalacao = null; // o navegador entrega quando o jogo pode ser instalado
 
 // só funciona em http(s) (GitHub Pages, localhost); abrindo o arquivo direto do computador não faz nada
-if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+if ("serviceWorker" in navigator && location.protocol.startsWith("http") && !sdkDaPlataforma) {
     navigator.serviceWorker.register("sw.js").catch(() => {});
 }
 

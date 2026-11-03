@@ -716,7 +716,19 @@ verificar("controle: aviso com 3 controles", textoDosControles(3), "🎮 3 contr
 verificar("contra o tempo: ordem pelos pontos", classificarPorPontos([{ nome: "A", pontuacao: 3 }, { nome: "B", pontuacao: 9 }, { nome: "C", pontuacao: 5 }]).map((j) => j.nome).join(), "B,C,A");
 verificar("conquista: Última de pé só vencendo com 4",
     [true, false].map((venceuComQuatro) => conquistasNovas([], { estatisticas: estatisticasVazias(), partida: { pontos: 0, tamanho: 1, powerUps: 0, venceuComQuatro } }).some((c) => c.id === "ultimaDePe")).join(), "true,false");
-verificar("loja: Última de pé dá a Mascara de ferro (não vendida)", JSON.stringify(ITENS_DA_LOJA.filter((item) => item.conquista === "ultimaDePe").map((item) => [item.id, item.tipo, item.preco ?? null])), JSON.stringify([["mascara", "chapeu", null]]));
+verificar("idioma: sem escolha, segue o navegador", [escolherIdioma(null, "pt-BR"), escolherIdioma(null, "en-US"), escolherIdioma(null, "es")].join(), "pt,en,en");
+verificar("idioma: a escolha salva ganha do navegador", [escolherIdioma("pt", "en-US"), escolherIdioma("en", "pt-BR")].join(), "pt,en");
+verificar("idioma: em português o texto não muda e os valores entram", tr("Fase {n}", { n: 2 }), "Fase 2");
+idioma = "en";
+verificar("idioma: em inglês traduz e preenche", [tr("Fase {n}", { n: 2 }), tr("Empate!"), numeroNoIdioma("1.4")].join(), "Level 2,Draw!,1.4");
+idioma = "pt";
+verificar("idioma: toda tabela do logica.js tem tradução", (() => {
+    const faltando = [];
+    percorrerTextos([CONQUISTAS, CORES_DA_COBRA, TEMAS_DO_TABULEIRO, EPOCAS, MUSICAS, MISSOES, ITENS_DA_LOJA, MAPAS_DAS_FASES, TEMA_ALTO_CONTRASTE], (dono, campo) => { if (!(dono[campo] in TRADUCOES)) faltando.push(dono[campo]); });
+    for (const nomes of [NOMES_DOS_MODOS, NOMES_DOS_POWERUPS]) faltando.push(...Object.values(nomes).filter((nome) => !(nome in TRADUCOES)));
+    return faltando.join();
+})(), "");
+verificar("loja: Última de pé dá o Capacete de samurai (não vendido)", JSON.stringify(ITENS_DA_LOJA.filter((item) => item.conquista === "ultimaDePe").map((item) => [item.id, item.tipo, item.preco ?? null])), JSON.stringify([["mascara", "chapeu", null]]));
 
 // épocas do ano: Halloween
 verificar("época: Halloween de 25/10 a 2/11", ["2026-10-24", "2026-10-25", "2026-10-31", "2026-11-02", "2026-11-03"].map((data) => (epocaDoDia(data) || { id: "-" }).id).join(), "-,halloween,halloween,halloween,-");

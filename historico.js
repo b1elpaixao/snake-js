@@ -39,7 +39,7 @@ function mostrarHistorico() {
 
     if (partidas.length === 0) {
         grafico.innerHTML = "";
-        elementoResumo.textContent = "Jogue uma partida pra ver o gráfico.";
+        elementoResumo.textContent = tr("Jogue uma partida pra ver o gráfico.");
         return;
     }
 
@@ -47,7 +47,7 @@ function mostrarHistorico() {
     const { pontos, maximo } = pontosDoGrafico(partidas.map((partida) => partida.pontos), LARGURA_DO_GRAFICO, ALTURA_DO_GRAFICO, MARGEM_DO_GRAFICO);
     const yDaMedia = yNoGrafico(resumo.media, maximo, ALTURA_DO_GRAFICO, MARGEM_DO_GRAFICO);
     const nomeDaPartida = (partida) =>
-        `${partida.data.slice(8, 10)}/${partida.data.slice(5, 7)} · ${NOMES_MODOS[partida.modo] || partida.modo} · ${partida.pontos} pontos`;
+        tr("{dia}/{mes} · {modo} · {n} pontos", { dia: partida.data.slice(8, 10), mes: partida.data.slice(5, 7), modo: NOMES_MODOS[partida.modo] || partida.modo, n: partida.pontos });
 
     // linha tracejada = média; a bolinha maior é a última partida (passe o mouse pra ver cada uma)
     grafico.innerHTML = `
@@ -57,9 +57,9 @@ function mostrarHistorico() {
         <text class="grafico-texto" x="2" y="10">${maximo}</text>
         <text class="grafico-texto" x="2" y="${ALTURA_DO_GRAFICO - 2}">0</text>`;
 
-    const tendencias = { subindo: " · subindo ↑", caindo: " · caindo ↓", estavel: " · estável" };
-    const texto = `${partidas.length} ${partidas.length === 1 ? "partida" : "partidas"} · melhor ${resumo.melhor} · média ${String(resumo.media).replace(".", ",")}${tendencias[resumo.tendencia] || ""}`;
+    const tendencias = { subindo: tr(" · subindo ↑"), caindo: tr(" · caindo ↓"), estavel: tr(" · estável") };
+    const texto = tr(partidas.length === 1 ? "{n} partida · melhor {melhor} · média {media}" : "{n} partidas · melhor {melhor} · média {media}", { n: partidas.length, melhor: resumo.melhor, media: numeroNoIdioma(String(resumo.media)) }) + (tendencias[resumo.tendencia] || "");
 
     elementoResumo.textContent = texto;
-    grafico.setAttribute("aria-label", `Gráfico dos pontos: ${texto}`);
+    grafico.setAttribute("aria-label", tr("Gráfico dos pontos: {texto}", { texto }));
 }

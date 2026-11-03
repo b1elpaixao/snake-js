@@ -13,7 +13,7 @@ function penalizarBatida(jogador) {
     jogador.comboAtual = 0;
     jogador.elementoPontuacao.textContent = jogador.pontuacao;
     jogador.atordoadoAte = agoraDoJogo() + DURACAO_ATORDOADO_MS;
-    adicionarTextoFlutuante(jogador.cobra[0], "Bateu!", "#ff8a80");
+    adicionarTextoFlutuante(jogador.cobra[0], tr("Bateu!"), "#ff8a80");
 }
 
 function atualizarRelogio() {
@@ -21,7 +21,7 @@ function atualizarRelogio() {
         atualizarRelogioDaArena();
         return;
     }
-    elementoRelogio.title = "Tempo restante";
+    elementoRelogio.title = tr("Tempo restante");
     const restante = DURACAO_MODO_TEMPO_MS - tempoDaPartidaMs;
     elementoRelogio.textContent = formatarRelogio(restante);
     elementoRelogio.classList.toggle("acabando", restante <= 10000);
@@ -52,9 +52,9 @@ function tirarDaPartida(batidas) {
         jogador.fora = true;
         placaresDosJogadores[jogador.numero - 1].classList.add("fora");
         eliminacoesRecentes.push({ jogador, ate: performance.now() + 900 });
-        adicionarTextoFlutuante(jogador.cobra[0], "Fora!", "#ff6b6b");
+        adicionarTextoFlutuante(jogador.cobra[0], tr("Fora!"), "#ff6b6b");
     }
-    anunciar(`${quem.map((jogador) => jogador.nome).join(" e ")} ${quem.length === 1 ? "saiu" : "saíram"}. Sobraram ${jogadores.length}.`);
+    anunciar(tr(quem.length === 1 ? "{nomes} saiu. Sobraram {n}." : "{nomes} saíram. Sobraram {n}.", { nomes: quem.map((jogador) => jogador.nome).join(tr(" e ")), n: jogadores.length }));
     tocarSomColisao();
     vibrar(80);
 }
@@ -99,7 +99,7 @@ function carregarFase(numero) {
         jogador.filaDirecoes = [];
     });
 
-    elementoFase.textContent = `Fase ${numero} · ${MAPAS_DAS_FASES[numero - 1].nome}`;
+    elementoFase.textContent = tr("Fase {n} · {nome}", { n: numero, nome: MAPAS_DAS_FASES[numero - 1].nome });
 }
 
 function passarDeFase(numero) {
@@ -114,7 +114,7 @@ function passarDeFase(numero) {
     // pausa e mostra "Fase 2", depois 3, 2, 1, Vai!
     pausado = true;
     pausadoDesde = performance.now();
-    iniciarContagem(sairDaPausa, [`Fase ${numero}`, "3", "2", "1", "Vai!"]);
+    iniciarContagem(sairDaPausa, [tr("Fase {n}", { n: numero }), "3", "2", "1", tr("Vai!")]);
 }
 
 
@@ -153,7 +153,7 @@ function voltarAoInicio(jogador) {
         jogador.cobra = [gerarPosicaoLivre()]; // na Arena o começo pode ter ficado fora da zona
         jogador.cobraAnterior = jogador.cobra.map((pedaco) => ({ ...pedaco }));
     }
-    adicionarTextoFlutuante(jogador.cobra[0], "Volta em 3 s", "#ffffff");
+    adicionarTextoFlutuante(jogador.cobra[0], tr("Volta em 3 s"), "#ffffff");
 }
 
 function atualizarPlacarJuntos() {
@@ -178,8 +178,8 @@ function prepararArena() {
 
 function atualizarRelogioDaArena() {
     const restante = tempoParaFecharArena(tempoDaPartidaMs, COLUNAS, LINHAS);
-    elementoRelogio.title = "Tempo até a zona fechar";
-    elementoRelogio.textContent = restante === null ? "Zona final" : `Zona ${formatarRelogio(restante)}`;
+    elementoRelogio.title = tr("Tempo até a zona fechar");
+    elementoRelogio.textContent = restante === null ? tr("Zona final") : tr("Zona {tempo}", { tempo: formatarRelogio(restante) });
     elementoRelogio.classList.toggle("acabando", restante !== null && restante <= ARENA_AVISO_MS);
 }
 
@@ -191,7 +191,7 @@ function atualizarZonaDaArena() {
     if (restante !== null && restante <= ARENA_AVISO_MS && !avisouQueVaiFechar) {
         avisouQueVaiFechar = true;
         tocarSom(440, 0.12, "square");
-        anunciar("A zona vai fechar");
+        anunciar(tr("A zona vai fechar"));
     }
 
     const nova = zonaDaArena(tempoDaPartidaMs, COLUNAS, LINHAS);
@@ -204,7 +204,7 @@ function atualizarZonaDaArena() {
         const antes = jogador.cobra.length;
         jogador.cobra = cortarCobraNaZona(jogador.cobra, zonaArena);
         jogador.cobraAnterior = jogador.cobraAnterior.slice(0, jogador.cobra.length);
-        if (jogador.cobra.length < antes) adicionarTextoFlutuante(jogador.cobra[0], "Queimou!", "#ff8a65");
+        if (jogador.cobra.length < antes) adicionarTextoFlutuante(jogador.cobra[0], tr("Queimou!"), "#ff8a65");
     }
 
     // o que ficou fora some: a maçã nasce de novo dentro da zona
@@ -216,7 +216,7 @@ function atualizarZonaDaArena() {
     tocarSom(160, 0.3, "sawtooth");
     vibrar(100);
     if (zonaArena.final) {
-        anunciar("Zona final");
+        anunciar(tr("Zona final"));
         verificarConquistas({ zonaFinal: true });
     }
     return true;

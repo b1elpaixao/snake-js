@@ -109,11 +109,11 @@ function verificarColisao(jogador, jogadores, obstaculos, colunas, linhas) {
 // frase pra tela de fim de jogo, ex.: "Ana bateu numa pedra"
 function descreverBatida(nome, motivo, nomeDoOutro) {
     const frases = {
-        parede: "bateu na parede",
-        proprioCorpo: "bateu no próprio corpo",
-        pedra: "bateu numa pedra",
-        outroJogador: `bateu em ${nomeDoOutro}`,
-        zona: "ficou fora da zona",
+        parede: tr("bateu na parede"),
+        proprioCorpo: tr("bateu no próprio corpo"),
+        pedra: tr("bateu numa pedra"),
+        outroJogador: tr("bateu em {nome}", { nome: nomeDoOutro }),
+        zona: tr("ficou fora da zona"),
     };
 
     return `${nome} ${frases[motivo]}`;
@@ -381,7 +381,7 @@ function duracaoDoPasso(velocidadeInicialMs, comidas, aceleracaoMaxima) {
 // quantas vezes mais rápido que no começo da partida, ex.: "1,4x"
 function formatarVelocidade(velocidadeInicialMs, velocidadeAtualMs) {
     const fator = velocidadeInicialMs / velocidadeAtualMs;
-    return `${fator.toFixed(1).replace(".", ",")}x`;
+    return `${numeroNoIdioma(fator.toFixed(1))}x`;
 }
 
 // ==========================================
@@ -1028,7 +1028,7 @@ function nomeDaTecla(tecla) {
 function resumoDasTeclas(teclas) {
     const nomes = DIRECOES_DAS_TECLAS.map((direcao) => nomeDaTecla(teclas[direcao]));
 
-    if (nomes.join("") === "↑←↓→") return "setas";
+    if (nomes.join("") === "↑←↓→") return tr("setas");
     return nomes.every((nome) => nome.length === 1) ? nomes.join("") : nomes.join(" ");
 }
 
@@ -1050,24 +1050,24 @@ const NOMES_DOS_MODOS = {
 // placar: [{ nome, pontuacao }] · data: "2026-10-20"
 function textoDeCompartilhar(modo, data, placar, link, juntos = false) {
     const titulo = modo === "desafio"
-        ? `Desafio de ${data.slice(8, 10)}/${data.slice(5, 7)}`
-        : `Modo ${NOMES_DOS_MODOS[modo] || modo}`;
+        ? tr("Desafio de {dia}/{mes}", { dia: data.slice(8, 10), mes: data.slice(5, 7) })
+        : tr("Modo {nome}", { nome: NOMES_DOS_MODOS[modo] || modo });
 
     const soma = placar.reduce((total, jogador) => total + jogador.pontuacao, 0);
-    const pontos = (n) => `${n} ${n === 1 ? "ponto" : "pontos"}`;
+    const pontos = (n) => tr(n === 1 ? "{n} ponto" : "{n} pontos", { n });
     let resultado;
 
     if (juntos) {
-        resultado = `${placar.map((jogador) => jogador.nome).join(" + ")} fizeram ${pontos(soma)} juntos`;
+        resultado = tr("{nomes} fizeram {pontos} juntos", { nomes: placar.map((jogador) => jogador.nome).join(" + "), pontos: pontos(soma) });
     } else if (placar.length === 1) {
         resultado = pontos(placar[0].pontuacao);
     } else {
         resultado = placar.map((jogador) => `${jogador.nome} ${jogador.pontuacao}`).join(" x ");
     }
 
-    let convite = "Joga também:";
-    if (modo === "desafio") convite = "Hoje todo mundo joga o mesmo mapa. Consegue fazer mais?";
-    if (modo === "personalizada") convite = "Fiz essa fase. Tenta passar:";
+    let convite = tr("Joga também:");
+    if (modo === "desafio") convite = tr("Hoje todo mundo joga o mesmo mapa. Consegue fazer mais?");
+    if (modo === "personalizada") convite = tr("Fiz essa fase. Tenta passar:");
 
     return `🐍 Snake · ${titulo}: ${resultado}\n${convite} ${link}`;
 }
@@ -1488,8 +1488,8 @@ function quantidadePeloControle(controles, escolhida, celular) {
 
 function textoDosControles(controles) {
     if (controles === 0) return "";
-    if (controles === 1) return "🎮 Controle conectado: setas ou analógico movem, A começa, Start pausa.";
-    return `🎮 ${controles} controles: cada um move um jogador, na ordem (vaga de bot é pulada). A começa, Start pausa.`;
+    if (controles === 1) return tr("🎮 Controle conectado: setas ou analógico movem, A começa, Start pausa.");
+    return tr("🎮 {n} controles: cada um move um jogador, na ordem (vaga de bot é pulada). A começa, Start pausa.", { n: controles });
 }
 
 // ==========================================
@@ -1508,21 +1508,21 @@ function passoDoTutorialCumprido(passo, situacao) {
 // entrada: "teclado", "toque" (celular) ou "controle" (videogame)
 function textoDoTutorial(passo, entrada, modo) {
     if (passo === "virar") {
-        if (entrada === "toque") return "Deslize o dedo no tabuleiro pra virar a cobra.";
-        if (entrada === "controle") return "Use as setas ou o analógico do controle pra virar a cobra.";
-        return "Use as setas do teclado pra virar a cobra.";
+        if (entrada === "toque") return tr("Deslize o dedo no tabuleiro pra virar a cobra.");
+        if (entrada === "controle") return tr("Use as setas ou o analógico do controle pra virar a cobra.");
+        return tr("Use as setas do teclado pra virar a cobra.");
     }
     if (passo === "comer") {
         return modo === "rato"
-            ? "Agora pegue um rato 🐭 pra crescer e ganhar pontos."
-            : "Agora coma a maçã 🍎 pra crescer e ganhar pontos.";
+            ? tr("Agora pegue um rato 🐭 pra crescer e ganhar pontos.")
+            : tr("Agora coma a maçã 🍎 pra crescer e ganhar pontos.");
     }
     if (passo === "cuidado") {
-        return "Boa! Não bata nas paredes, nas pedras nem no próprio corpo.";
+        return tr("Boa! Não bata nas paredes, nas pedras nem no próprio corpo.");
     }
 
     const comoPausar =  { toque: "O botão ⏸ pausa o jogo.", controle: "Start pausa o jogo.", teclado: "Espaço ou Esc pausa o jogo." };
-    return `Itens especiais dão poderes por alguns segundos. ${comoPausar[entrada]}`;
+    return tr("Itens especiais dão poderes por alguns segundos. {pausa}", { pausa: tr(comoPausar[entrada]) });
 }
 
 // ==========================================
@@ -1750,7 +1750,7 @@ const ITENS_DA_LOJA = [
     { id: "pirata", nome: "Bandana de pirata", tipo: "chapeu", conquista: "maratona" },
     { id: "visor", nome: "Visor de vilã", tipo: "chapeu", conquista: "venceuBot" },
     { id: "coroa", nome: "Coroa", tipo: "chapeu", conquista: "lendaria" },
-    { id: "mascara", nome: "Máscara de ferro", tipo: "chapeu", conquista: "ultimaDePe" },
+    { id: "mascara", nome: "Capacete de samurai", tipo: "chapeu", conquista: "ultimaDePe" },
     { id: "bruxa", nome: "Chapéu de bruxa", tipo: "chapeu", conquista: "noiteDasBruxas" },
     { id: "gorro", nome: "Gorro de Papai Noel", tipo: "chapeu", conquista: "hoHoHo" },
     { id: "baile", nome: "Máscara de baile", tipo: "chapeu", conquista: "folia" },

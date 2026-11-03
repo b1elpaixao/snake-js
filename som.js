@@ -26,8 +26,9 @@ function obterContextoAudio() {
 // chamado quando mexe nas barrinhas (e quando o áudio nasce)
 function aplicarVolumes() {
     if (!ganhoMusica) return;
-    ganhoMusica.gain.value = volumeMusica / 50;
-    ganhoEfeitos.gain.value = volumeEfeitos / 50;
+    const ligado = plataformaCalaOSom() ? 0 : 1;
+    ganhoMusica.gain.value = ligado * volumeMusica / 50;
+    ganhoEfeitos.gain.value = ligado * volumeEfeitos / 50;
 }
 
 function tocarSom(frequencia, duracaoSegundos, tipoOnda = "sine") {
@@ -187,7 +188,7 @@ function alternarOuvirMusica() {
     const musica = escolherMusica(musicaEscolhida, false, Math.random());
     ouvindoNoMenu = true;
     comecarMusica(musica);
-    botaoOuvirMusica.textContent = `■ Parar (${musica.nome})`;
+    botaoOuvirMusica.textContent = tr("■ Parar ({musica})", { musica: musica.nome });
     botaoOuvirMusica.setAttribute("aria-pressed", "true");
 }
 
@@ -195,7 +196,7 @@ function pararDeOuvirMusica() {
     if (!ouvindoNoMenu) return;
     ouvindoNoMenu = false;
     clearTimeout(temporizadorMusica);
-    botaoOuvirMusica.textContent = "▶ Ouvir";
+    botaoOuvirMusica.textContent = tr("▶ Ouvir");
     botaoOuvirMusica.setAttribute("aria-pressed", "false");
 }
 
@@ -204,7 +205,7 @@ function mostrarControlesDeSom() {
     const seletor = document.getElementById("seletorMusica");
     if (seletor.options.length === 0) {
         for (const musica of MUSICAS.filter((outra) => !outra.soChefao)) seletor.add(new Option(`${musica.nome} · ${musica.descricao}`, musica.id));
-        seletor.add(new Option("Sortear a cada partida", "sortear"));
+        seletor.add(new Option(tr("Sortear a cada partida"), "sortear"));
     }
     seletor.value = musicaEscolhida;
     document.getElementById("volumeMusica").value = volumeMusica;
@@ -214,11 +215,11 @@ function mostrarControlesDeSom() {
 }
 
 function atualizarBotaoMudo() {
-    botaoMudo.textContent = mudo ? "🔇 Efeitos" : "🔊 Efeitos";
+    botaoMudo.textContent = tr(mudo ? "🔇 Efeitos" : "🔊 Efeitos");
     botaoMudo.setAttribute("aria-pressed", String(!mudo));
 }
 
 function atualizarBotaoMusica() {
-    botaoMusica.textContent = musicaDesligada ? "🔇 Música" : "🎵 Música";
+    botaoMusica.textContent = tr(musicaDesligada ? "🔇 Música" : "🎵 Música");
     botaoMusica.setAttribute("aria-pressed", String(!musicaDesligada));
 }

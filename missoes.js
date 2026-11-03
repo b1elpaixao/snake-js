@@ -88,7 +88,7 @@ function mostrarMissoes() {
         const [mes, dia] = epocaAtual.fim.split("-").map(Number);
         const titulo = document.createElement("li");
         titulo.className = "missao-epoca-titulo";
-        titulo.textContent = `${epocaAtual.icone} ${epocaAtual.nome} · até ${dia}/${mes}`;
+        titulo.textContent = tr("{icone} {epoca} · até {dia}/{mes}", { icone: epocaAtual.icone, epoca: epocaAtual.nome, dia, mes });
         lista.appendChild(titulo);
 
         for (const missao of epocaAtual.missoes) {
@@ -98,7 +98,7 @@ function mostrarMissoes() {
 
     const sequencia = lerSequenciaDeMissoes();
     const diasSeguidos = sequenciaValendo(sequencia, estado.data);
-    document.getElementById("sequenciaMissoes").textContent = diasSeguidos > 0 ? `· 🔥 ${diasSeguidos} ${diasSeguidos === 1 ? "dia" : "dias"}` : "";
+    document.getElementById("sequenciaMissoes").textContent = diasSeguidos > 0 ? tr(diasSeguidos === 1 ? "· 🔥 {n} dia" : "· 🔥 {n} dias", { n: diasSeguidos }) : "";
 }
 
 // uma linha da lista: texto, número (12/30 ou ✓) e a barrinha. premio = o item que a missão dá (as da época)
@@ -131,8 +131,8 @@ function itemDaMissao(missao, estado, premio = null) {
 function avisarMissoes(novas, completouODia, moedas) {
     const aviso = document.getElementById("avisoConquista");
     const texto = (completouODia
-        ? "Missões do dia completas! 🔥"
-        : `Missão cumprida: ${novas.map((missao) => missao.texto).join(" · ")}`) + ` +${moedas} 🪙`;
+        ? tr("Missões do dia completas! 🔥")
+        : tr("Missão cumprida: {textos}", { textos: novas.map((missao) => missao.texto).join(" · ") })) + ` +${moedas} 🪙`;
 
     const mostrar = () => {
         aviso.textContent = texto;

@@ -7,7 +7,7 @@
 // ==========================================
 function lerDoArmazenamento(chave) {
     try {
-        return localStorage.getItem(chave);
+        return (sdkDaPlataforma ? sdkDaPlataforma.data : localStorage).getItem(chave); // na plataforma, fica na conta do jogador
     } catch {
         return null; // navegador bloqueou o armazenamento
     }
@@ -15,7 +15,7 @@ function lerDoArmazenamento(chave) {
 
 function salvarNoArmazenamento(chave, valor) {
     try {
-        localStorage.setItem(chave, valor);
+        (sdkDaPlataforma ? sdkDaPlataforma.data : localStorage).setItem(chave, valor);
     } catch {
         // sem armazenamento: o jogo segue funcionando, só não salva
     }
