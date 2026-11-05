@@ -354,8 +354,14 @@ verificar("conquista: não ganha de novo o que já tem", idsDe(conquistasNovas([
 verificar("conquista: 100 comidas dá duas de uma vez", idsDe(conquistasNovas([], contextoTeste({ comidas: 100 }))), "primeiraMordida,faminta");
 verificar("conquista: cobra grande vale na partida de agora", idsDe(conquistasNovas([], contextoTeste({}, { tamanho: 20 }))), "cobraGrande");
 verificar("conquista: 30 pontos só valem no Contra o tempo", idsDe(conquistasNovas([], contextoTeste({}, { pontos: 30, modo: "normal" }))) + "|" + idsDe(conquistasNovas([], contextoTeste({}, { pontos: 30, modo: "tempo" }))), "|contraORelogio");
-verificar("escalada: 5 andares, o último é o chefe", ANDARES_DA_ESCALADA.length + "," + Boolean(ANDARES_DA_ESCALADA[4].chefe), "5,true");
-verificar("escalada: a meta só sobe", ANDARES_DA_ESCALADA.every((andar, i, todos) => i === 0 || andar.meta > todos[i - 1].meta), true);
+verificar("escalada: 10 andares, chefes no 5º e no 10º", ANDARES_DA_ESCALADA.length + "," + ANDARES_DA_ESCALADA.map((andar, i) => (andar.chefe ? i + 1 : 0)).filter(Boolean).join("+"), "10,5+10");
+verificar("escalada: a meta dos andares comuns nunca desce", ANDARES_DA_ESCALADA.filter((andar) => !andar.chefe).every((andar, i, todos) => i === 0 || andar.meta >= todos[i - 1].meta), true);
+verificar("escalada: chefe sempre tem meta própria", ANDARES_DA_ESCALADA.filter((andar) => andar.chefe).every((andar) => andar.metaDoRival > andar.meta), true);
+verificar("poderes: 12, 6 liberados no começo", PODERES_DA_ESCALADA.length + "," + poderesLiberados(0).length, "12,6");
+verificar("poderes: todos liberados no andar 9", poderesLiberados(9).length, 12);
+verificar("proximoAndarComPoder", [proximoAndarComPoder(0), proximoAndarComPoder(4), proximoAndarComPoder(10)].join(), "2,6,");
+verificar("sortearPoderes: não sorteia bloqueado", sortearPoderes(["ima", "sangueFrio", "dieta", "bolsoCheio", "casca", "fomeDupla"], () => 0).length, 0);
+verificar("sortearPoderes: o melhor andar libera mais", sortearPoderes(["ima", "sangueFrio", "dieta", "bolsoCheio", "casca", "fomeDupla"], () => 0, 2).map((poder) => poder.id).join(), "caminhoLimpo");
 verificar("escalada: até 3 rivais", ANDARES_DA_ESCALADA.every((andar) => andar.rivais.length <= 3), true);
 verificar("sortearPoderes: 3 diferentes", new Set(sortearPoderes([], () => 0.5).map((poder) => poder.id)).size, 3);
 verificar("sortearPoderes: não repete o que já tem", sortearPoderes(["ima", "dieta"], () => 0).some((poder) => ["ima", "dieta"].includes(poder.id)), false);
@@ -363,7 +369,7 @@ verificar("sortearPoderes: sobrou pouco, vem pouco", sortearPoderes(["ima", "die
 verificar("macasQueValem: Fome dupla conta 2", [macasQueValem([]), macasQueValem(["fomeDupla"])].join(), "1,2");
 verificar("moedasDaEscalada: pontos + andares", moedasDaEscalada(20, 2, false, []), moedasDaPartida(20) + 8);
 verificar("moedasDaEscalada: topo e Bolso cheio", moedasDaEscalada(0, 5, true, ["bolsoCheio"]), 60);
-verificar("escalada: a faixa só vem da conquista do topo", ITENS_DA_LOJA.find((item) => item.id === "faixa").conquista, "topoDaEscalada");
+verificar("escalada: a faixa vem do Mestre e a tiara do topo", ["faixa", "tiara"].map((id) => ITENS_DA_LOJA.find((item) => item.id === id).conquista).join(), "derrubouOMestre,topoDaEscalada");
 verificar("conquista: ids únicos", new Set(CONQUISTAS.map((c) => c.id)).size, CONQUISTAS.length);
 verificar("limparConquistas tira o que não existe", JSON.stringify(limparConquistas(["faminta", "voar", 7])), JSON.stringify(["faminta"]));
 verificar("limparCOnquistas com lixo devolve lista vazia", JSON.stringify(limparConquistas(" {lixo")), "[]");

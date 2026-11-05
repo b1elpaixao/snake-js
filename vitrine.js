@@ -160,7 +160,7 @@ function desenharFundoDoMenu() {
 }
 
 const CARTOES_DE_MODO = [
-    { modo: "escalada", nome: "Escalada", texto: "5 andares, poderes e um chefe", cabeca: "#ff6a6a", chapeu: "faixa", chao: "#2f4a8f" },
+    { modo: "escalada", nome: "Escalada", texto: "10 andares, poderes e chefes", cabeca: "#ff6a6a", chapeu: "faixa", chao: "#2f4a8f" },
     { modo: "normal", nome: "Normal", texto: "Coma, cresça, não bata", cabeca: "#6fa0ff", chapeu: "mascara", chao: "#d2a56c" },
     { modo: "arena", nome: "Arena", texto: "A zona fecha com fogo", cabeca: "#ff9a6b", chapeu: "coroa", chao: "#5a2a1e" },
     { modo: "chefao", nome: "Chefão", texto: "Enfrente os olhos", cabeca: "#ff7ac6", chapeu: "bruxa", chao: "#112033" },

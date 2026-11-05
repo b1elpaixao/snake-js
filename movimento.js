@@ -44,6 +44,7 @@ function moverJogador(jogador) {
         adicionarTextoFlutuante(novaCabeca, `+${pontosGanhos}`, "#f5c451");
         atualizarRecordeSeNecessario(jogador.pontuacao);
         tocarSomComidaDourada();
+        contarDouradaDaEscalada(jogador);
 
         if (!jogador.bot) {
             estatisticas.macasDouradas++;
@@ -104,7 +105,7 @@ function moverJogador(jogador) {
 // maçã ou rato: contra o combo, soma os pontos e atualiza o placar
 function comerAlimento(jogador, pontosBase) {
     const agora = agoraDoJogo();
-    const dentroDoCombo = jogador.ultimoComerEm !== null && (agora - jogador.ultimoComerEm) <= JANELA_COMBO_MS;
+    const dentroDoCombo = jogador.ultimoComerEm !== null && (agora - jogador.ultimoComerEm) <= janelaDoCombo(jogador);
 
     jogador.comboAtual = dentroDoCombo ? jogador.comboAtual + 1 : 1;
     jogador.ultimoComerEm = agora;
@@ -253,7 +254,7 @@ function atualizarEfeitos(jogador) {
 
 // escudo segura uma batida: a cobra volta pra casa de antes, perde o escudo e fica meio segundo parada
 function segurarComEscudo(jogador) {
-    if (!jogador.escudoAtivo) return false;
+    if (!jogador.escudoAtivo && !usarSegundaChance(jogador)) return false;
 
     jogador.escudoAtivo = false;
     jogador.cobra = jogador.cobraAnterior.map((segmento) => ({ ...segmento }));

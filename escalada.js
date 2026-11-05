@@ -1,5 +1,5 @@
 // ==========================================
-// Escalada: a campanha solo. 5 andares contra bots; a cada andar vencido, escolhe 1 de 3 poderes.
+// Escalada: a campanha solo. 10 andares contra bots; a cada andar vencido, escolhe 1 de 3 poderes.
 // Morreu? Recomeça do andar 1 (as moedas ficam). As regras puras ficam no logica.js.
 // ==========================================
 const DISTANCIA_DO_IMA_DA_ESCALADA = 6;
@@ -9,7 +9,7 @@ const MUITO_TEMPO_MS = 1e9; // poder que dura o andar inteiro
 let escalada = null; // { andar, poderes, pontos, tempoMs, partida, macas, macasDoRival, seguindo, entreAndares, venceu, rivalVenceu }
 
 function novaEscalada() {
-    return { andar: 1, poderes: [], pontos: 0, tempoMs: 0, partida: null, macas: 0, macasDoRival: 0, seguindo: false, entreAndares: false, venceu: false, rivalVenceu: false };
+    return { andar: 1, poderes: [], pontos: 0, tempoMs: 0, partida: null, macas: 0, macasDoRival: 0, seguindo: false, entreAndares: false, venceu: false, rivalVenceu: false, usouSegundaChance: false, novosPoderes: [] };
 }
 
 function andarDaEscalada() {
@@ -21,7 +21,8 @@ function temPoderDaEscalada(id) {
 }
 
 function temaDaEscalada() {
-    return TEMAS_DO_TABULEIRO.find((tema) => tema.id === andarDaEscalada().tema);
+    const id = andarDaEscalada().tema;
+    return id === "abismo" ? TEMA_DO_ABISMO : TEMAS_DO_TABULEIRO.find((tema) => tema.id === id);
 }
 
 function recordeDaEscalada() {
@@ -49,8 +50,9 @@ function prepararEscaladaNoReiniciar() {
     document.querySelector(".placares").classList.toggle("placares-muitos", quantidadeJogadoresAtual > 2);
 
     aplicarDificuldade();
-    QUANTIDADE_OBSTACULOS = andar.pedras;
-    QUANTIDADE_PEDRAS_MOVEIS = 0;
+    const semPedras = temPoderDaEscalada("caminhoLimpo");
+    QUANTIDADE_OBSTACULOS = semPedras ? 0 : andar.pedras;
+    QUANTIDADE_PEDRAS_MOVEIS = semPedras ? 0 : andar.pedrasMoveis || 0;
     if (temPoderDaEscalada("sangueFrio")) VELOCIDADE_INICIAL_MS = Math.round(VELOCIDADE_INICIAL_MS * MULTIPLICADOR_DO_SANGUE_FRIO);
 }
 
@@ -79,6 +81,14 @@ function comecarAndarDaEscalada() {
         humano.escudoAtivo = true;
         humano.escudoAte = agoraDoJogo() + MUITO_TEMPO_MS;
     }
+    if (temPoderDaEscalada("portalDeBolso")) {
+        humano.portalAtivo = true;
+        humano.portalAte = agoraDoJogo() + MUITO_TEMPO_MS;
+    }
+    if (temPoderDaEscalada("largada")) {
+        const contagem = passosDaContagemDaEscalada().length * DURACAO_PASSO_CONTAGEM_MS;
+        jogadores.slice(1).forEach((rival) => { rival.atordoadoAte = agoraDoJogo() + contagem + 3000; });
+    }
     atualizarPlacarDaEscalada();
     elementoFase.hidden = false;
 }
@@ -104,6 +114,30 @@ function contarMacaDaEscalada(jogador) {
         escalada.macas += macasQueValem(escalada.poderes);
     }
     atualizarPlacarDaEscalada();
+}
+
+// maçã dourada: com Caça-ouro, conta 2 pra meta do andar
+function contarDouradaDaEscalada(jogador) {
+    if (jogador.bot || !temPoderDaEscalada("cacaOuro")) return;
+    escalada.macas += 2 * macasQueValem(escalada.poderes);
+    atualizarPlacarDaEscalada();
+}
+
+function chanceDeDourada() {
+    return temPoderDaEscalada("cacaOuro") ? 3 : 1;
+}
+
+// com Combo longo, o combo da pessoa dura o dobro
+function janelaDoCombo(jogador) {
+    return !jogador.bot && temPoderDaEscalada("comboLongo") ? JANELA_COMBO_MS * 2 : JANELA_COMBO_MS;
+}
+
+// Segunda chance: segura uma batida, uma vez só na corrida
+function usarSegundaChance(jogador) {
+    if (jogador.bot || !temPoderDaEscalada("segundaChance") || escalada.usouSegundaChance) return false;
+    escalada.usouSegundaChance = true;
+    adicionarTextoFlutuante(jogador.cobra[0], tr("Segunda chance!"), "#ff7ac6");
+    return true;
 }
 
 // a Dieta faz a cobra crescer só em uma maçã a cada duas
@@ -158,6 +192,7 @@ function terminarAndar() {
     adicionarTextoFlutuante(humano.cobra[0], tr("Andar vencido!"), "#ffd23a");
     tocarFanfarra();
     vibrar([30, 40, 60]);
+    if (andarDaEscalada().rivais[0] === RIVAIS_DA_ESCALADA.mestre) verificarConquistas({ derrubouOMestre: true });
 
     if (escalada.andar >= ANDARES_DA_ESCALADA.length) {
         escalada.venceu = true;
@@ -180,7 +215,11 @@ function encerrarCorrida(vivos) {
 
 function salvarRecordeDaEscalada() {
     const andar = escalada.venceu ? ANDARES_DA_ESCALADA.length : escalada.andar;
-    if (andar > recordeDaEscalada()) salvarNoArmazenamento("snakeRecordeEscalada", String(andar));
+    const antes = recordeDaEscalada();
+    if (andar <= antes) return;
+    salvarNoArmazenamento("snakeRecordeEscalada", String(andar));
+    const novos = poderesLiberados(andar).filter((poder) => poder.liberaNoAndar > antes);
+    escalada.novosPoderes = novos;
 }
 
 // ---------- tela de escolher o poder ----------
@@ -213,7 +252,7 @@ function mostrarEscolhaDePoder() {
         : tr("Se morrer, volta ao andar 1, mas as moedas ficam.");
 
     caixa.innerHTML = "";
-    sortearPoderes(escalada.poderes, Math.random).forEach((poder) => {
+    sortearPoderes(escalada.poderes, Math.random, recordeDaEscalada()).forEach((poder) => {
         const botao = document.createElement("button");
         botao.type = "button";
         botao.className = `carta-poder raridade-${poder.raridade}`;
@@ -276,11 +315,18 @@ function resultadoDaEscalada() {
 }
 
 function pontuacaoDaEscalada() {
-    return tr("Pontos: {pontos} · Melhor andar: {recorde}", { pontos: escalada.pontos, recorde: recordeDaEscalada() });
+    const recorde = recordeDaEscalada();
+    const partes = [tr("Pontos: {pontos} · Melhor andar: {recorde}", { pontos: escalada.pontos, recorde })];
+    if (escalada.novosPoderes.length > 0) {
+        partes.push(tr("Poder novo: {lista}", { lista: escalada.novosPoderes.map((poder) => `${poder.icone} ${poder.nome}`).join(", ") }));
+    }
+    const proximo = proximoAndarComPoder(recorde);
+    if (proximo !== null) partes.push(tr("Chegue ao andar {n} para liberar outro poder", { n: proximo }));
+    return partes.join(" · ");
 }
 
 function causaDoFimDaEscalada() {
-    if (escalada.venceu) return tr("O Mestre da Faixa caiu. A faixa agora é sua!");
+    if (escalada.venceu) return tr("A Rainha das Cobras caiu. O topo é seu!");
     const rival = andarDaEscalada().rivais[0];
     return tr("{nome} comeu {n} maçãs antes de você", { nome: tr(rival.nome), n: andarDaEscalada().metaDoRival });
 }

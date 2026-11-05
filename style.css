@@ -2611,14 +2611,17 @@ body.menos-movimento .botao-jogar {
 
 .trilha-andares {
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
 }
 
 .andar-da-trilha {
     display: grid;
     place-items: center;
-    width: 38px;
-    height: 38px;
+    width: clamp(26px, 6.5vh, 36px);
+    height: clamp(26px, 6.5vh, 36px);
+    font-size: 13px;
     font-weight: 800;
     background: #151d2c;
     border: 3px solid #05070c;
@@ -2728,10 +2731,14 @@ body.menos-movimento .botao-jogar {
     white-space: nowrap;
 }
 
-@media (max-width: 600px) {
-    .jogo:has(.placares-escalada) .barra-recorde {
-        display: none;
-    }
+.jogo:has(.placares-escalada) .barra-recorde {
+    display: none;
+}
+
+.placares-escalada .placar-jogador > span:nth-child(2) {
+    max-width: 9ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 @media (max-width: 900px), (max-height: 600px) {
@@ -2753,6 +2760,11 @@ body.menos-movimento .botao-jogar {
 }
 
 @media (max-width: 640px) {
+    .andar-da-trilha {
+        width: 28px;
+        height: 28px;
+    }
+
     .cartas-poder {
         grid-template-columns: minmax(0, 1fr);
     }

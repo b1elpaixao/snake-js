@@ -87,6 +87,25 @@ function desenharChapeu(c, id, tempo = 0) {
         c.lineWidth = 1.6;
         c.beginPath(); c.moveTo(-3, 11); c.lineTo(6, -12); c.stroke();
         elipse(-3, 11, 7.5, 7, "#111111");
+    } else if (id === "tiara") {
+        // tiara dourada na testa, com as pontas viradas pra trás e joias
+        c.lineJoin = "round";
+        const contorno = () => {
+            c.beginPath();
+            c.moveTo(-3, -17);
+            [[-15, -13], [-7, -8], [-19, -3.5], [-7, 0], [-19, 3.5], [-7, 8], [-15, 13], [-3, 17]].forEach(([x, y]) => c.lineTo(x, y));
+            c.closePath();
+        };
+        contorno();
+        c.lineWidth = 3;
+        c.strokeStyle = "#141414";
+        c.stroke();
+        c.fillStyle = "#ffd23a";
+        c.fill();
+        c.fillStyle = "#e0245e";
+        c.beginPath(); c.arc(-14, 0, 2.2, 0, Math.PI * 2); c.fill();
+        c.fillStyle = "#4aa8ff";
+        c.beginPath(); c.arc(-12, -8, 1.6, 0, Math.PI * 2); c.arc(-12, 8, 1.6, 0, Math.PI * 2); c.fill();
     } else if (id === "faixa") {
         // faixa de lutador: amarrada na testa, com as pontas voando atrás
         const balanco = Math.sin(tempo / 170) * 2.5;

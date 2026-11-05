@@ -888,7 +888,8 @@ const CONQUISTAS = [
     { id: "cacadora", nome: "Caçadora do abismo", descricao: "Derrotar os olhos que emergem 3 vezes numa partida", condicao: (c) => (c.partida.chefoes || 0) >= 3 },
     { id: "labirinto", nome: "Saí do labirinto", descricao: "Chegar à fase 4 no modo Fases", condicao: (c) => c.partida.modo === "fases" && c.partida.fase >= 4 },
     { id: "ultimaDePe", nome: "Última de pé", descricao: "Vencer uma partida com 4 jogadores", condicao: (c) => c.partida.venceuComQuatro === true },
-    { id: "topoDaEscalada", nome: "Topo da Escalada", descricao: "Vencer o chefe no último andar da Escalada", condicao: (c) => c.partida.chegouAoTopo === true },
+    { id: "topoDaEscalada", nome: "Topo da Escalada", descricao: "Vencer a Rainha das Cobras no 10º andar", condicao: (c) => c.partida.chegouAoTopo === true },
+    { id: "derrubouOMestre", nome: "Faixa conquistada", descricao: "Vencer o Mestre da Faixa na Escalada", condicao: (c) => c.partida.derrubouOMestre === true },
     { id: "venceuBot", nome: "Mais esperta que o bot", descricao: "Vencer o bot no nível Difícil", condicao: (c) => c.partida.venceuBotDificil === true },
     { id: "veterana", nome: "Veterana", descricao: "Jogar 50 partidas", condicao: (c) => c.estatisticas.partidas >= 50 },
     { id: "maratona", nome: "Maratona", descricao: "Jogar 1 hora no total", condicao: (c) => c.estatisticas.tempoTotalMs >= 3600000 },
@@ -1146,30 +1147,62 @@ function guardarFantasmaSeMelhor(salvos, data, modo, pontuacao, passos) {
 // ==========================================
 // Escalada: a campanha solo (funções puras - testadas em testes.js)
 // ==========================================
+const RIVAIS_DA_ESCALADA = {
+    ze: { nome: "Zé do Boné", chapeu: "bone" },
+    flor: { nome: "Dona Flor", chapeu: "flor" },
+    dj: { nome: "DJ Fone", chapeu: "fone" },
+    pirata: { nome: "Capitã Pirata", chapeu: "pirata" },
+    vila: { nome: "A Vilã", chapeu: "visor" },
+    mestre: { nome: "Mestre da Faixa", chapeu: "faixa", cabeca: "#ff6a6a", corpo: "#8f1f2c" },
+    rainha: { nome: "Rainha das Cobras", chapeu: "tiara", cabeca: "#ffd23a", corpo: "#b5791a" },
+};
+
 const ANDARES_DA_ESCALADA = [
-    { meta: 5, nivel: "facil", pedras: 2, tema: "coliseu", rivais: [{ nome: "Zé do Boné", chapeu: "bone" }] },
-    { meta: 6, nivel: "facil", pedras: 3, tema: "coliseu", rivais: [{ nome: "Zé do Boné", chapeu: "bone" }, { nome: "Dona Flor", chapeu: "flor" }] },
-    { meta: 7, nivel: "normal", pedras: 3, tema: "selva", rivais: [{ nome: "Zé do Boné", chapeu: "bone" }, { nome: "Dona Flor", chapeu: "flor" }, { nome: "DJ Fone", chapeu: "fone" }] },
-    { meta: 8, nivel: "normal", pedras: 5, tema: "selva", rivais: [{ nome: "Zé do Boné", chapeu: "bone" }, { nome: "Dona Flor", chapeu: "flor" }, { nome: "DJ Fone", chapeu: "fone" }] },
-    { meta: 9, metaDoRival: 12, nivel: "dificil", pedras: 4, tema: "arena", chefe: true, rivais: [{ nome: "Mestre da Faixa", chapeu: "faixa", cabeca: "#ff6a6a", corpo: "#8f1f2c" }] },
+    { meta: 5, nivel: "facil", pedras: 2, tema: "coliseu", rivais: [RIVAIS_DA_ESCALADA.ze] },
+    { meta: 6, nivel: "facil", pedras: 3, tema: "coliseu", rivais: [RIVAIS_DA_ESCALADA.ze, RIVAIS_DA_ESCALADA.flor] },
+    { meta: 6, nivel: "normal", pedras: 3, tema: "selva", rivais: [RIVAIS_DA_ESCALADA.ze, RIVAIS_DA_ESCALADA.flor, RIVAIS_DA_ESCALADA.dj] },
+    { meta: 7, nivel: "normal", pedras: 5, tema: "selva", rivais: [RIVAIS_DA_ESCALADA.ze, RIVAIS_DA_ESCALADA.flor, RIVAIS_DA_ESCALADA.dj] },
+    { meta: 9, metaDoRival: 12, nivel: "dificil", pedras: 4, tema: "arena", chefe: true, rivais: [RIVAIS_DA_ESCALADA.mestre] },
+    { meta: 7, nivel: "normal", pedras: 5, tema: "arena", rivais: [RIVAIS_DA_ESCALADA.pirata, RIVAIS_DA_ESCALADA.flor, RIVAIS_DA_ESCALADA.dj] },
+    { meta: 8, nivel: "normal", pedras: 6, pedrasMoveis: 1, tema: "arena", rivais: [RIVAIS_DA_ESCALADA.pirata, RIVAIS_DA_ESCALADA.vila, RIVAIS_DA_ESCALADA.dj] },
+    { meta: 8, nivel: "dificil", pedras: 6, pedrasMoveis: 2, tema: "abismo", rivais: [RIVAIS_DA_ESCALADA.pirata, RIVAIS_DA_ESCALADA.vila, RIVAIS_DA_ESCALADA.dj] },
+    { meta: 9, nivel: "dificil", pedras: 7, pedrasMoveis: 2, tema: "abismo", rivais: [RIVAIS_DA_ESCALADA.pirata, RIVAIS_DA_ESCALADA.vila, RIVAIS_DA_ESCALADA.mestre] },
+    { meta: 12, metaDoRival: 15, nivel: "dificil", pedras: 6, pedrasMoveis: 2, tema: "abismo", chefe: true, rivais: [RIVAIS_DA_ESCALADA.rainha] },
 ];
 
+// liberaNoAndar: o poder entra no sorteio depois que a pessoa chega nesse andar (em qualquer corrida)
 const PODERES_DA_ESCALADA = [
-    { id: "ima", icone: "🧲", raridade: "comum", nome: "Ímã de comida", descricao: "A maçã vem até você quando está perto" },
-    { id: "sangueFrio", icone: "🧊", raridade: "comum", nome: "Sangue frio", descricao: "O jogo fica 15% mais lento" },
-    { id: "dieta", icone: "🥗", raridade: "comum", nome: "Dieta", descricao: "Você cresce só em uma maçã a cada duas" },
-    { id: "bolsoCheio", icone: "🪙", raridade: "raro", nome: "Bolso cheio", descricao: "50% mais moedas no fim da corrida" },
-    { id: "casca", icone: "🛡️", raridade: "raro", nome: "Casca grossa", descricao: "Uma batida perdoada a cada andar" },
-    { id: "fomeDupla", icone: "🍎", raridade: "lendario", nome: "Fome dupla", descricao: "Cada maçã conta 2 para vencer o andar" },
+    { id: "ima", icone: "🧲", raridade: "comum", liberaNoAndar: 0, nome: "Ímã de comida", descricao: "A maçã vem até você quando está perto" },
+    { id: "sangueFrio", icone: "🧊", raridade: "comum", liberaNoAndar: 0, nome: "Sangue frio", descricao: "O jogo fica 15% mais lento" },
+    { id: "dieta", icone: "🥗", raridade: "comum", liberaNoAndar: 0, nome: "Dieta", descricao: "Você cresce só em uma maçã a cada duas" },
+    { id: "bolsoCheio", icone: "🪙", raridade: "raro", liberaNoAndar: 0, nome: "Bolso cheio", descricao: "50% mais moedas no fim da corrida" },
+    { id: "casca", icone: "🛡️", raridade: "raro", liberaNoAndar: 0, nome: "Casca grossa", descricao: "Uma batida perdoada a cada andar" },
+    { id: "fomeDupla", icone: "🍎", raridade: "lendario", liberaNoAndar: 0, nome: "Fome dupla", descricao: "Cada maçã conta 2 para vencer o andar" },
+    { id: "caminhoLimpo", icone: "🧹", raridade: "comum", liberaNoAndar: 2, nome: "Caminho limpo", descricao: "Os andares começam sem pedras" },
+    { id: "comboLongo", icone: "🔥", raridade: "comum", liberaNoAndar: 3, nome: "Combo longo", descricao: "O dobro de tempo para manter o combo" },
+    { id: "portalDeBolso", icone: "🌀", raridade: "raro", liberaNoAndar: 4, nome: "Portal de bolso", descricao: "Atravesse uma parede a cada andar" },
+    { id: "largada", icone: "⏱️", raridade: "raro", liberaNoAndar: 6, nome: "Largada na frente", descricao: "Os rivais ficam parados 3 s no começo" },
+    { id: "cacaOuro", icone: "✨", raridade: "raro", liberaNoAndar: 7, nome: "Caça-ouro", descricao: "Mais maçãs douradas, e cada uma conta 2" },
+    { id: "segundaChance", icone: "💖", raridade: "lendario", liberaNoAndar: 9, nome: "Segunda chance", descricao: "Uma batida perdoada na corrida inteira" },
 ];
 
 const MULTIPLICADOR_DO_SANGUE_FRIO = 1.15;
 const MOEDAS_POR_ANDAR = 4;
 const MOEDAS_POR_CHEGAR_AO_TOPO = 20;
 
-// até 3 poderes que a pessoa ainda não tem, sem repetir; sorteio devolve de 0 a 1
-function sortearPoderes(donos, sorteio) {
-    const restantes = PODERES_DA_ESCALADA.filter((poder) => !donos.includes(poder.id));
+function poderesLiberados(melhorAndar) {
+    return PODERES_DA_ESCALADA.filter((poder) => poder.liberaNoAndar <= melhorAndar);
+}
+
+// o andar em que o próximo poder libera (ou null, se já liberou todos)
+function proximoAndarComPoder(melhorAndar) {
+    const faltam = PODERES_DA_ESCALADA.map((poder) => poder.liberaNoAndar).filter((andar) => andar > melhorAndar);
+    return faltam.length > 0 ? Math.min(...faltam) : null;
+}
+
+// até 3 poderes liberados que a pessoa ainda não tem, sem repetir; sorteio devolve de 0 a 1
+function sortearPoderes(donos, sorteio, melhorAndar = 0) {
+    const restantes = poderesLiberados(melhorAndar).filter((poder) => !donos.includes(poder.id));
     const escolhidos = [];
     while (escolhidos.length < 3 && restantes.length > 0) {
         escolhidos.push(restantes.splice(Math.floor(sorteio() * restantes.length), 1)[0]);
@@ -1796,7 +1829,8 @@ const ITENS_DA_LOJA = [
     { id: "helice", nome: "Gorro de hélice", tipo: "chapeu", preco: 750 },
     { id: "pirata", nome: "Bandana de pirata", tipo: "chapeu", conquista: "maratona" },
     { id: "visor", nome: "Visor de vilã", tipo: "chapeu", conquista: "venceuBot" },
-    { id: "faixa", nome: "Faixa de lutador", tipo: "chapeu", conquista: "topoDaEscalada" },
+    { id: "faixa", nome: "Faixa de lutador", tipo: "chapeu", conquista: "derrubouOMestre" },
+    { id: "tiara", nome: "Tiara da Rainha", tipo: "chapeu", conquista: "topoDaEscalada" },
     { id: "coroa", nome: "Coroa", tipo: "chapeu", conquista: "lendaria" },
     { id: "mascara", nome: "Capacete de samurai", tipo: "chapeu", conquista: "ultimaDePe" },
     { id: "bruxa", nome: "Chapéu de bruxa", tipo: "chapeu", conquista: "noiteDasBruxas" },

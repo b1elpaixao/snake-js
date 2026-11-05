@@ -1306,7 +1306,7 @@ function loop() {
     for (const jogador of jogadores) {
         atualizarEfeitos(jogador);
 
-        if (jogador.comboAtual > 0 && agoraDoJogo() - jogador.ultimoComerEm > JANELA_COMBO_MS) {
+        if (jogador.comboAtual > 0 && agoraDoJogo() - jogador.ultimoComerEm > janelaDoCombo(jogador)) {
             jogador.comboAtual = 0;
         }
     }
@@ -1398,7 +1398,7 @@ function loop() {
         powerUp = { x: posicao.x, y: posicao.y, tipo: gerarTipoPowerUp() };
     }
 
-    if(!comidaDourada && Math.random() < CHANCE_COMIDA_DOURADA_POR_TICK) {
+    if(!comidaDourada && Math.random() < CHANCE_COMIDA_DOURADA_POR_TICK * chanceDeDourada()) {
         gerarComidaDourada();
     }
 
