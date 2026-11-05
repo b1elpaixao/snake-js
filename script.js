@@ -152,9 +152,9 @@ const seletorModo = document.getElementById("seletorModo");
 const seletorNivelBot = document.getElementById("seletorNivelBot");
 
 const CONFIGURACAO_DIFICULDADE = {
-    facil: { velocidadeInicial: 300, aceleracaoMaxima: 1.6, obstaculos: 5, pedrasMoveis: 0 },
-    normal: { velocidadeInicial: 250, aceleracaoMaxima: 2, obstaculos: 8, pedrasMoveis: 0 },
-    dificil: { velocidadeInicial: 180, aceleracaoMaxima: 2.4, obstaculos: 12, pedrasMoveis: 3 },
+    facil: { velocidadeInicial: 260, aceleracaoMaxima: 1.6, obstaculos: 5, pedrasMoveis: 0 },
+    normal: { velocidadeInicial: 215, aceleracaoMaxima: 2, obstaculos: 8, pedrasMoveis: 0 },
+    dificil: { velocidadeInicial: 165, aceleracaoMaxima: 2.4, obstaculos: 12, pedrasMoveis: 3 },
 };
 const botaoJogarBot = document.getElementById("botaoJogarBot");
 const botaoJogar1 = document.getElementById("botaoJogar1");
@@ -307,7 +307,7 @@ let musicaEscolhida = "classica"; // ou "sortear"
 let tempoPausadoTotal= 0;
 let pausadoDesde = null;
 
-const DURACAO_PASSO_CONTAGEM_MS = 700;
+const DURACAO_PASSO_CONTAGEM_MS = 450;
 let contagemAtiva = false;
 let temporizadorLoop = null; // guardado pra poder parar o loop ao reiniciar/sair pela pausa
 let proximoLoopEm = 0; // no relógio do jogo: quando é o próximo meio passo (o loopRenderizacao confere a cada quadro)
@@ -1355,6 +1355,7 @@ function loop() {
         tocarSomColisao();
         vibrar([120, 60, 200]);
 
+        batidas.forEach((batida) => soltarEstouro(batida.jogador.cobra[0], batida.jogador.corCabeca, 4));
         animacaoMorte = { inicio: performance.now(), batidos: batidas.map((batida) => batida.jogador) };
         temporizadorAnimacaoMorte = setTimeout(() => {
             animacaoMorte = null;
@@ -1556,7 +1557,7 @@ function aplicarTamanhoDoTabuleiro() {
     ajustarResolucaoCanvas();
 }
 
-function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorModo.value) {
+function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorModo.value, botsEscolhidos = vagasComBotEscolhidas()) {
     obterContextoAudio();
     salvarPreferencias();
     modoAtual = modo;
@@ -1566,7 +1567,7 @@ function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorM
     quantidadeJogadoresAtual = comBot || comChefao || juntos ? 2 : jogadoresPermitidos(modo, quantidade);
     modoComBotAtivo = comBot && !comChefao;
     modoCooperativo = juntos && !comChefao;
-    vagasComBotAtuais = comBot || comChefao || juntos ? [] : vagasComBotEscolhidas().filter((vaga) => vaga <= quantidadeJogadoresAtual);
+    vagasComBotAtuais = comBot || comChefao || juntos ? [] : botsEscolhidos.filter((vaga) => vaga <= quantidadeJogadoresAtual);
 
     const nomeDaVaga = (vaga, input) => vagasComBotAtuais.includes(vaga) ? `Bot ${vaga}` : (nomeDoCampo(input) || tr(`Jogador ${vaga}`));
     const nome1 = inputNomeJogador1.value.trim() || tr("Jogador 1");
@@ -1648,6 +1649,7 @@ seletorQuantidade.addEventListener("change", () => {
 if (window.matchMedia("(pointer: coarse)").matches) seletorQuantidade.parentElement.hidden = true;
 mostrarQuantidadeEscolhida();
 botaoJogarBot.addEventListener("click", () => comecarJogo(1, true));
+document.getElementById("botaoJogarBots").addEventListener("click", () => comecarJogo(4, false, false, seletorModo.value, [2, 3, 4]));
 document.getElementById("botaoJogarJuntos").addEventListener("click", () => comecarJogo(2, false, true));
 
 // ==========================================

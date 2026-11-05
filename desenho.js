@@ -94,6 +94,7 @@ function desenhar() {
     desenharParticulas(); // rastro e efeito ao comer da loja
     desenharFantasma(); // por baixo das cobras de verdade
     desenharQuemSaiu(); // 3 ou 4 jogadores
+    desenharEstouros();
 
     for (const jogador of jogadores) {
         if (jogador.fora) continue; // saiu da partida (3 ou 4 jogadores): não volta nem no fundo da tela de fim
@@ -328,7 +329,7 @@ function desenharTabuleiro() {
 function desenharMaca(x, y, cor = "#e7471d") {
     const centroX = x * TAMANHO_CELULA + TAMANHO_CELULA / 2;
     const centroY = y * TAMANHO_CELULA + TAMANHO_CELULA / 2 + 1;
-    const raio = TAMANHO_CELULA * 0.38;
+    const raio = TAMANHO_CELULA * 0.38 * (reduzirMovimento ? 1 : 1 + 0.07 * Math.sin(agoraDoJogo() / 180)); // a maçã "respira"
 
     ctx.fillStyle = cor;
     ctx.beginPath();
@@ -741,7 +742,8 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
         resultado = tr("Game Over");
     } else if (jogadores.length > 2) {
         const vencedor = vencedorComMuitos();
-        resultado = vencedor ? tr("{nome} venceu!", { nome: vencedor.nome }) : tr("Empate!");
+        const soBotsVivos = jogadoresVivos.length > 1 && jogadoresVivos.every((jogador) => jogador.bot);
+        resultado = vencedor ? tr("{nome} venceu!", { nome: vencedor.nome }) : soBotsVivos ? tr("Os bots venceram!") : tr("Empate!");
     } else if (jogadoresVivos.length === 1) {
         resultado = tr("{nome} venceu!", { nome: jogadoresVivos[0].nome });
     } else {

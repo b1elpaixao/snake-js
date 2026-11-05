@@ -48,6 +48,8 @@ const TRADUCOES = {
     "Quem vai jogar?": "Who's playing?",
     "Jogar": "Play",
     "Com amigos": "With friends",
+    "Contra 3 bots": "Against 3 bots",
+    "Os bots venceram!": "The bots won!",
     "Progresso": "Progress",
     "Ajustes": "Settings",
     "Partida": "Game",

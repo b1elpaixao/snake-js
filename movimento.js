@@ -130,6 +130,8 @@ function comerAlimento(jogador, pontosBase) {
             : tr(umPonto ? "{n} ponto" : "{n} pontos", { n: jogador.pontuacao }));
     }
     tocarSomComer();
+    soltarEstouro(jogador.cobra[0], jogador.corCabeca, Math.min(jogador.comboAtual, 6));
+    pularPlacar(jogador.elementoPontuacao);
 
     if (!jogador.bot) {
         estatisticas.comidas++;
