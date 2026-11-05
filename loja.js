@@ -44,7 +44,9 @@ function darMoedasDaPartida() {
     const pontos = modoCooperativo
         ? humanos.reduce((soma, jogador) => soma + jogador.pontuacao, 0)
         : Math.max(...humanos.map((jogador) => jogador.pontuacao));
-    const ganhas = moedasDaPartida(pontos);
+    const ganhas = modoAtual === "escalada" && escalada
+        ? moedasDaEscalada(pontos, escalada.venceu ? ANDARES_DA_ESCALADA.length : escalada.andar - 1, escalada.venceu, escalada.poderes)
+        : moedasDaPartida(pontos);
 
     ganharMoedas(ganhas);
     elemento.textContent = ganhas > 0

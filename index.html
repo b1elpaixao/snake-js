@@ -28,6 +28,12 @@
     <main class="layout">
         <section class="jogo">
             <canvas id="cenarioDeFora" aria-hidden="true" hidden></canvas>
+            <div id="telaPoderes" class="tela-poderes" role="dialog" aria-labelledby="tituloPoderes" hidden>
+                <div id="trilhaDosAndares" class="trilha-andares"></div>
+                <h2 id="tituloPoderes" class="titulo-poderes"></h2>
+                <div id="cartasDePoder" class="cartas-poder"></div>
+                <p id="rodapePoderes" class="rodape-poderes"></p>
+            </div>
             <div class="barra-placar">
                 <div class="placares">
                     <span id="placarJogador1" class="placar-jogador">
@@ -146,6 +152,7 @@
                             <label for="seletorModo">Modo</label>
                             <select id="seletorModo">
                                 <option value="normal" selected>Normal</option>
+                                <option value="escalada">Escalada (sozinho)</option>
                                 <option value="clássico">clássico (sem pedras)</option>
                                 <option value="rato">Rato (caçada)</option>
                                 <option value="tempo">Contra o tempo (2 min)</option>
@@ -553,6 +560,7 @@
     <script src="enfeites.js"></script>
     <script src="loja.js"></script>
     <script src="salvos.js"></script>
+    <script src="escalada.js"></script>
     <script src="cenarios.js"></script>
     <script src="sensacao.js"></script>
     <script src="vitrine.js"></script>

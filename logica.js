@@ -888,6 +888,7 @@ const CONQUISTAS = [
     { id: "cacadora", nome: "Caçadora do abismo", descricao: "Derrotar os olhos que emergem 3 vezes numa partida", condicao: (c) => (c.partida.chefoes || 0) >= 3 },
     { id: "labirinto", nome: "Saí do labirinto", descricao: "Chegar à fase 4 no modo Fases", condicao: (c) => c.partida.modo === "fases" && c.partida.fase >= 4 },
     { id: "ultimaDePe", nome: "Última de pé", descricao: "Vencer uma partida com 4 jogadores", condicao: (c) => c.partida.venceuComQuatro === true },
+    { id: "topoDaEscalada", nome: "Topo da Escalada", descricao: "Vencer o chefe no último andar da Escalada", condicao: (c) => c.partida.chegouAoTopo === true },
     { id: "venceuBot", nome: "Mais esperta que o bot", descricao: "Vencer o bot no nível Difícil", condicao: (c) => c.partida.venceuBotDificil === true },
     { id: "veterana", nome: "Veterana", descricao: "Jogar 50 partidas", condicao: (c) => c.estatisticas.partidas >= 50 },
     { id: "maratona", nome: "Maratona", descricao: "Jogar 1 hora no total", condicao: (c) => c.estatisticas.tempoTotalMs >= 3600000 },
@@ -1142,6 +1143,50 @@ function guardarFantasmaSeMelhor(salvos, data, modo, pontuacao, passos) {
 // Temas do tabuleiro (funções puras - testadas em testes.js)
 // ==========================================
 // conquista: null = livre desde o começo; senão, o id da conquista que libera o tema
+// ==========================================
+// Escalada: a campanha solo (funções puras - testadas em testes.js)
+// ==========================================
+const ANDARES_DA_ESCALADA = [
+    { meta: 5, nivel: "facil", pedras: 2, tema: "coliseu", rivais: [{ nome: "Zé do Boné", chapeu: "bone" }] },
+    { meta: 6, nivel: "facil", pedras: 3, tema: "coliseu", rivais: [{ nome: "Zé do Boné", chapeu: "bone" }, { nome: "Dona Flor", chapeu: "flor" }] },
+    { meta: 7, nivel: "normal", pedras: 3, tema: "selva", rivais: [{ nome: "Zé do Boné", chapeu: "bone" }, { nome: "Dona Flor", chapeu: "flor" }, { nome: "DJ Fone", chapeu: "fone" }] },
+    { meta: 8, nivel: "normal", pedras: 5, tema: "selva", rivais: [{ nome: "Zé do Boné", chapeu: "bone" }, { nome: "Dona Flor", chapeu: "flor" }, { nome: "DJ Fone", chapeu: "fone" }] },
+    { meta: 9, metaDoRival: 12, nivel: "dificil", pedras: 4, tema: "arena", chefe: true, rivais: [{ nome: "Mestre da Faixa", chapeu: "faixa", cabeca: "#ff6a6a", corpo: "#8f1f2c" }] },
+];
+
+const PODERES_DA_ESCALADA = [
+    { id: "ima", icone: "🧲", raridade: "comum", nome: "Ímã de comida", descricao: "A maçã vem até você quando está perto" },
+    { id: "sangueFrio", icone: "🧊", raridade: "comum", nome: "Sangue frio", descricao: "O jogo fica 15% mais lento" },
+    { id: "dieta", icone: "🥗", raridade: "comum", nome: "Dieta", descricao: "Você cresce só em uma maçã a cada duas" },
+    { id: "bolsoCheio", icone: "🪙", raridade: "raro", nome: "Bolso cheio", descricao: "50% mais moedas no fim da corrida" },
+    { id: "casca", icone: "🛡️", raridade: "raro", nome: "Casca grossa", descricao: "Uma batida perdoada a cada andar" },
+    { id: "fomeDupla", icone: "🍎", raridade: "lendario", nome: "Fome dupla", descricao: "Cada maçã conta 2 para vencer o andar" },
+];
+
+const MULTIPLICADOR_DO_SANGUE_FRIO = 1.15;
+const MOEDAS_POR_ANDAR = 4;
+const MOEDAS_POR_CHEGAR_AO_TOPO = 20;
+
+// até 3 poderes que a pessoa ainda não tem, sem repetir; sorteio devolve de 0 a 1
+function sortearPoderes(donos, sorteio) {
+    const restantes = PODERES_DA_ESCALADA.filter((poder) => !donos.includes(poder.id));
+    const escolhidos = [];
+    while (escolhidos.length < 3 && restantes.length > 0) {
+        escolhidos.push(restantes.splice(Math.floor(sorteio() * restantes.length), 1)[0]);
+    }
+    return escolhidos;
+}
+
+function macasQueValem(poderes) {
+    return poderes.includes("fomeDupla") ? 2 : 1;
+}
+
+// as moedas da corrida: as dos pontos + as dos andares vencidos
+function moedasDaEscalada(pontos, andaresVencidos, chegouAoTopo, poderes) {
+    const total = moedasDaPartida(pontos) + andaresVencidos * MOEDAS_POR_ANDAR + (chegouAoTopo ? MOEDAS_POR_CHEGAR_AO_TOPO : 0);
+    return poderes.includes("bolsoCheio") ? Math.floor(total * 1.5) : total;
+}
+
 const TEMAS_DO_TABULEIRO = [
     { id: "coliseu", nome: "Coliseu", claro: "#d2a56c", escuro: "#b98a52", conquista: null, cenario: true },
     { id: "selva", nome: "Selva", claro: "#49a83f", escuro: "#3f9a3a", conquista: null, cenario: true },
@@ -1751,6 +1796,7 @@ const ITENS_DA_LOJA = [
     { id: "helice", nome: "Gorro de hélice", tipo: "chapeu", preco: 750 },
     { id: "pirata", nome: "Bandana de pirata", tipo: "chapeu", conquista: "maratona" },
     { id: "visor", nome: "Visor de vilã", tipo: "chapeu", conquista: "venceuBot" },
+    { id: "faixa", nome: "Faixa de lutador", tipo: "chapeu", conquista: "topoDaEscalada" },
     { id: "coroa", nome: "Coroa", tipo: "chapeu", conquista: "lendaria" },
     { id: "mascara", nome: "Capacete de samurai", tipo: "chapeu", conquista: "ultimaDePe" },
     { id: "bruxa", nome: "Chapéu de bruxa", tipo: "chapeu", conquista: "noiteDasBruxas" },

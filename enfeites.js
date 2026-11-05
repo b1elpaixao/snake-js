@@ -87,6 +87,26 @@ function desenharChapeu(c, id, tempo = 0) {
         c.lineWidth = 1.6;
         c.beginPath(); c.moveTo(-3, 11); c.lineTo(6, -12); c.stroke();
         elipse(-3, 11, 7.5, 7, "#111111");
+    } else if (id === "faixa") {
+        // faixa de lutador: amarrada na testa, com as pontas voando atrás
+        const balanco = Math.sin(tempo / 170) * 2.5;
+        c.strokeStyle = "#141414";
+        c.lineWidth = 6.5;
+        c.lineCap = "round";
+        for (const lado of [-1, 1]) {
+            c.beginPath(); c.moveTo(-14, 0); c.quadraticCurveTo(-21, lado * 3 + balanco, -28, lado * 9 + balanco); c.stroke();
+        }
+        c.strokeStyle = "#d3212d";
+        c.lineWidth = 3.8;
+        for (const lado of [-1, 1]) {
+            c.beginPath(); c.moveTo(-14, 0); c.quadraticCurveTo(-21, lado * 3 + balanco, -28, lado * 9 + balanco); c.stroke();
+        }
+        c.fillStyle = "#141414";
+        c.beginPath(); c.roundRect(-14, -19, 9.5, 38, 4); c.fill();
+        c.fillStyle = "#d3212d";
+        c.beginPath(); c.roundRect(-12.5, -17.5, 6.5, 35, 3); c.fill();
+        c.fillStyle = "#fff";
+        c.beginPath(); c.arc(-9.2, 0, 2.6, 0, Math.PI * 2); c.fill();
     } else if (id === "visor") {
         // visor de vilã: faixa vermelha brilhando por cima dos olhos
         c.shadowColor = "#ff1f3d";

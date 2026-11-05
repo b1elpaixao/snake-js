@@ -354,6 +354,16 @@ verificar("conquista: não ganha de novo o que já tem", idsDe(conquistasNovas([
 verificar("conquista: 100 comidas dá duas de uma vez", idsDe(conquistasNovas([], contextoTeste({ comidas: 100 }))), "primeiraMordida,faminta");
 verificar("conquista: cobra grande vale na partida de agora", idsDe(conquistasNovas([], contextoTeste({}, { tamanho: 20 }))), "cobraGrande");
 verificar("conquista: 30 pontos só valem no Contra o tempo", idsDe(conquistasNovas([], contextoTeste({}, { pontos: 30, modo: "normal" }))) + "|" + idsDe(conquistasNovas([], contextoTeste({}, { pontos: 30, modo: "tempo" }))), "|contraORelogio");
+verificar("escalada: 5 andares, o último é o chefe", ANDARES_DA_ESCALADA.length + "," + Boolean(ANDARES_DA_ESCALADA[4].chefe), "5,true");
+verificar("escalada: a meta só sobe", ANDARES_DA_ESCALADA.every((andar, i, todos) => i === 0 || andar.meta > todos[i - 1].meta), true);
+verificar("escalada: até 3 rivais", ANDARES_DA_ESCALADA.every((andar) => andar.rivais.length <= 3), true);
+verificar("sortearPoderes: 3 diferentes", new Set(sortearPoderes([], () => 0.5).map((poder) => poder.id)).size, 3);
+verificar("sortearPoderes: não repete o que já tem", sortearPoderes(["ima", "dieta"], () => 0).some((poder) => ["ima", "dieta"].includes(poder.id)), false);
+verificar("sortearPoderes: sobrou pouco, vem pouco", sortearPoderes(["ima", "dieta", "casca", "sangueFrio", "fomeDupla"], () => 0).map((poder) => poder.id).join(), "bolsoCheio");
+verificar("macasQueValem: Fome dupla conta 2", [macasQueValem([]), macasQueValem(["fomeDupla"])].join(), "1,2");
+verificar("moedasDaEscalada: pontos + andares", moedasDaEscalada(20, 2, false, []), moedasDaPartida(20) + 8);
+verificar("moedasDaEscalada: topo e Bolso cheio", moedasDaEscalada(0, 5, true, ["bolsoCheio"]), 60);
+verificar("escalada: a faixa só vem da conquista do topo", ITENS_DA_LOJA.find((item) => item.id === "faixa").conquista, "topoDaEscalada");
 verificar("conquista: ids únicos", new Set(CONQUISTAS.map((c) => c.id)).size, CONQUISTAS.length);
 verificar("limparConquistas tira o que não existe", JSON.stringify(limparConquistas(["faminta", "voar", 7])), JSON.stringify(["faminta"]));
 verificar("limparCOnquistas com lixo devolve lista vazia", JSON.stringify(limparConquistas(" {lixo")), "[]");
@@ -725,7 +735,7 @@ verificar("idioma: em inglês traduz e preenche", [tr("Fase {n}", { n: 2 }), tr(
 idioma = "pt";
 verificar("idioma: toda tabela do logica.js tem tradução", (() => {
     const faltando = [];
-    percorrerTextos([CONQUISTAS, CORES_DA_COBRA, TEMAS_DO_TABULEIRO, EPOCAS, MUSICAS, MISSOES, ITENS_DA_LOJA, MAPAS_DAS_FASES, TEMA_ALTO_CONTRASTE], (dono, campo) => { if (!(dono[campo] in TRADUCOES)) faltando.push(dono[campo]); });
+    percorrerTextos([PODERES_DA_ESCALADA, CONQUISTAS, CORES_DA_COBRA, TEMAS_DO_TABULEIRO, EPOCAS, MUSICAS, MISSOES, ITENS_DA_LOJA, MAPAS_DAS_FASES, TEMA_ALTO_CONTRASTE], (dono, campo) => { if (!(dono[campo] in TRADUCOES)) faltando.push(dono[campo]); });
     for (const nomes of [NOMES_DOS_MODOS, NOMES_DOS_POWERUPS]) faltando.push(...Object.values(nomes).filter((nome) => !(nome in TRADUCOES)));
     return faltando.join();
 })(), "");

@@ -270,7 +270,7 @@ let reduzirMovimento = movimentoReduzidoNoSistema; // também liga pela opção 
 let textosFlutuantes = []; // os "=3" que sobem ao comer
 const DURACAO_TEXTO_FLUTUANTE_MS = 800;
 const MODOS_DE_JOGO = ["normal", "clássico", "rato", "tempo", "arena", "chefao", "fases", "desafio"];
-const NOMES_MODOS = { normal: tr("Normal"), "clássico": tr("Clássico"), rato: tr("Rato"), tempo: tr("Contra o tempo"), arena: tr("Arena"), chefao: tr("Chefão"), fases: tr("Fases"), desafio: tr("Desafio de hoje"), personalizada: tr("Fase criada") };
+const NOMES_MODOS = { normal: tr("Normal"), "clássico": tr("Clássico"), rato: tr("Rato"), tempo: tr("Contra o tempo"), arena: tr("Arena"), chefao: tr("Chefão"), escalada: tr("Escalada"), fases: tr("Fases"), desafio: tr("Desafio de hoje"), personalizada: tr("Fase criada") };
 
 let jogoAtivo = false; // só fica true quando a partida começa ( o loopRenderizacao anda o jogo sempre que for true)
 let pausado = false;
@@ -405,6 +405,7 @@ function registrarFimDePartida(batidas) {
     verificarConquistas({
         venceuBotDificil: venceuOBot && seletorNivelBot.value === "dificil",
         venceuComQuatro: jogadores.length === 4 && Boolean(vencedor) && !vencedor.bot,
+        chegouAoTopo: modoAtual === "escalada" && escalada !== null && escalada.venceu,
     });
     registrarMissoesDaPartida(); // depois das conquistas: o aviso da missão espera o da conquista sair
     darMoedasDaPartida();
@@ -626,6 +627,7 @@ function escolherCorDaCobra(id) {
 function temaDoTabuleiro() {
     if (opcoesDeAcessibilidade.altoContraste) return TEMA_ALTO_CONTRASTE; // a opção de acessibilidade ganha do tema
     if (chefao) return TEMA_DO_ABISMO; // o Chefão é sempre no abismo escuro
+    if (modoAtual === "escalada" && escalada) return temaDaEscalada(); // cada andar tem o seu
     if (epocaAtual && enfeitesDeEpoca) return epocaAtual.tabuleiro; // época do ano: ganha da loja e do tema
     const daLoja = tabuleiroDaLoja();
     if (daLoja) return daLoja; // tabuleiro comprado na loja
@@ -788,6 +790,10 @@ function sairDaPausa() {
 function mudarDirecao(evento) {
     if (!noMenu && evento.key.startsWith("Arrow")) evento.preventDefault(); // dentro de um site, as setas rolariam a página dele
     if (noMenu || animacaoMorte || anuncioAberto) return;
+    if (escolhendoPoder()) {
+        teclaNaEscolhaDePoder(evento); // entre os andares, as teclas só escolhem o poder
+        return;
+    }
     if (!jogoAtivo) {
         if (evento.key === "Escape") {
             voltarAoMenu();
@@ -1322,6 +1328,7 @@ function loop() {
     }
     
     // só quem andou pode ter batido (ou quem ficou fora da zona da Arena que acabou de fechar)
+    if (modoAtual === "escalada" && passoCompleto) atualizarImaDaEscalada();
     let batidas = (fechouAZona ? jogadores : jogadoresQueAndam)
         .map((jogador) => ({ jogador, motivo: motivoDaBatida(jogador) }))
         .filter((batida) => batida.motivo !== null)
@@ -1335,7 +1342,9 @@ function loop() {
 
     batidas.forEach(({ jogador }) => { jogador.bateu = true; }); // o desenho mostra a cabeça encostada
 
-    if (batidas.length > 0 && modoAtual === "tempo") {
+    if (batidas.length > 0 && modoAtual === "escalada" && batidas.every(({ jogador }) => jogador.bot)) {
+        tirarDaPartida(batidas); // rival bateu: sai; a pessoa continua
+    } else if (batidas.length > 0 && modoAtual === "tempo") {
         // no Contra o Tempo bater não acaba o jogo: perde pedaços e fica parada um pouco
         batidas.forEach(({ jogador }) => penalizarBatida(jogador));
         tocarSomColisao();
@@ -1361,11 +1370,14 @@ function loop() {
             animacaoMorte = null;
             const vivos = jogadores.filter((jogador) => !batidas.some((batida) => batida.jogador === jogador));
             if (participantes.length > 2) saidasDaPartida.push(batidas); // a última rodada de quem bateu
+            if (modoAtual === "escalada") { guardarProgressoDaEscalada(); salvarRecordeDaEscalada(); }
             jogadores = participantes; // o fim (placar, recordes, moedas) conta todo mundo que jogou
             mostrarTelaGameOver(vivos, participantes.length > 2 ? saidasDaPartida.flat() : batidas);
         }, DURACAO_ANIMACAO_MORTE_MS);
         return;
     }
+
+    if (modoAtual === "escalada" && verificarFimDoAndar()) return;
 
     jogadoresQueAndam.forEach(gravarPassoDoFantasma); // depois das batidas: no Contra o tempo a cobra já voltou
 
@@ -1463,6 +1475,7 @@ function travarSemParedes(travado) {
 
 function reiniciar() {
     if (anuncioAberto) return;
+    prepararEscaladaNoReiniciar();
     particulas = []; // rastro e efeitos da partida anterior
     clearTimeout(temporizadorAnimacaoMorte);
     elementoTextoCompartilhar.hidden = true;
@@ -1470,7 +1483,7 @@ function reiniciar() {
     cancelarContagem();
     menuPausa.hidden = true;
     animacaoMorte = null;
-    semParedesNaPartida = inputModoSemParedes.checked && modoAtual !== "desafio" && modoAtual !== "arena"; // desafio e Arena: sempre com paredes
+    semParedesNaPartida = inputModoSemParedes.checked && modoAtual !== "desafio" && modoAtual !== "arena" && modoAtual !== "escalada"; // desafio, Arena e Escalada: sempre com paredes
     travarSemParedes(true);
     iniciarMusicaFundo();
     jogadores = criarJogadores(quantidadeJogadoresAtual, nomesJogadoresAtuais);
@@ -1528,7 +1541,9 @@ function reiniciar() {
     jogoAtivo = true;
     botaoPausa.textContent = tr("Pausar");
     prepararFantasma();
-    iniciarContagem();
+    comecarAndarDaEscalada();
+    if (modoAtual === "escalada") iniciarContagem(loop, passosDaContagemDaEscalada());
+    else iniciarContagem();
 }
 
 function aplicarDificuldade() {

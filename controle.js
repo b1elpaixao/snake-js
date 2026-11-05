@@ -35,6 +35,7 @@ function lerControles() {
 
 // 1º controle move o Jogador 1, 2º o Jogador 2... (pulando as vagas de bot)
 function moverPeloControle(posicao, direcao) {
+    if (telaDePoderesAberta()) { moverFocoDasCartas(direcao.x + direcao.y); return; }
     if (noMenu || animacaoMorte || !jogoAtivo || pausado) return;
 
     const pessoa = jogadorDoControle(posicao, participantes);
@@ -52,6 +53,7 @@ function apertouA() {
         return;
     }
     if (animacaoMorte) return;
+    if (escolhendoPoder()) { confirmarCartaPeloControle(); return; }
     if (!jogoAtivo) {
         reiniciar();
     } else if (menuPausaDisponivel()) {

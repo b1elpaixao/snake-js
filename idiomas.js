@@ -401,6 +401,41 @@ const TRADUCOES = {
     "Dourada": "Golden",
     "Noite": "Night",
     "Coliseu": "Colosseum",
+    "Escalada": "The Climb",
+    "Escalada (sozinho)": "The Climb (solo)",
+    "5 andares, poderes e um chefe": "5 floors, powers and a boss",
+    "Topo da Escalada": "Top of the Climb",
+    "Vencer o chefe no último andar da Escalada": "Beat the boss on the last floor of The Climb",
+    "Faixa de lutador": "Fighter's headband",
+    "Zé do Boné": "Cap Joe",
+    "Dona Flor": "Lady Flower",
+    "DJ Fone": "DJ Beats",
+    "Mestre da Faixa": "Headband Master",
+    "Ímã de comida": "Food magnet",
+    "A maçã vem até você quando está perto": "The apple comes to you when it's close",
+    "Sangue frio": "Cold blood",
+    "O jogo fica 15% mais lento": "The game runs 15% slower",
+    "Dieta": "Diet",
+    "Você cresce só em uma maçã a cada duas": "You only grow on every other apple",
+    "Bolso cheio": "Full pockets",
+    "50% mais moedas no fim da corrida": "50% more coins at the end of the run",
+    "Casca grossa": "Thick skin",
+    "Uma batida perdoada a cada andar": "One crash forgiven on each floor",
+    "Fome dupla": "Double hunger",
+    "Cada maçã conta 2 para vencer o andar": "Each apple counts as 2 to clear the floor",
+    "Chefe!": "Boss!",
+    "Andar {n}": "Floor {n}",
+    "Andar {n} · 🍎 {feitas}/{meta}": "Floor {n} · 🍎 {feitas}/{meta}",
+    "Rival {feitas}/{meta}": "Rival {feitas}/{meta}",
+    "Andar vencido!": "Floor cleared!",
+    "Andar {n} vencido! Escolha um poder": "Floor {n} cleared! Choose a power",
+    "Seus poderes: {lista}": "Your powers: {lista}",
+    "Se morrer, volta ao andar 1, mas as moedas ficam.": "If you die, you go back to floor 1, but you keep the coins.",
+    "Você chegou ao topo!": "You reached the top!",
+    "Caiu no andar {n}": "Fell on floor {n}",
+    "Pontos: {pontos} · Melhor andar: {recorde}": "Points: {pontos} · Best floor: {recorde}",
+    "O Mestre da Faixa caiu. A faixa agora é sua!": "The Headband Master fell. The headband is yours!",
+    "{nome} comeu {n} maçãs antes de você": "{nome} ate {n} apples before you",
     "Selva": "Jungle",
     "Deserto": "Desert",
     "Neve": "Snow",
@@ -614,7 +649,7 @@ function percorrerTextos(tabela, aoAchar) {
 // as tabelas ficam em português no logica.js; em inglês, os textos delas são trocados uma vez ao abrir
 function traduzirTabelas() {
     const trocar = (dono, campo) => { dono[campo] = tr(dono[campo]); };
-    percorrerTextos([CONQUISTAS, CORES_DA_COBRA, TEMAS_DO_TABULEIRO, EPOCAS, MUSICAS, MISSOES, ITENS_DA_LOJA, MAPAS_DAS_FASES, TEMA_ALTO_CONTRASTE, TEMA_DO_ABISMO], trocar);
+    percorrerTextos([PODERES_DA_ESCALADA, CONQUISTAS, CORES_DA_COBRA, TEMAS_DO_TABULEIRO, EPOCAS, MUSICAS, MISSOES, ITENS_DA_LOJA, MAPAS_DAS_FASES, TEMA_ALTO_CONTRASTE, TEMA_DO_ABISMO], trocar);
     for (const nomes of [NOMES_DOS_MODOS, NOMES_DOS_POWERUPS]) {
         for (const chave of Object.keys(nomes)) trocar(nomes, chave);
     }

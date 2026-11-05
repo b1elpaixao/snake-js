@@ -54,7 +54,7 @@ function moverJogador(jogador) {
         comidaDourada = null;
     }
 
-    if (!comeuComida && !comeuComidaDourada && !comeuRato) {
+    if ((!comeuComida && !comeuComidaDourada && !comeuRato) || (comeuComida && dietaSeguraOCrescimento(jogador))) {
         jogador.cobra.pop();
     }
     
@@ -129,6 +129,7 @@ function comerAlimento(jogador, pontosBase) {
             ? tr(umPonto ? "{nome}: {n} ponto" : "{nome}: {n} pontos", { nome: jogador.nome, n: jogador.pontuacao })
             : tr(umPonto ? "{n} ponto" : "{n} pontos", { n: jogador.pontuacao }));
     }
+    contarMacaDaEscalada(jogador);
     tocarSomComer(jogador.comboAtual, jogador.bot ? 0.4 : 1); // sobe de tom com o combo; bot mais baixinho
     soltarEstouro(jogador.cobra[0], jogador.corCabeca, Math.min(jogador.comboAtual, 6));
     pularPlacar(jogador.elementoPontuacao);
@@ -355,7 +356,7 @@ function decidirDirecaoBot(jogador) {
         !(zonaDoBot && foraDaZona(posicao, zonaDoBot));
     const cabeca = jogador.cobra[0];
 
-    const nivel = jogador.chefao ? jogador.nivel : NIVEIS_DO_BOT[limparNivelBot(seletorNivelBot.value)];
+    const nivel = jogador.nivel || NIVEIS_DO_BOT[limparNivelBot(seletorNivelBot.value)]; // Chefão e Escalada têm nível próprio
 
     // de vez em quando (mais no fácil) ele se distrai e vira pra um lado qualquer
     if (Math.random() < nivel.chanceDeErro) {

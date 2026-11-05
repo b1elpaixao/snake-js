@@ -2586,3 +2586,187 @@ body.menos-movimento .botao-jogar {
         display: none;
     }
 }
+
+/* ==========================================
+   Escalada: escolher o poder entre os andares
+   ========================================== */
+.tela-poderes {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(8px, 2.4vh, 20px);
+    color: #fff;
+    background: rgba(8, 10, 18, 0.86);
+    overflow-y: auto;
+}
+
+.tela-poderes[hidden] {
+    display: none;
+}
+
+.trilha-andares {
+    display: flex;
+    gap: 10px;
+}
+
+.andar-da-trilha {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    font-weight: 800;
+    background: #151d2c;
+    border: 3px solid #05070c;
+    border-radius: 50%;
+}
+
+.andar-da-trilha.chefe {
+    background: #a12a4a;
+}
+
+.andar-da-trilha.feito {
+    background: #2f8f4f;
+}
+
+.andar-da-trilha.proximo {
+    color: #141414;
+    background: #ffd23a;
+    box-shadow: 0 0 14px #ffd23a;
+}
+
+.titulo-poderes {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-size: clamp(28px, min(8vh, 9.5vw), 62px);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: 0.03em;
+    text-align: center;
+    color: #ffd23a;
+    -webkit-text-stroke: 2px #05070c;
+    paint-order: stroke fill;
+    text-shadow: 3px 3px 0 #05070c;
+}
+
+.cartas-poder {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 260px));
+    gap: 14px;
+    width: 100%;
+    justify-content: center;
+}
+
+.carta-poder {
+    padding: clamp(8px, 2.4vh, 20px) 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(3px, 1vh, 8px);
+    font-family: inherit;
+    color: #fff;
+    text-align: center;
+    background: #151d2c;
+    border: 4px solid var(--cor-raridade, #05070c);
+    border-radius: 16px;
+    box-shadow: 0 6px 0 #05070c;
+    cursor: pointer;
+    transition: transform 0.12s ease;
+}
+
+.carta-poder:hover,
+.carta-poder:focus-visible {
+    transform: translateY(-5px) scale(1.03);
+    outline: 3px solid #ffd23a;
+    outline-offset: 2px;
+}
+
+.raridade-comum { --cor-raridade: #5b6678; }
+.raridade-raro { --cor-raridade: #6fa0ff; }
+.raridade-lendario { --cor-raridade: #ffb31f; }
+
+.carta-poder i {
+    font-size: clamp(30px, 9vh, 64px);
+    font-style: normal;
+    line-height: 1.1;
+}
+
+.carta-poder b {
+    font-family: var(--fonte-titulo);
+    font-size: clamp(21px, 5vh, 32px);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.03em;
+}
+
+.carta-poder span {
+    font-size: clamp(13px, 2.4vh, 16px);
+    color: #d7deea;
+}
+
+.rodape-poderes {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* na Escalada o placar divide espaço com a meta do andar */
+.jogo:has(.placares-escalada) .barra-velocidade {
+    display: none;
+}
+
+.placares-escalada {
+    flex: none;
+}
+
+.placares-escalada .placar-jogador {
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .jogo:has(.placares-escalada) .barra-recorde {
+        display: none;
+    }
+}
+
+@media (max-width: 900px), (max-height: 600px) {
+    .placares-escalada .placar-jogador > span:nth-child(2) {
+        display: none;
+    }
+
+    .placares-escalada .placar-jogador {
+        gap: 5px;
+    }
+
+    .jogo .placares-escalada .placar-jogador strong {
+        font-size: 14px;
+    }
+
+    .placares-escalada .efeitos {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .cartas-poder {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .carta-poder {
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr);
+        column-gap: 10px;
+        text-align: left;
+    }
+
+    .carta-poder i {
+        grid-row: span 2;
+        font-size: 40px;
+        text-align: center;
+    }
+}

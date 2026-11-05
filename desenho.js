@@ -701,6 +701,8 @@ function desenharCobra(jogador, trilha = trilhaDaCobra(jogador)) {
     if (padrao === "esqueleto") desenharDentesDaCaveira(ctx);
     if (jogador.numero === 1 && !jogador.bot) {
         desenharChapeu(ctx, carteira.equipados.chapeu, agoraDoJogo()); // chapéu da loja: só no Jogador 1
+    } else if (jogador.chapeuDeRival) {
+        desenharChapeu(ctx, jogador.chapeuDeRival, agoraDoJogo()); // os rivais da Escalada
     }
     ctx.restore();
 }
@@ -762,7 +764,7 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
           .map((jogador) => `${jogador.nome}: ${jogador.pontuacao}`)
           .join(" | ");
 
-    elementoResultadoFinal.textContent = resultado;
+    elementoResultadoFinal.textContent = modoAtual === "escalada" ? resultadoDaEscalada() : resultado;
     elementoCausaMorte.textContent = batidas
         .map(({ jogador, motivo, outro }) => {
             const nome = jogadores.length === 1 || chefao ? tr("Você") : jogador.nome; // no Chefão, o chefão não conta como jogador
@@ -772,9 +774,9 @@ function mostrarTelaGameOver(jogadoresVivos, batidas) {
         .join(" · ");
 
     if (batidas.length === 0) {
-        elementoCausaMorte.textContent = tr("Acabou o tempo");
+        elementoCausaMorte.textContent = modoAtual === "escalada" ? causaDoFimDaEscalada() : tr("Acabou o tempo");
     }
-    elementoPontuacaoFinal.textContent = textoPontuacao;
+    elementoPontuacaoFinal.textContent = modoAtual === "escalada" ? pontuacaoDaEscalada() : textoPontuacao;
 
      // compara com o Top 5 de antes, por isso vem antes de atualizarListaRecordes
     const pontuacoesHumanas = jogadores.filter((jogador) => !jogador.bot).map((jogador) => jogador.pontuacao);
@@ -854,7 +856,7 @@ function atualizarBarrasEfeitos() {
             elemento.hidden = !estaAtivo;
 
             if (estaAtivo) {
-                const porcentagem = (restante / efeito.duracao) * 100;
+                const porcentagem = Math.min(100, (restante / efeito.duracao) * 100); // na Escalada, alguns duram o andar inteiro
                 elemento.querySelector(".efeito-barra").style.width = `${porcentagem}%`;
                 elemento.classList.toggle("acabando", restante < TEMPO_AVISO_FIM_EFEITO_MS);
             }
