@@ -2292,3 +2292,256 @@ body[data-gaveta="ajustes"] .painel > [data-secao]:not([data-secao="ajustes"]) {
         font-size: 13px;
     }
 }
+
+/* ==========================================
+   Menu com cartões de modo, em cima do abismo
+   ========================================== */
+#fundoDoMenu {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    pointer-events: none;
+}
+
+#canvasVitrine {
+    opacity: 0.95;
+}
+
+.menu-centro {
+    width: min(900px, 100%);
+    gap: clamp(6px, 1.7vh, 13px);
+    background: none;
+    border: none;
+}
+
+.titulo-jogo {
+    font-size: clamp(52px, min(13vw, 16vh), 112px);
+    transform: rotate(-3deg);
+    filter: drop-shadow(0 6px 0 #05070c);
+}
+
+.titulo-jogo span {
+    -webkit-text-stroke: 3px #05070c;
+    paint-order: stroke fill;
+    text-shadow: 5px 5px 0 #05070c !important;
+}
+
+.titulo-jogo span:last-child {
+    color: #ffd23a;
+}
+
+.botao-jogar {
+    align-self: center;
+    width: min(360px, 88%);
+    height: clamp(52px, 11vh, 78px);
+    font-size: clamp(28px, 6.4vh, 42px);
+    color: #141414;
+    background: linear-gradient(#ffe45c, #ffb31f);
+    border: 4px solid #05070c;
+    border-radius: 18px;
+    box-shadow: 0 6px 0 #05070c, 0 12px 28px rgba(0, 0, 0, 0.45);
+    animation: pulsoDoJogar 1.3s ease-in-out infinite;
+}
+
+.botao-jogar::before {
+    content: "▶ ";
+}
+
+.botao-jogar:hover {
+    background: linear-gradient(#fff07a, #ffc23a);
+}
+
+@keyframes pulsoDoJogar {
+    50% {
+        transform: scale(1.045);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .botao-jogar {
+        animation: none;
+    }
+}
+
+body.menos-movimento .botao-jogar {
+    animation: none;
+}
+
+.cartoes-modo {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.cartao-modo {
+    padding: 0 0 7px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    overflow: hidden;
+    color: #ffffff;
+    font-family: inherit;
+    text-align: center;
+    background: #151d2c;
+    border: 3px solid #05070c;
+    border-radius: 14px;
+    box-shadow: 0 5px 0 #05070c;
+    transition: transform 0.12s;
+}
+
+.cartao-modo:hover,
+.cartao-modo:focus-visible {
+    transform: translateY(-4px) rotate(-1deg);
+}
+
+.cartao-modo canvas {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 8 / 5;
+    object-fit: cover;
+}
+
+.cartao-modo b {
+    font-family: var(--fonte-titulo);
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    line-height: 1.15;
+}
+
+.cartao-modo span {
+    padding: 0 6px;
+    color: #b9c4d6;
+    font-size: 12px;
+}
+
+.menu-centro .botoes-secundarios {
+    align-self: center;
+    width: min(420px, 100%);
+}
+
+.menu-centro .botoes-secundarios .botao-secundario {
+    min-height: 44px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #ffffff;
+    background: #2f4a8f;
+    border: 3px solid #05070c;
+    border-radius: 13px;
+    box-shadow: 0 4px 0 #05070c;
+}
+
+.menu-centro .botoes-secundarios #botaoJogarBots {
+    background: #a13f8f;
+}
+
+.menu-centro .menu-opcoes-duas {
+    align-self: center;
+    width: min(420px, 100%);
+}
+
+.menu-centro .menu-dificuldade label {
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 1px 1px 0 #05070c;
+}
+
+.menu-centro .menu-dificuldade select {
+    height: 34px;
+    color: #ffffff;
+    background: rgba(5, 7, 12, 0.85);
+    border: 2px solid #05070c;
+}
+
+.menu-centro .menu-links {
+    gap: 8px;
+}
+
+.menu-centro .menu-links .botao-link {
+    min-width: 66px;
+    padding: 5px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    background: rgba(5, 7, 12, 0.75);
+    border: 2px solid #05070c;
+    border-radius: 12px;
+}
+
+.menu-centro .menu-links .botao-link i {
+    font-size: 20px;
+    font-style: normal;
+    line-height: 1;
+}
+
+@media (max-width: 700px) {
+    .cartoes-modo {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cartao-modo canvas {
+        aspect-ratio: 5 / 2;
+    }
+
+    .cartao-modo span {
+        display: none;
+    }
+}
+
+@media (max-height: 520px) {
+    .titulo-jogo {
+        font-size: 44px;
+    }
+
+    .botao-jogar {
+        height: 44px;
+        font-size: 24px;
+    }
+
+    .cartao-modo span {
+        display: none;
+    }
+
+    .cartao-modo canvas {
+        aspect-ratio: 3 / 1;
+    }
+
+    .cartao-modo b {
+        font-size: 17px;
+    }
+
+    .menu-centro .botoes-secundarios .botao-secundario {
+        min-height: 30px;
+        font-size: 13px;
+    }
+
+    .menu-centro .menu-dificuldade {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .menu-centro .menu-dificuldade select {
+        height: 26px;
+        font-size: 12px;
+    }
+
+    .menu-centro .menu-links .botao-link {
+        min-width: 0;
+        padding: 2px 6px;
+        flex-direction: row;
+        gap: 4px;
+        font-size: 11px;
+    }
+
+    .menu-centro .menu-links .botao-link i {
+        font-size: 13px;
+    }
+}

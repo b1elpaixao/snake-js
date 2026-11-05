@@ -130,10 +130,16 @@
                 <p id="anuncioLeitor" class="so-leitor" aria-live="polite"></p>
 
                 <div id="telaInicial" class="overlay overlay-menu">
+                    <canvas id="fundoDoMenu" aria-hidden="true"></canvas>
                     <canvas id="canvasVitrine" aria-hidden="true"></canvas>
                     <div class="menu-centro">
                         <h1 class="titulo-jogo"><span>Snake</span> <span>Brawl</span></h1>
                         <button id="botaoJogar1" class="botao-principal botao-jogar" type="button">Jogar</button>
+                        <div id="cartoesDeModo" class="cartoes-modo"></div>
+                        <div class="botoes-secundarios">
+                            <button id="botaoAbrirFesta" class="botao-secundario" type="button">Com amigos</button>
+                            <button id="botaoJogarBots" class="botao-secundario" type="button">Contra 3 bots</button>
+                        </div>
                         <div class="menu-opcoes menu-opcoes-duas">
                         <div class="menu-dificuldade">
                             <label for="seletorModo">Modo</label>
@@ -157,17 +163,13 @@
                         </select>
                     </div>
                         </div>
-                        <div class="botoes-secundarios">
-                            <button id="botaoAbrirFesta" class="botao-secundario" type="button">Com amigos</button>
-                            <button id="botaoJogarBots" class="botao-secundario" type="button">Contra 3 bots</button>
-                        </div>
                         <nav class="menu-links">
-                            <button id="botaoLoja" class="botao-link" type="button">Loja <span id="saldoMoedas">🪙 0</span></button>
-                            <button id="botaoAbrirProgresso" class="botao-link" type="button">Progresso</button>
-                            <button id="botaoAbrirAjustes" class="botao-link" type="button">Ajustes</button>
-                            <button id="botaoComoJogar" class="botao-link" type="button">Como jogar</button>
-                            <button id="botaoCriarFase" class="botao-link" type="button">Criar fase</button>
-                            <button id="botaoIdioma" class="botao-link" type="button">English</button>
+                            <button id="botaoLoja" class="botao-link" type="button"><i aria-hidden="true">🛒</i><span>Loja</span> <span id="saldoMoedas">🪙 0</span></button>
+                            <button id="botaoAbrirProgresso" class="botao-link" type="button"><i aria-hidden="true">🏆</i><span>Progresso</span></button>
+                            <button id="botaoAbrirAjustes" class="botao-link" type="button"><i aria-hidden="true">⚙️</i><span>Ajustes</span></button>
+                            <button id="botaoComoJogar" class="botao-link" type="button"><i aria-hidden="true">❔</i><span>Como jogar</span></button>
+                            <button id="botaoCriarFase" class="botao-link" type="button"><i aria-hidden="true">✏️</i><span>Criar fase</span></button>
+                            <button id="botaoIdioma" class="botao-link" type="button"><i aria-hidden="true">🌐</i><span>English</span></button>
                         </nav>
                     </div>
 

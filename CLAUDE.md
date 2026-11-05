@@ -40,7 +40,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 19. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último; carregado pelo `plataforma.js`)
 
 Os arquivos 2 a 17 só tem funções e valores fixos (e o `plataforma.js` só liga o SDK); o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-v22`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
+Outros: `style.css`, `sw.js` (service worker, cache `snake-v23`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
 **Ao criar um arquivo .js novo:** incluir no `index.html` antes do `plataforma.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
@@ -89,6 +89,6 @@ Inglês (`idiomas.js`: quem não usa português vê em inglês; botão no menu t
 
 ## Tela (desde 05/11/2026)
 
-O tabuleiro ocupa a janela (`--proporcao`, no fim do `style.css`). Menu inicial: Jogar, Modo, Dificuldade, Com amigos (`painelFesta`) e Contra 3 bots; Progresso e Ajustes abrem na gaveta (`body[data-gaveta]`, `abrirGaveta`, cada cartão com `data-secao`).
+O tabuleiro ocupa a janela (`--proporcao`, no fim do `style.css`). Menu inicial (`vitrine.js`: fundo, cobras e `CARTOES_DE_MODO`): Jogar, cartões de modo, Com amigos (`painelFesta`), Contra 3 bots, Modo e Dificuldade; Progresso e Ajustes abrem na gaveta (`body[data-gaveta]`, `abrirGaveta`, cada cartão com `data-secao`).
 
 Versão do itch.io: https://b1elpaixao.itch.io/snake-brawl (zip em `marketing/itch/`, gerado de uma cópia sem SDK e sem service worker).

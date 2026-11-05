@@ -1687,6 +1687,9 @@ window.addEventListener("keydown", (evento) => {
     }
 }, true);
 
+desenharFundoDoMenu();
+window.addEventListener("resize", desenharFundoDoMenu);
+montarCartoesDeModo();
 iniciarVitrine();
 
 // ==========================================
