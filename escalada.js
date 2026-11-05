@@ -87,6 +87,10 @@ function comecarAndarDaEscalada() {
         humano.portalAtivo = true;
         humano.portalAte = agoraDoJogo() + MUITO_TEMPO_MS;
     }
+    if (temPoderDaEscalada("entradaTriunfal")) {
+        humano.invencivel = true;
+        humano.invencivelAte = agoraDoJogo() + passosDaContagemDaEscalada().length * DURACAO_PASSO_CONTAGEM_MS + 5000;
+    }
     if (temPoderDaEscalada("largada")) {
         const contagem = passosDaContagemDaEscalada().length * DURACAO_PASSO_CONTAGEM_MS;
         jogadores.slice(1).forEach((rival) => { rival.atordoadoAte = agoraDoJogo() + contagem + 3000; });
@@ -122,6 +126,17 @@ function contarMacaDaEscalada(jogador) {
 function contarDouradaDaEscalada(jogador) {
     if (jogador.bot || !temPoderDaEscalada("cacaOuro")) return;
     escalada.macas += 2 * macasQueValem(escalada.poderes);
+    atualizarPlacarDaEscalada();
+}
+
+function chanceDePowerUp() {
+    return temPoderDaEscalada("sorteDePoder") ? 2 : 1;
+}
+
+// Caçador: rival derrotado conta 2 maçãs
+function contarRivalDerrotado(atacante) {
+    if (atacante.bot || !temPoderDaEscalada("cacador")) return;
+    escalada.macas += 2;
     atualizarPlacarDaEscalada();
 }
 
@@ -244,18 +259,36 @@ function desenharTrilhaDosAndares(concluidos) {
     });
 }
 
+// entre os andares: escolhe um poder, ou só respira e segue (a cada 2 andares vem a escolha; se acabarem os poderes, segue também)
 function mostrarEscolhaDePoder() {
     const tela = document.getElementById("telaPoderes");
     const caixa = document.getElementById("cartasDePoder");
     desenharTrilhaDosAndares(escalada.andar);
-    document.getElementById("tituloPoderes").textContent = tr("Andar {n} vencido! Escolha um poder", { n: escalada.andar });
+    const opcoes = andarDaPoder(escalada.andar)
+        ? sortearPoderes(escalada.poderes, Math.random, Math.max(recordeDaEscalada(), escalada.andar))
+        : [];
+    document.getElementById("tituloPoderes").textContent = opcoes.length > 0
+        ? tr("Andar {n} vencido! Escolha um poder", { n: escalada.andar })
+        : tr("Andar {n} vencido!", { n: escalada.andar });
     const seus = escalada.poderes.map((id) => PODERES_DA_ESCALADA.find((poder) => poder.id === id));
     document.getElementById("rodapePoderes").textContent = seus.length > 0
         ? tr("Seus poderes: {lista}", { lista: seus.map((poder) => `${poder.icone} ${poder.nome}`).join(" · ") })
         : tr("Se morrer, volta ao andar 1, mas as moedas ficam.");
+    caixa.classList.toggle("so-seguir", opcoes.length === 0);
+    if (opcoes.length === 0 && andarDaPoder(escalada.andar + 1)) {
+        document.getElementById("rodapePoderes").textContent = tr("Vença o próximo andar para escolher um poder!");
+    }
 
     caixa.innerHTML = "";
-    sortearPoderes(escalada.poderes, Math.random, recordeDaEscalada()).forEach((poder) => {
+    if (opcoes.length === 0) {
+        const botao = document.createElement("button");
+        botao.type = "button";
+        botao.className = "botao-principal botao-seguir-andar";
+        botao.textContent = tr("Próximo andar");
+        botao.addEventListener("click", () => escolherPoder(null));
+        caixa.append(botao);
+    }
+    opcoes.forEach((poder) => {
         const botao = document.createElement("button");
         botao.type = "button";
         botao.className = `carta-poder raridade-${poder.raridade}`;
@@ -276,7 +309,7 @@ function mostrarEscolhaDePoder() {
 
 function escolherPoder(id) {
     document.getElementById("telaPoderes").hidden = true;
-    escalada.poderes.push(id);
+    if (id) escalada.poderes.push(id);
     escalada.andar++;
     escalada.seguindo = true;
     reiniciar();

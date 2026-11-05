@@ -1180,6 +1180,12 @@ const PODERES_DA_ESCALADA = [
     { id: "bolsoCheio", icone: "🪙", raridade: "raro", liberaNoAndar: 0, nome: "Bolso cheio", descricao: "50% mais moedas no fim da corrida" },
     { id: "casca", icone: "🛡️", raridade: "raro", liberaNoAndar: 0, nome: "Casca grossa", descricao: "Uma batida perdoada a cada andar" },
     { id: "fomeDupla", icone: "🍎", raridade: "lendario", liberaNoAndar: 0, nome: "Fome dupla", descricao: "Cada maçã conta 2 para vencer o andar" },
+    { id: "laminaLonga", icone: "🗡️", raridade: "comum", liberaNoAndar: 0, nome: "Lâmina longa", descricao: "A espada dura 50% mais" },
+    { id: "sorteDePoder", icone: "🍀", raridade: "comum", liberaNoAndar: 0, nome: "Pé de coelho", descricao: "Power-ups aparecem o dobro" },
+    { id: "mestreDeArmas", icone: "⚔️", raridade: "raro", liberaNoAndar: 3, nome: "Mestre de armas", descricao: "A espada volta na metade do tempo" },
+    { id: "golpeDuplo", icone: "💥", raridade: "raro", liberaNoAndar: 5, nome: "Golpe duplo", descricao: "A espada tira 2 de vida dos chefes" },
+    { id: "entradaTriunfal", icone: "🌟", raridade: "raro", liberaNoAndar: 5, nome: "Entrada triunfal", descricao: "Invencível nos primeiros 5 s de cada andar" },
+    { id: "cacador", icone: "🏹", raridade: "lendario", liberaNoAndar: 8, nome: "Caçador", descricao: "Cada rival derrotado conta 2 maçãs" },
     { id: "caminhoLimpo", icone: "🧹", raridade: "comum", liberaNoAndar: 2, nome: "Caminho limpo", descricao: "Os andares começam sem pedras" },
     { id: "comboLongo", icone: "🔥", raridade: "comum", liberaNoAndar: 3, nome: "Combo longo", descricao: "O dobro de tempo para manter o combo" },
     { id: "portalDeBolso", icone: "🌀", raridade: "raro", liberaNoAndar: 4, nome: "Portal de bolso", descricao: "Atravesse uma parede a cada andar" },
@@ -1191,6 +1197,13 @@ const PODERES_DA_ESCALADA = [
 const MULTIPLICADOR_DO_SANGUE_FRIO = 1.15;
 const MOEDAS_POR_ANDAR = 4;
 const MOEDAS_POR_CHEGAR_AO_TOPO = 20;
+
+// a escolha de poder vem a cada 2 andares vencidos
+const ANDARES_ENTRE_PODERES = 2;
+
+function andarDaPoder(andar) {
+    return andar % ANDARES_ENTRE_PODERES === 0;
+}
 
 function poderesLiberados(melhorAndar) {
     return PODERES_DA_ESCALADA.filter((poder) => poder.liberaNoAndar <= melhorAndar);

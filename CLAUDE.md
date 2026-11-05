@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (410 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (412 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -35,7 +35,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 16. `loja.js` - moedas (`snakeCarteira`: moedas, comprados, equipados), tela da loja com abas, desenho dos chapéus e das comidas
 17. `salvos.js` - tudo que é guardado no navegador: `lerDoArmazenamento`/`salvarNoArmazenamento`, recordes, estatísticas, conquistas, teclas e preferências
 16a. `medidas.js` - contagem anônima no GoatCounter (painel: https://b13l.goatcounter.com): `medir(evento)`, visitas e volta (`snakeUltimaVisita`), partidas e andares; desligada com o SDK do CrazyGames e abrindo o arquivo direto
-16b. `escalada.js` - campanha solo: 10 andares contra bots (`ANDARES_DA_ESCALADA`, `RIVAIS_DA_ESCALADA`, `PODERES_DA_ESCALADA`, `sortearPoderes`, `poderesLiberados` no `logica.js`); vencer = comer a meta do andar ou sobrar sozinho; a cada andar escolhe 1 de 3 poderes (`#telaPoderes`); chefes no 5º (Mestre da Faixa, conquista `derrubouOMestre` = Faixa de lutador) e no 10º (Rainha das Cobras, `topoDaEscalada` = Tiara da Rainha), em corrida de maçãs. Morreu, volta ao andar 1; `snakeRecordeEscalada` guarda o melhor andar, que libera poderes (`liberaNoAndar`)
+16b. `escalada.js` - campanha solo: 10 andares contra bots (`ANDARES_DA_ESCALADA`, `RIVAIS_DA_ESCALADA`, `PODERES_DA_ESCALADA`, `sortearPoderes`, `poderesLiberados` no `logica.js`); vencer = comer a meta do andar ou sobrar sozinho; a cada 2 andares escolhe 1 de 3 poderes (`andarDaPoder`, `#telaPoderes`; nos outros andares só o botão Próximo andar); chefes no 5º (Mestre da Faixa, conquista `derrubouOMestre` = Faixa de lutador) e no 10º (Rainha das Cobras, `topoDaEscalada` = Tiara da Rainha), em corrida de maçãs. Morreu, volta ao andar 1; `snakeRecordeEscalada` guarda o melhor andar, que libera poderes (`liberaNoAndar`)
 17a. `cenarios.js` - tabuleiros desenhados (`DESENHOS_DOS_CENARIOS`: Coliseu, o padrão; Selva; Arena, libera com "Mais esperta que o bot") e o fundo em volta (`#cenarioDeFora`: torcida, folhas, holofotes). Desenha uma vez numa tela guardada e cola a cada quadro; a antiga "grama" salva vira Coliseu
 17b. `sensacao.js` - estouros ao comer e ao bater, e o pulinho do placar (sorteio próprio)
 17c. `vitrine.js` - as cobras com chapéu passeando atrás do menu (sorteio próprio, não mexe nas partidas)
@@ -43,7 +43,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 19. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último; carregado pelo `plataforma.js`)
 
 Os arquivos 2 a 17 só tem funções e valores fixos (e o `plataforma.js` só liga o SDK); o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-v28`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
+Outros: `style.css`, `sw.js` (service worker, cache `snake-v29`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
 **Ao criar um arquivo .js novo:** incluir no `index.html` antes do `plataforma.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 

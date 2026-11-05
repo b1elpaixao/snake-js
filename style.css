@@ -2711,6 +2711,17 @@ body.menos-movimento .botao-jogar {
     color: #d7deea;
 }
 
+.cartas-poder.so-seguir {
+    display: flex;
+    justify-content: center;
+}
+
+.botao-seguir-andar {
+    width: min(320px, 100%);
+    min-height: 54px;
+    font-size: 18px;
+}
+
 .rodape-poderes {
     margin: 0;
     font-size: 14px;

@@ -269,7 +269,7 @@ function humanoArmadoPerto(bot) {
 
 function golpearRival(atacante, rival) {
     const casa = { ...atacante.cobra[0] };
-    rival.golpes = (rival.golpes || 1) - 1;
+    rival.golpes = (rival.golpes || 1) - (temPoderDaEscalada("golpeDuplo") ? 2 : 1);
     soltarEstouro(casa, rival.corCabeca, 6);
     vibrar(80);
 
@@ -286,6 +286,7 @@ function golpearRival(atacante, rival) {
     atacante.elementoPontuacao.textContent = atacante.pontuacao;
     atualizarRecordeSeNecessario(atacante.pontuacao);
     tirarDaPartida([{ jogador: rival, motivo: "espada", outro: "" }]);
+    contarRivalDerrotado(atacante);
     adicionarTextoFlutuante(casa, `+${PONTOS_POR_DERROTAR_RIVAL}`, "#f5c451");
     anunciar(tr("Você derrotou {nome}", { nome: rival.nome }));
 }
@@ -302,8 +303,10 @@ function atualizarEspadaContraBots() {
     for (const humano of humanos) {
         if (espada && mesmaPosicao(humano.cobra[0], espada)) {
             espada = null;
-            humano.espadaAte = agora + DURACAO_ESPADA_MS;
-            proximaEspadaEm = agora + DURACAO_ESPADA_MS + ESPADA_CONTRA_BOTS_VOLTA_EM_MS;
+            const duracao = DURACAO_ESPADA_MS * (temPoderDaEscalada("laminaLonga") ? 1.5 : 1);
+            const espera = ESPADA_CONTRA_BOTS_VOLTA_EM_MS / (temPoderDaEscalada("mestreDeArmas") ? 2 : 1);
+            humano.espadaAte = agora + duracao;
+            proximaEspadaEm = agora + duracao + espera;
             adicionarTextoFlutuante(humano.cobra[0], tr("Espada! Acerte um rival"), "#9be7ff");
             anunciar(tr("Pegou a espada: encoste num rival para derrotá-lo"));
             tocarSomPoder();

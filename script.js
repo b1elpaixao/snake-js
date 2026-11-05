@@ -1394,7 +1394,7 @@ function loop() {
 
     moverPedras();
     
-    if (!powerUp && Math.random() < CHANCE_POWERUP_POR_TICK) {
+    if (!powerUp && Math.random() < CHANCE_POWERUP_POR_TICK * chanceDePowerUp()) {
         const posicao = gerarPosicaoLivre();
         powerUp = { x: posicao.x, y: posicao.y, tipo: gerarTipoPowerUp() };
     }
