@@ -166,6 +166,32 @@ const CARTOES_DE_MODO = [
     { modo: "chefao", nome: "Chefão", texto: "Enfrente os olhos", cabeca: "#ff7ac6", chapeu: "bruxa", chao: "#112033" },
 ];
 
+const MAIS_MODOS = [
+    { modo: "clássico", nome: "Clássico", texto: "Sem pedras no caminho", icone: "🐍" },
+    { modo: "rato", nome: "Rato", texto: "Cace os ratos que fogem", icone: "🐭" },
+    { modo: "tempo", nome: "Contra o tempo", texto: "2 minutos, muitos pontos", icone: "⏱️" },
+    { modo: "fases", nome: "Fases", texto: "Mapas com paredes", icone: "🧱" },
+    { modo: "desafio", nome: "Desafio do dia", texto: "O mesmo mapa para todo mundo", icone: "📅" },
+];
+
+function montarMaisModos() {
+    const lista = document.getElementById("listaMaisModos");
+    for (const dados of MAIS_MODOS) {
+        const botao = document.createElement("button");
+        botao.type = "button";
+        botao.className = "modo-extra";
+        const icone = document.createElement("i");
+        icone.textContent = dados.icone;
+        const nome = document.createElement("b");
+        nome.textContent = tr(dados.nome);
+        const texto = document.createElement("span");
+        texto.textContent = tr(dados.texto);
+        botao.append(icone, nome, texto);
+        botao.addEventListener("click", () => comecarJogo(1, false, false, dados.modo));
+        lista.append(botao);
+    }
+}
+
 function montarCartoesDeModo() {
     const fila = document.getElementById("cartoesDeModo");
     if (!fila.append || !document.createElement("canvas").getContext("2d")) return;
@@ -194,7 +220,6 @@ function montarCartoesDeModo() {
         texto.textContent = tr(cartao.texto);
         botao.append(tela, nome, texto);
         botao.addEventListener("click", () => {
-            seletorModo.value = cartao.modo;
             comecarJogo(1, false, false, cartao.modo);
         });
         fila.append(botao);

@@ -96,6 +96,11 @@ function mostrarMissoes() {
         }
     }
 
+    const botao = document.getElementById("botaoMissoes");
+    const feitas = estado.feitas.length;
+    botao.textContent = `🎯 ${tr("Missões")} ${feitas}/${MISSOES_POR_DIA}`;
+    botao.classList.toggle("completas", feitas >= MISSOES_POR_DIA);
+
     const sequencia = lerSequenciaDeMissoes();
     const diasSeguidos = sequenciaValendo(sequencia, estado.data);
     document.getElementById("sequenciaMissoes").textContent = diasSeguidos > 0 ? tr(diasSeguidos === 1 ? "· 🔥 {n} dia" : "· 🔥 {n} dias", { n: diasSeguidos }) : "";

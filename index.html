@@ -148,20 +148,8 @@
                             <button id="botaoJogarBots" class="botao-secundario" type="button">Contra 3 bots</button>
                         </div>
                         <div class="menu-opcoes menu-opcoes-duas">
-                        <div class="menu-dificuldade">
-                            <label for="seletorModo">Modo</label>
-                            <select id="seletorModo">
-                                <option value="normal" selected>Normal</option>
-                                <option value="escalada">Escalada (sozinho)</option>
-                                <option value="clássico">clássico (sem pedras)</option>
-                                <option value="rato">Rato (caçada)</option>
-                                <option value="tempo">Contra o tempo (2 min)</option>
-                                <option value="arena">Arena (zona que fecha)</option>
-                                <option value="chefao">Chefão (os olhos que emergem)</option>
-                                <option value="fases">Fases(mapas)</option>
-                                <option value="desafio">Desafio do dia</option>
-                            </select>
-                        </div>
+                        <button id="botaoMissoes" class="botao-secundario botao-missoes" type="button">🎯 Missões</button>
+                        <button id="botaoMaisModos" class="botao-secundario botao-mais-modos" type="button">Mais modos</button>
                         <div class="menu-dificuldade">
                             <label for="seletorDificuldade">Dificuldade</label>
                             <select id="seletorDificuldade">
@@ -181,12 +169,35 @@
                         </nav>
                     </div>
 
+                    <div id="painelModos" class="painel-festa" role="dialog" aria-labelledby="tituloModos" hidden>
+                        <div class="painel-festa-caixa">
+                            <div class="como-jogar-topo">
+                                <h2 id="tituloModos">Mais modos</h2>
+                                <button id="botaoFecharModos" class="botao-secundario" type="button">Voltar</button>
+                            </div>
+                            <div id="listaMaisModos" class="lista-mais-modos"></div>
+                        </div>
+                    </div>
+
                     <div id="painelFesta" class="painel-festa" role="dialog" aria-labelledby="tituloFesta" hidden>
                         <div class="painel-festa-caixa">
                             <div class="como-jogar-topo">
                                 <h2 id="tituloFesta">Quem vai jogar?</h2>
                                 <button id="botaoFecharFesta" class="botao-secundario" type="button">Voltar</button>
                             </div>
+                        <div class="menu-dificuldade">
+                            <label for="seletorModo">Modo</label>
+                            <select id="seletorModo">
+                                <option value="normal" selected>Normal</option>
+                                <option value="clássico">clássico (sem pedras)</option>
+                                <option value="rato">Rato (caçada)</option>
+                                <option value="tempo">Contra o tempo (2 min)</option>
+                                <option value="arena">Arena (zona que fecha)</option>
+                                <option value="chefao">Chefão (os olhos que emergem)</option>
+                                <option value="fases">Fases(mapas)</option>
+                                <option value="desafio">Desafio do dia</option>
+                            </select>
+                        </div>
                             <div class="menu-nomes">
                         <label class="campo campo-1">
                             Jogador 1 · <span id="resumoTeclas1">setas</span>
@@ -437,7 +448,7 @@
                 </div>
             </div>
 
-            <div class="cartao" data-secao="progresso">
+            <div class="cartao" data-secao="missoes">
                 <p class="rotulo">Missões de hoje <span id="sequenciaMissoes"></span></p>
                 <ul id="listaMissoes" class="lista-missoes"></ul>
             </div>

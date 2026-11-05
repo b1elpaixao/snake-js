@@ -1600,6 +1600,7 @@ function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorM
     noMenu = false;
     telaInicial.hidden= true;
     painelFesta.hidden = true;
+    painelModos.hidden = true;
     aplicarTamanhoDoTabuleiro();
     reiniciar();
     prepararTutorial();
@@ -1610,7 +1611,7 @@ function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorM
     }
 }
 
-botaoJogar1.addEventListener("click", () => comecarJogo(1));
+botaoJogar1.addEventListener("click", () => comecarJogo(1, false, false, "escalada")); // o botão grande leva pra campanha
 botaoJogar2.addEventListener("click", () => comecarJogo(quantidadeEscolhida()));
 
 // quantos jogam no botão "2 Jogadores" (no celular, sempre 2: não cabe tanta gente no toque)
@@ -1667,7 +1668,7 @@ seletorQuantidade.addEventListener("change", () => {
 if (window.matchMedia("(pointer: coarse)").matches) seletorQuantidade.parentElement.hidden = true;
 mostrarQuantidadeEscolhida();
 botaoJogarBot.addEventListener("click", () => comecarJogo(1, true));
-document.getElementById("botaoJogarBots").addEventListener("click", () => comecarJogo(4, false, false, seletorModo.value, [2, 3, 4]));
+document.getElementById("botaoJogarBots").addEventListener("click", () => comecarJogo(4, false, false, "normal", [2, 3, 4]));
 document.getElementById("botaoJogarJuntos").addEventListener("click", () => comecarJogo(2, false, true));
 
 // ==========================================
@@ -1677,7 +1678,7 @@ const painelFesta = document.getElementById("painelFesta");
 
 function abrirGaveta(secao) {
     document.body.dataset.gaveta = secao;
-    document.getElementById("tituloGaveta").textContent = tr(secao === "progresso" ? "Progresso" : "Ajustes");
+    document.getElementById("tituloGaveta").textContent = secao === "missoes" ? tr("Missões") : tr(secao === "progresso" ? "Progresso" : "Ajustes");
     document.getElementById("gaveta").scrollTop = 0;
     document.getElementById("botaoFecharGaveta").focus({ preventScroll: true });
 }
@@ -1688,6 +1689,10 @@ function fecharGaveta() {
 
 document.getElementById("botaoAbrirFesta").addEventListener("click", () => { painelFesta.hidden = false; });
 document.getElementById("botaoFecharFesta").addEventListener("click", () => { painelFesta.hidden = true; });
+document.getElementById("botaoMissoes").addEventListener("click", () => abrirGaveta("missoes"));
+const painelModos = document.getElementById("painelModos");
+document.getElementById("botaoMaisModos").addEventListener("click", () => { painelModos.hidden = false; });
+document.getElementById("botaoFecharModos").addEventListener("click", () => { painelModos.hidden = true; });
 document.getElementById("botaoAbrirProgresso").addEventListener("click", () => abrirGaveta("progresso"));
 document.getElementById("botaoAbrirAjustes").addEventListener("click", () => abrirGaveta("ajustes"));
 document.getElementById("botaoAjustesPausa").addEventListener("click", () => abrirGaveta("ajustes"));
@@ -1699,6 +1704,9 @@ window.addEventListener("keydown", (evento) => {
     if (document.body.dataset.gaveta) {
         evento.stopPropagation();
         if (evento.key === "Escape") fecharGaveta();
+    } else if (!painelModos.hidden && evento.key === "Escape") {
+        evento.stopPropagation();
+        painelModos.hidden = true;
     } else if (!painelFesta.hidden && evento.key === "Escape") {
         evento.stopPropagation();
         painelFesta.hidden = true;
@@ -1709,6 +1717,7 @@ desenharFundoDoMenu();
 window.addEventListener("resize", desenharFundoDoMenu);
 ligarContagem();
 montarCartoesDeModo();
+montarMaisModos();
 iniciarVitrine();
 
 // ==========================================
