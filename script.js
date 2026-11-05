@@ -786,6 +786,7 @@ function sairDaPausa() {
 // Controle: teclado
 // ==========================================
 function mudarDirecao(evento) {
+    if (!noMenu && evento.key.startsWith("Arrow")) evento.preventDefault(); // dentro de um site, as setas rolariam a página dele
     if (noMenu || animacaoMorte || anuncioAberto) return;
     if (!jogoAtivo) {
         if (evento.key === "Escape") {
