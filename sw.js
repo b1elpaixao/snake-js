@@ -1,6 +1,6 @@
 // Service worker: guarda uma cópia do jogo pra ele abrir sem internet (e poder ser instalado como app)
-const NOME_DO_CACHE = "snake-v23";
-const ARQUIVOS =["./", "index.html", "style.css", "idiomas.js", "logica.js", "itens.js", "desenho.js", "som.js", "movimento.js", "modos.js", "chefao.js", "poderes.js", "fantasma.js", "controle.js", "tutorial.js", "acessibilidade.js", "historico.js", "missoes.js", "enfeites.js", "loja.js", "salvos.js", "sensacao.js", "vitrine.js", "plataforma.js", "script.js", "manifest.webmanifest", "icone-32.png", "icone-180.png", "icone-192.png", "icone-512.png", "icone-maskable-512.png"];
+const NOME_DO_CACHE = "snake-v24";
+const ARQUIVOS =["./", "index.html", "style.css", "idiomas.js", "logica.js", "itens.js", "desenho.js", "som.js", "movimento.js", "modos.js", "chefao.js", "poderes.js", "fantasma.js", "controle.js", "tutorial.js", "acessibilidade.js", "historico.js", "missoes.js", "enfeites.js", "loja.js", "salvos.js", "cenarios.js", "sensacao.js", "vitrine.js", "plataforma.js", "script.js", "manifest.webmanifest", "icone-32.png", "icone-180.png", "icone-192.png", "icone-512.png", "icone-maskable-512.png"];
 
 self.addEventListener("install", (evento) => {
     evento.waitUntil(caches.open(NOME_DO_CACHE).then((cache) => cache.addAll(ARQUIVOS)));

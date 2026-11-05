@@ -1143,16 +1143,18 @@ function guardarFantasmaSeMelhor(salvos, data, modo, pontuacao, passos) {
 // ==========================================
 // conquista: null = livre desde o começo; senão, o id da conquista que libera o tema
 const TEMAS_DO_TABULEIRO = [
-    { id: "grama", nome: "Grama", claro: "#aad751", escuro: "#a2d149", conquista: null },
+    { id: "coliseu", nome: "Coliseu", claro: "#d2a56c", escuro: "#b98a52", conquista: null, cenario: true },
+    { id: "selva", nome: "Selva", claro: "#49a83f", escuro: "#3f9a3a", conquista: null, cenario: true },
+    { id: "arena", nome: "Arena", claro: "#1d2c47", escuro: "#17233a", conquista: "venceuBot", cenario: true },
     { id: "deserto", nome: "Deserto", claro: "#ecd29a", escuro: "#e3c585", conquista: "cobraGrande" },
     { id: "neve", nome: "Neve", claro: "#eef4f8", escuro: "#dde8ef", conquista: "colecionadora" },
     { id: "noite", nome: "Noite", claro: "#2b4a3d", escuro: "#244034", conquista: "cinquenta" },
 ];
 
-// o tema salvo só vale se existir e estiver liberado; senão volta pra grama
+// o tema salvo só vale se existir e estiver liberado; senão volta pro Coliseu (a antiga "grama" também)
 function limparTemaDoTabuleiro(id, conquistasGanhas) {
     const tema = TEMAS_DO_TABULEIRO.find((opcao) => opcao.id === id);
-    return tema && corEstaLiberada(tema, conquistasGanhas) ? tema.id : "grama";
+    return tema && corEstaLiberada(tema, conquistasGanhas) ? tema.id : "coliseu";
 }
 
 // ==========================================

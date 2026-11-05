@@ -314,6 +314,7 @@ function desenharZonaDaArena() {
 }
 
 function desenharTabuleiro() {
+    if (desenharCenario(temaDoTabuleiro())) return; // Coliseu, Selva e Arena: desenhados uma vez só (cenarios.js)
     // fundo inteiro na cor escura: com zoom, sobra um fiozinho entre as casas e aparecia a página por trás
     ctx.fillStyle = temaDoTabuleiro().escuro;
     ctx.fillRect(0, 0, LARGURA_TABULEIRO, ALTURA_TABULEIRO);
@@ -806,7 +807,8 @@ function tocarFanfarra() {
 
     notas.forEach((frequencia, indice) => {
         // espera o som da batida terminar antes de começar
-        setTimeout(() => tocarSom(frequencia, 0.15, "triangle"), 350 + indice * 120);
+        setTimeout(() => tocarNotaDeEfeito(frequencia, 0, indice === notas.length - 1 ? 0.5 : 0.16, "square", 0.13), 350 + indice * 120);
+        setTimeout(() => tocarNotaDeEfeito(frequencia / 2, 0, indice === notas.length - 1 ? 0.5 : 0.16, "triangle", 0.2), 350 + indice * 120);
     });
 }
 
@@ -872,7 +874,7 @@ function iniciarContagem(aoTerminar = loop, passos = ["3", "2", "1", tr("Vai!")]
 
         textoContagem = passos[indice];
         inicioPassoContagem = performance.now();
-        tocarSom(ultimoPasso ? 880 : 440, 0.12, "square");
+        tocarSomContagem(ultimoPasso);
 
         if (ultimoPasso) {
             contagemAtiva = false;

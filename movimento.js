@@ -129,7 +129,7 @@ function comerAlimento(jogador, pontosBase) {
             ? tr(umPonto ? "{nome}: {n} ponto" : "{nome}: {n} pontos", { nome: jogador.nome, n: jogador.pontuacao })
             : tr(umPonto ? "{n} ponto" : "{n} pontos", { n: jogador.pontuacao }));
     }
-    tocarSomComer();
+    tocarSomComer(jogador.comboAtual, jogador.bot ? 0.4 : 1); // sobe de tom com o combo; bot mais baixinho
     soltarEstouro(jogador.cobra[0], jogador.corCabeca, Math.min(jogador.comboAtual, 6));
     pularPlacar(jogador.elementoPontuacao);
 
@@ -259,7 +259,7 @@ function segurarComEscudo(jogador) {
     jogador.filaDirecoes = [];
     jogador.atordoadoAte = agoraDoJogo() + DURACAO_SUSTO_ESCUDO_MS;
     adicionarTextoFlutuante(jogador.cobra[0], tr("Escudo!"), CORES_POWERUP.escudo);
-    tocarSom(520, 0.12, "triangle");
+    tocarSomPoder();
     return true;
 }
 

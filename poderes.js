@@ -188,8 +188,7 @@ function explodirBomba(jogador) {
     }
 
     // som: estrondo grave
-    tocarSom(70, 0.45, "sawtooth");
-    tocarSom(45, 0.6, "square");
+    tocarSomExplosao();
     vibrar([80, 40, 160]);
 
     explosoes.push({ casa: { ...centro }, ate: performance.now() + DURACAO_EXPLOSAO_MS });

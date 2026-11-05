@@ -160,7 +160,7 @@ function desenharFundoDoMenu() {
 }
 
 const CARTOES_DE_MODO = [
-    { modo: "normal", nome: "Normal", texto: "Coma, cresça, não bata", cabeca: "#6fa0ff", chapeu: "mascara", chao: "#aad751" },
+    { modo: "normal", nome: "Normal", texto: "Coma, cresça, não bata", cabeca: "#6fa0ff", chapeu: "mascara", chao: "#d2a56c" },
     { modo: "arena", nome: "Arena", texto: "A zona fecha com fogo", cabeca: "#ff9a6b", chapeu: "coroa", chao: "#5a2a1e" },
     { modo: "chefao", nome: "Chefão", texto: "Enfrente os olhos", cabeca: "#ff7ac6", chapeu: "bruxa", chao: "#112033" },
     { modo: "tempo", nome: "Contra o tempo", texto: "2 minutos, muitos pontos", cabeca: "#b98bff", chapeu: "helice", chao: "#2b4a3d" },

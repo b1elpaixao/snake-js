@@ -16,11 +16,39 @@ function obterContextoAudio() {
         contextoAudio = new (window.AudioContext || window.webkitAudioContext)();
         ganhoMusica = contextoAudio.createGain();
         ganhoEfeitos = contextoAudio.createGain();
-        ganhoMusica.connect(contextoAudio.destination);
-        ganhoEfeitos.connect(contextoAudio.destination);
+        ligarSaidasDoAudio(contextoAudio);
         aplicarVolumes();
     }
     return contextoAudio;
+}
+
+// tudo passa por um compressor (som mais cheio, sem estourar); a música ganha um ecozinho
+function ligarSaidasDoAudio(ctxAudio) {
+    const mestre = ctxAudio.createDynamicsCompressor();
+    mestre.threshold.value = -16;
+    mestre.ratio.value = 5;
+    mestre.attack.value = 0.003;
+    mestre.release.value = 0.2;
+    mestre.connect(ctxAudio.destination);
+    ganhoEfeitos.connect(mestre);
+    ganhoMusica.connect(mestre);
+
+    const eco = ctxAudio.createDelay(1);
+    const voltaDoEco = ctxAudio.createGain();
+    const volumeDoEco = ctxAudio.createGain();
+    const filtroDoEco = ctxAudio.createBiquadFilter();
+    eco.delayTime.value = 0.19;
+    voltaDoEco.gain.value = 0.25;
+    volumeDoEco.gain.value = 0.18;
+    filtroDoEco.type = "bandpass"; // sem grave nem chiado: só a melodia ecoa
+    filtroDoEco.frequency.value = 1200;
+    filtroDoEco.Q.value = 0.5;
+    ganhoMusica.connect(filtroDoEco);
+    filtroDoEco.connect(eco);
+    eco.connect(voltaDoEco);
+    voltaDoEco.connect(eco);
+    eco.connect(volumeDoEco);
+    volumeDoEco.connect(mestre);
 }
 
 // chamado quando mexe nas barrinhas (e quando o áudio nasce)
@@ -28,7 +56,7 @@ function aplicarVolumes() {
     if (!ganhoMusica) return;
     const ligado = plataformaCalaOSom() ? 0 : 1;
     ganhoMusica.gain.value = ligado * volumeMusica / 50;
-    ganhoEfeitos.gain.value = ligado * volumeEfeitos / 50;
+    ganhoEfeitos.gain.value = ligado * volumeEfeitos / 50 * 1.8; // o compressor segura: os efeitos precisam aparecer em cima da música
 }
 
 function tocarSom(frequencia, duracaoSegundos, tipoOnda = "sine") {
@@ -51,16 +79,91 @@ function tocarSom(frequencia, duracaoSegundos, tipoOnda = "sine") {
     oscilador.stop(ctxAudio.currentTime + duracaoSegundos);
 }
 
-function tocarSomComer() {
-    tocarSom(700, 0.1, "square");
+// uma nota de efeito: pode começar depois (atraso) e escorregar até outra frequência
+function tocarNotaDeEfeito(frequencia, atraso, duracao, onda, volume, frequenciaFinal = frequencia) {
+    if (mudo) return;
+    const ctxAudio = obterContextoAudio();
+    const inicio = ctxAudio.currentTime + atraso;
+    const oscilador = ctxAudio.createOscillator();
+    const ganho = ctxAudio.createGain();
+    oscilador.type = onda;
+    oscilador.frequency.setValueAtTime(frequencia, inicio);
+    if (frequenciaFinal !== frequencia) oscilador.frequency.exponentialRampToValueAtTime(frequenciaFinal, inicio + duracao);
+    ganho.gain.value = 0;
+    ganho.gain.setValueAtTime(0.0001, inicio);
+    ganho.gain.linearRampToValueAtTime(volume, inicio + 0.005);
+    ganho.gain.exponentialRampToValueAtTime(0.001, inicio + duracao);
+    oscilador.connect(ganho);
+    ganho.connect(ganhoEfeitos);
+    oscilador.start(inicio);
+    oscilador.stop(inicio + duracao + 0.02);
 }
 
+// um estouro de chiado, com o filtro fechando (de frequencia até frequenciaFinal)
+function tocarChiadoDeEfeito(atraso, duracao, volume, frequencia, frequenciaFinal) {
+    if (mudo) return;
+    const ctxAudio = obterContextoAudio();
+    const inicio = ctxAudio.currentTime + atraso;
+    const chiado = ctxAudio.createBufferSource();
+    const filtro = ctxAudio.createBiquadFilter();
+    const ganho = ctxAudio.createGain();
+    chiado.buffer = ruidoDaMusica(ctxAudio);
+    filtro.type = "lowpass";
+    filtro.frequency.setValueAtTime(frequencia, inicio);
+    filtro.frequency.exponentialRampToValueAtTime(frequenciaFinal, inicio + duracao);
+    ganho.gain.value = 0;
+    ganho.gain.setValueAtTime(volume, inicio);
+    ganho.gain.exponentialRampToValueAtTime(0.001, inicio + duracao);
+    chiado.connect(filtro);
+    filtro.connect(ganho);
+    ganho.connect(ganhoEfeitos);
+    chiado.start(inicio);
+    chiado.stop(inicio + duracao + 0.02);
+}
+
+// nham: duas notinhas subindo. Cada ponto de combo sobe um tom (até x8)
+function tocarSomComer(combo = 1, volume = 1) {
+    const base = 520 * Math.pow(2, (Math.min(Math.max(combo, 1), 8) - 1) * 2 / 12);
+    tocarNotaDeEfeito(base, 0, 0.06, "square", 0.14 * volume);
+    tocarNotaDeEfeito(base * 1.5, 0.05, 0.1, "square", 0.16 * volume);
+    tocarChiadoDeEfeito(0, 0.03, 0.08 * volume, 6000, 2000);
+}
+
+// pancada: grave que cai, chiado da batida e um rasgo
 function tocarSomColisao() {
-    tocarSom(120, 0.4, "sawtooth");
+    tocarNotaDeEfeito(170, 0, 0.32, "sine", 0.55, 38);
+    tocarNotaDeEfeito(120, 0, 0.22, "sawtooth", 0.16, 50);
+    tocarChiadoDeEfeito(0, 0.28, 0.38, 3500, 250);
 }
 
 function tocarSomComidaDourada() {
-    tocarSom(1000, 0.15, "triangle");
+    [880, 1175, 1568].forEach((nota, indice) => tocarNotaDeEfeito(nota, indice * 0.06, 0.16, "triangle", 0.24));
+    tocarNotaDeEfeito(2093, 0.18, 0.3, "sine", 0.12);
+}
+
+// pegou um power-up: sobe rasgando e termina num ping
+function tocarSomPoder() {
+    tocarNotaDeEfeito(380, 0, 0.18, "sawtooth", 0.12, 1300);
+    tocarNotaDeEfeito(1320, 0.16, 0.22, "triangle", 0.22);
+}
+
+function tocarSomExplosao() {
+    tocarNotaDeEfeito(110, 0, 0.6, "sine", 0.6, 28);
+    tocarNotaDeEfeito(70, 0, 0.4, "sawtooth", 0.18, 35);
+    tocarChiadoDeEfeito(0, 0.7, 0.5, 5000, 120);
+}
+
+// 3, 2, 1: toc grave; "Vai!": agudo com pancada
+function tocarSomContagem(ultimoPasso) {
+    if (ultimoPasso) {
+        tocarNotaDeEfeito(880, 0, 0.3, "square", 0.17);
+        tocarNotaDeEfeito(440, 0, 0.3, "square", 0.12);
+        tocarNotaDeEfeito(150, 0, 0.2, "sine", 0.45, 45);
+        tocarChiadoDeEfeito(0, 0.15, 0.2, 5000, 800);
+    } else {
+        tocarNotaDeEfeito(440, 0, 0.1, "square", 0.15);
+        tocarNotaDeEfeito(110, 0, 0.12, "sine", 0.3, 60);
+    }
 }
 
 // vibra o celular (o botão "Efeitos" desliga a vibração também)
@@ -110,7 +213,7 @@ function tocarBatida(ctxAudio, peca, inicio) {
         const oscilador = ctxAudio.createOscillator();
         oscilador.frequency.setValueAtTime(140, inicio);
         oscilador.frequency.exponentialRampToValueAtTime(40, inicio + 0.12);
-        ganho.gain.setValueAtTime(0.2, inicio);
+        ganho.gain.setValueAtTime(0.32, inicio);
         ganho.gain.exponentialRampToValueAtTime(0.001, inicio + 0.16);
         oscilador.connect(ganho);
         oscilador.start(inicio);
@@ -123,7 +226,7 @@ function tocarBatida(ctxAudio, peca, inicio) {
     filtro.type = "highpass";
     filtro.frequency.value = peca === "caixa" ? 1200 : 7000;
     const duracao = peca === "caixa" ? 0.12 : 0.04;
-    ganho.gain.setValueAtTime(peca === "caixa" ? 0.12 : 0.05, inicio);
+    ganho.gain.setValueAtTime(peca === "caixa" ? 0.16 : 0.05, inicio);
     ganho.gain.exponentialRampToValueAtTime(0.001, inicio + duracao);
     chiado.connect(filtro);
     filtro.connect(ganho);

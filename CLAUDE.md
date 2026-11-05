@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (391 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (392 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -34,13 +34,14 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 15. `enfeites.js` - desenho dos itens da loja: chapéus, comidas, padrões do corpo, rastros e efeitos (partículas), tabuleiros com enfeites, as prévias e o estilo "aura" (`desenharSombraViva`: chefão e skin Espectro; sem `ctx.filter`, rascunho nem `createPattern` — travavam: a aura são camadas transparentes e o granulado são pontinhos num Path2D)
 16. `loja.js` - moedas (`snakeCarteira`: moedas, comprados, equipados), tela da loja com abas, desenho dos chapéus e das comidas
 17. `salvos.js` - tudo que é guardado no navegador: `lerDoArmazenamento`/`salvarNoArmazenamento`, recordes, estatísticas, conquistas, teclas e preferências
+17a. `cenarios.js` - tabuleiros desenhados (`DESENHOS_DOS_CENARIOS`: Coliseu, o padrão; Selva; Arena, libera com "Mais esperta que o bot") e o fundo em volta (`#cenarioDeFora`: torcida, folhas, holofotes). Desenha uma vez numa tela guardada e cola a cada quadro; a antiga "grama" salva vira Coliseu
 17b. `sensacao.js` - estouros ao comer e ao bater, e o pulinho do placar (sorteio próprio)
 17c. `vitrine.js` - as cobras com chapéu passeando atrás do menu (sorteio próprio, não mexe nas partidas)
 18. `plataforma.js` - CrazyGames: SDK, anúncio no fim da partida (`pedirAnuncioDoIntervalo`), saves na conta (`sdkDaPlataforma.data`), classe `na-plataforma` no `<html>`. É a última tag do `index.html`: espera o SDK e só depois carrega o `script.js`. Testar com `?useLocalSdk=true` em http://127.0.0.1
 19. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último; carregado pelo `plataforma.js`)
 
 Os arquivos 2 a 17 só tem funções e valores fixos (e o `plataforma.js` só liga o SDK); o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-v23`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
+Outros: `style.css`, `sw.js` (service worker, cache `snake-v24`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
 **Ao criar um arquivo .js novo:** incluir no `index.html` antes do `plataforma.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 

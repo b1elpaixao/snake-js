@@ -448,9 +448,10 @@ verificar("compartilhar: 2 juntos soma os pontos",
     "🐍 Snake · Modo Normal: Ana + Beto fizeram 20 pontos juntos");
 
 // temas do tabuleiro
-verificar("temas: só a grama começa liberada",
-    TEMAS_DO_TABULEIRO.filter((tema) => corEstaLiberada(tema, [])).map((tema) => tema.id).join(","), "grama");
-verificar("limparTemaDoTabuleiro: tema bloqueado volta pra grama", limparTemaDoTabuleiro("neve", []), "grama");
+verificar("temas: só o Coliseu e a Selva começam liberados",
+    TEMAS_DO_TABULEIRO.filter((tema) => corEstaLiberada(tema, [])).map((tema) => tema.id).join(","), "coliseu,selva");
+verificar("limparTemaDoTabuleiro: tema bloqueado volta pro Coliseu", limparTemaDoTabuleiro("neve", []), "coliseu");
+verificar("limparTemaDoTabuleiro: a antiga grama vira Coliseu", limparTemaDoTabuleiro("grama", []), "coliseu");
 verificar("limparTemaDoTabuleiro: tema liberado fica", limparTemaDoTabuleiro("neve", ["colecionadora"]), "neve");
 verificar("temas: toda conquista pedida existe",
     TEMAS_DO_TABULEIRO.every((tema) => tema.conquista === null || CONQUISTAS.some((conquista) => conquista.id === tema.conquista)), true);
