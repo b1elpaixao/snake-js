@@ -370,6 +370,8 @@ verificar("macasQueValem: Fome dupla conta 2", [macasQueValem([]), macasQueValem
 verificar("moedasDaEscalada: pontos + andares", moedasDaEscalada(20, 2, false, []), moedasDaPartida(20) + 8);
 verificar("moedasDaEscalada: topo e Bolso cheio", moedasDaEscalada(0, 5, true, ["bolsoCheio"]), 60);
 verificar("escalada: a faixa vem do Mestre e a tiara do topo", ["faixa", "tiara"].map((id) => ITENS_DA_LOJA.find((item) => item.id === id).conquista).join(), "derrubouOMestre,topoDaEscalada");
+verificar("escalada: chefes aguentam mais golpes", [RIVAIS_DA_ESCALADA.mestre.golpes, RIVAIS_DA_ESCALADA.rainha.golpes, RIVAIS_DA_ESCALADA.ze.golpes].join(), "2,3,");
+verificar("descreverBatida: espada", descreverBatida("Bot", "espada", "").includes("espada"), true);
 verificar("conquista: ids únicos", new Set(CONQUISTAS.map((c) => c.id)).size, CONQUISTAS.length);
 verificar("limparConquistas tira o que não existe", JSON.stringify(limparConquistas(["faminta", "voar", 7])), JSON.stringify(["faminta"]));
 verificar("limparCOnquistas com lixo devolve lista vazia", JSON.stringify(limparConquistas(" {lixo")), "[]");

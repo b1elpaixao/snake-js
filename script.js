@@ -1322,6 +1322,7 @@ function loop() {
         jogador.ultimoPassoEm = horaDoPasso; // contado horário certo do passo (o quadro pode ter chegado um pouco depois)
     }
     if (chefao) atualizarChefao(); // espada e golpes no chefão
+    if (atualizarEspadaContraBots()) return; // nas partidas com bots, a espada derrota rivais
 
     if (comidaDourada && agoraDoJogo() >= comidaDourada.expiraEm) {
         comidaDourada = null;
@@ -1329,7 +1330,7 @@ function loop() {
     
     // só quem andou pode ter batido (ou quem ficou fora da zona da Arena que acabou de fechar)
     if (modoAtual === "escalada" && passoCompleto) atualizarImaDaEscalada();
-    let batidas = (fechouAZona ? jogadores : jogadoresQueAndam)
+    let batidas = (fechouAZona ? jogadores : jogadoresQueAndam.filter((jogador) => jogadores.includes(jogador))) // quem levou espada já saiu
         .map((jogador) => ({ jogador, motivo: motivoDaBatida(jogador) }))
         .filter((batida) => batida.motivo !== null)
         .filter(({ jogador }) => !segurarComEscudo(jogador)); // com escudo, a batida não conta
@@ -1476,6 +1477,7 @@ function travarSemParedes(travado) {
 function reiniciar() {
     if (anuncioAberto) return;
     prepararEscaladaNoReiniciar();
+    if (modoAtual !== "escalada" || escalada.andar === 1) medir(`partida/${modoAtual}`); // cada andar conta à parte
     particulas = []; // rastro e efeitos da partida anterior
     clearTimeout(temporizadorAnimacaoMorte);
     elementoTextoCompartilhar.hidden = true;
@@ -1542,6 +1544,7 @@ function reiniciar() {
     botaoPausa.textContent = tr("Pausar");
     prepararFantasma();
     comecarAndarDaEscalada();
+    prepararEspadaContraBots();
     if (modoAtual === "escalada") iniciarContagem(loop, passosDaContagemDaEscalada());
     else iniciarContagem();
 }
@@ -1704,6 +1707,7 @@ window.addEventListener("keydown", (evento) => {
 
 desenharFundoDoMenu();
 window.addEventListener("resize", desenharFundoDoMenu);
+ligarContagem();
 montarCartoesDeModo();
 iniciarVitrine();
 

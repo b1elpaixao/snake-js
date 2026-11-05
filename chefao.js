@@ -241,3 +241,85 @@ function desenharPulsos() {
     }
     ctx.restore();
 }
+
+// ==========================================
+// Espada contra os bots: nas partidas com bots, pegue a espada no chão e encoste no corpo de um rival.
+// Ele sai da partida (chefe da Escalada aguenta mais golpes). Bots fogem de quem está armado.
+// ==========================================
+const PRIMEIRA_ESPADA_CONTRA_BOTS_MS = 8000;
+const ESPADA_CONTRA_BOTS_VOLTA_EM_MS = 12000;
+const PONTOS_POR_DERROTAR_RIVAL = 5;
+const DISTANCIA_QUE_O_BOT_FOGE = 7;
+
+function espadaValeNaPartida() {
+    return !chefao && !modoCooperativo && MODOS_COM_ESPADA_CONTRA_BOTS.includes(modoAtual) &&
+        participantes.some((jogador) => jogador.bot) && participantes.some((jogador) => !jogador.bot);
+}
+
+// no fim do reiniciar
+function prepararEspadaContraBots() {
+    proximaEspadaEm = agoraDoJogo() + PRIMEIRA_ESPADA_CONTRA_BOTS_MS;
+}
+
+// quem está armado e perto o bastante pra este bot fugir
+function humanoArmadoPerto(bot) {
+    return jogadores.find((outro) => outro !== bot && !outro.bot && temEspada(outro) &&
+        distanciaManhattan(outro.cobra[0], bot.cobra[0]) <= DISTANCIA_QUE_O_BOT_FOGE) || null;
+}
+
+function golpearRival(atacante, rival) {
+    const casa = { ...atacante.cobra[0] };
+    rival.golpes = (rival.golpes || 1) - 1;
+    soltarEstouro(casa, rival.corCabeca, 6);
+    vibrar(80);
+
+    if (rival.golpes > 0) {
+        rival.cobra = encolherCobra(rival.cobra, 2);
+        rival.cobraAnterior = rival.cobraAnterior.slice(0, rival.cobra.length);
+        rival.filaDirecoes = [];
+        rival.atordoadoAte = agoraDoJogo() + 1200; // fica parado: nesse tempo não leva outro golpe
+        adicionarTextoFlutuante(casa, `${tr("Golpe!")} -1 ♥`, "#ff8a80");
+        tocarSomColisao();
+        return;
+    }
+    atacante.pontuacao += PONTOS_POR_DERROTAR_RIVAL;
+    atacante.elementoPontuacao.textContent = atacante.pontuacao;
+    atualizarRecordeSeNecessario(atacante.pontuacao);
+    tirarDaPartida([{ jogador: rival, motivo: "espada", outro: "" }]);
+    adicionarTextoFlutuante(casa, `+${PONTOS_POR_DERROTAR_RIVAL}`, "#f5c451");
+    anunciar(tr("Você derrotou {nome}", { nome: rival.nome }));
+}
+
+// a cada passo, no loop. true = a partida acabou (não sobrou rival)
+function atualizarEspadaContraBots() {
+    if (!espadaValeNaPartida()) return false;
+    const humanos = jogadores.filter((jogador) => !jogador.bot);
+    if (humanos.length === 0) return false;
+    const agora = agoraDoJogo();
+
+    if (!espada && agora >= proximaEspadaEm && !humanos.some(temEspada)) espada = gerarPosicaoLivre();
+
+    for (const humano of humanos) {
+        if (espada && mesmaPosicao(humano.cobra[0], espada)) {
+            espada = null;
+            humano.espadaAte = agora + DURACAO_ESPADA_MS;
+            proximaEspadaEm = agora + DURACAO_ESPADA_MS + ESPADA_CONTRA_BOTS_VOLTA_EM_MS;
+            adicionarTextoFlutuante(humano.cobra[0], tr("Espada! Acerte um rival"), "#9be7ff");
+            anunciar(tr("Pegou a espada: encoste num rival para derrotá-lo"));
+            tocarSomPoder();
+            vibrar(50);
+        }
+        if (!temEspada(humano)) continue;
+        jogadores
+            .filter((rival) => rival.bot && !estaAtordoado(rival) && rival.cobra.some((pedaco) => mesmaPosicao(pedaco, humano.cobra[0])))
+            .forEach((rival) => golpearRival(humano, rival));
+    }
+
+    if (modoAtual === "escalada" || humanos.length !== 1 || jogadores.length !== 1) return false;
+    jogoAtivo = false;
+    travarSemParedes(false);
+    pararMusicaFundo();
+    jogadores = participantes;
+    mostrarTelaGameOver(humanos, saidasDaPartida.flat());
+    return true;
+}

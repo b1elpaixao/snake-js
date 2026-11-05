@@ -61,6 +61,7 @@ function comecarAndarDaEscalada() {
     if (modoAtual !== "escalada") return;
     const andar = andarDaEscalada();
     const humano = jogadores[0];
+    medir(`escalada/andar-${escalada.andar}`);
 
     humano.pontuacao = escalada.pontos;
     humano.elementoPontuacao.textContent = humano.pontuacao;
@@ -71,6 +72,7 @@ function comecarAndarDaEscalada() {
         const dados = andar.rivais[indice];
         rival.nivel = NIVEIS_DO_BOT[andar.nivel];
         rival.chapeuDeRival = dados.chapeu;
+        rival.golpes = dados.golpes || 1; // quantos golpes de espada aguenta
         if (dados.cabeca) {
             rival.corCabeca = dados.cabeca;
             rival.corCorpo = dados.corpo;
@@ -196,6 +198,7 @@ function terminarAndar() {
 
     if (escalada.andar >= ANDARES_DA_ESCALADA.length) {
         escalada.venceu = true;
+        medir("escalada/topo");
         encerrarCorrida([humano]);
         return;
     }

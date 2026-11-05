@@ -367,8 +367,11 @@ function decidirDirecaoBot(jogador) {
     // quando mais cuidadoso, mais espaço ele exige à frente pra não entrar em beco
     const espaçoNecessario = espacoQueOBotExige(jogador.cobra.length, nivel.cuidado);
 
+    const armadoPerto = !jogador.chefao && nivel.cuidado > 0 ? humanoArmadoPerto(jogador) : null;
     const alvo = jogador.chefao
         ? alvoDoChefao(cabeca, jogadores[0].cobra[0], jogadores[0].direcao, comida, temEspada(jogadores[0]), COLUNAS, LINHAS)
+        : armadoPerto
+        ? alvoDoChefao(cabeca, armadoPerto.cobra[0], armadoPerto.direcao, comida, true, COLUNAS, LINHAS) // foge de quem tem espada
         : escolherAlvoBot(cabeca);
     // foge de bater de frente com outra cobra (o chefão e o bot fácil não ligam pra isso)
     const perigo = jogador.chefao || nivel.cuidado === 0 ? [] : casasPerigosas(jogadores.filter((outro) => outro !== jogador), andar);

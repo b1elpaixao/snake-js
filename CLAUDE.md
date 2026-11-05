@@ -2,7 +2,7 @@
 
 Jogo da cobrinha  em JavaScript puro (sem frameworks, sem build).
 Site no ar: https://b1elpaixao.github.io/snake-js/ (GitHub Pages, publica sozinho a cada push na `main`).
-Testes: abrir `testes.html` no navegador; tem que dar todos passando (408 na última contagem).
+Testes: abrir `testes.html` no navegador; tem que dar todos passando (410 na última contagem).
 
 ## Como eu gosto de trabalhar
 
@@ -34,6 +34,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 15. `enfeites.js` - desenho dos itens da loja: chapéus, comidas, padrões do corpo, rastros e efeitos (partículas), tabuleiros com enfeites, as prévias e o estilo "aura" (`desenharSombraViva`: chefão e skin Espectro; sem `ctx.filter`, rascunho nem `createPattern` — travavam: a aura são camadas transparentes e o granulado são pontinhos num Path2D)
 16. `loja.js` - moedas (`snakeCarteira`: moedas, comprados, equipados), tela da loja com abas, desenho dos chapéus e das comidas
 17. `salvos.js` - tudo que é guardado no navegador: `lerDoArmazenamento`/`salvarNoArmazenamento`, recordes, estatísticas, conquistas, teclas e preferências
+16a. `medidas.js` - contagem anônima no GoatCounter (painel: https://b13l.goatcounter.com): `medir(evento)`, visitas e volta (`snakeUltimaVisita`), partidas e andares; desligada com o SDK do CrazyGames e abrindo o arquivo direto
 16b. `escalada.js` - campanha solo: 10 andares contra bots (`ANDARES_DA_ESCALADA`, `RIVAIS_DA_ESCALADA`, `PODERES_DA_ESCALADA`, `sortearPoderes`, `poderesLiberados` no `logica.js`); vencer = comer a meta do andar ou sobrar sozinho; a cada andar escolhe 1 de 3 poderes (`#telaPoderes`); chefes no 5º (Mestre da Faixa, conquista `derrubouOMestre` = Faixa de lutador) e no 10º (Rainha das Cobras, `topoDaEscalada` = Tiara da Rainha), em corrida de maçãs. Morreu, volta ao andar 1; `snakeRecordeEscalada` guarda o melhor andar, que libera poderes (`liberaNoAndar`)
 17a. `cenarios.js` - tabuleiros desenhados (`DESENHOS_DOS_CENARIOS`: Coliseu, o padrão; Selva; Arena, libera com "Mais esperta que o bot") e o fundo em volta (`#cenarioDeFora`: torcida, folhas, holofotes). Desenha uma vez numa tela guardada e cola a cada quadro; a antiga "grama" salva vira Coliseu
 17b. `sensacao.js` - estouros ao comer e ao bater, e o pulinho do placar (sorteio próprio)
@@ -42,7 +43,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 19. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último; carregado pelo `plataforma.js`)
 
 Os arquivos 2 a 17 só tem funções e valores fixos (e o `plataforma.js` só liga o SDK); o que executa ao carregar fica no `script.js`.
-Outros: `style.css`, `sw.js` (service worker, cache `snake-v26`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
+Outros: `style.css`, `sw.js` (service worker, cache `snake-v27`), `manifest.webmanifest`, ícones PNG (`icone-32`, `-180`, `-192`, `-512`, `-maskable-512`: a cobra enrolada na maçã, desenhada pelo próprio jogo).
 **Ao criar um arquivo .js novo:** incluir no `index.html` antes do `plataforma.js`, na lista `ARQUIVOS`
 do `sw.js`, e trocar o número do `NOME_DO_CACHE`.
 
@@ -61,6 +62,7 @@ Conquistas dão itens exclusivos 🏆 (nunca vendidos); a loja vende só itens p
 
 - Movimento por trilha: a direção do próximo passo é combinada no fim de cada passo; o corpo é desenhado seguindo as casas, com cantos arredondados. Os passos acontecem dentro do `loopRenderizacao` (compasso do desenho) usando `proximoLoopEm`; não volte para `setTimeout`.
 - Velocidade: acelera pelo que a cobra come (`jogador.comidas`), não pelos pontos, numa curva suave (`duracaoDoPasso`) com limite por dificuldade (`aceleracaoMaxima`: 1,6x / 2x / 2,4x). Não voltar a ligar a velocidade aos pontos: o combo faz o jogo disparar.
+- Espada contra bots (fim do `chefao.js`): nas partidas com bots em Normal, Rato, Arena e Escalada, pegar a espada e encostar num rival tira ele da partida; `golpes` = quantos aguenta (chefes da Escalada); bots não fáceis fogem de quem está armado.
 - `agoraDoJogo()` é o relógio que para na pausa. Use ele para tempos no jogo.
 - Teclas reservadas (não podem ser escolhidas para jogador): Espaço, Esc, F, Enter, Tab.
 - localStorage só pelas funções `lerDoArmazenamento` / `salvarNoArmazenamento`.

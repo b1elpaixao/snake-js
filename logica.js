@@ -114,6 +114,7 @@ function descreverBatida(nome, motivo, nomeDoOutro) {
         pedra: tr("bateu numa pedra"),
         outroJogador: tr("bateu em {nome}", { nome: nomeDoOutro }),
         zona: tr("ficou fora da zona"),
+        espada: tr("foi derrotado pela espada"),
     };
 
     return `${nome} ${frases[motivo]}`;
@@ -528,6 +529,7 @@ function cortarCobraNaZona(cobra, zona) {
 // Modo Chefão (funções puras - testadas em testes.js)
 // ==========================================
 const DURACAO_ESPADA_MS = 6000;
+const MODOS_COM_ESPADA_CONTRA_BOTS = ["normal", "rato", "arena", "escalada"];
 const ESPADA_VOLTA_EM_MS = 4000; // depois que a espada acaba (ou chega chefão novo), outra aparece
 const PONTOS_POR_CHEFAO = 10; // vezes o número do chefão: o 1º dá 10, o 2º dá 20...
 const DISTANCIA_DE_CACA = 8; // mais perto que isso, o chefão vai pra frente da sua cabeça
@@ -1153,8 +1155,8 @@ const RIVAIS_DA_ESCALADA = {
     dj: { nome: "DJ Fone", chapeu: "fone" },
     pirata: { nome: "Capitã Pirata", chapeu: "pirata" },
     vila: { nome: "A Vilã", chapeu: "visor" },
-    mestre: { nome: "Mestre da Faixa", chapeu: "faixa", cabeca: "#ff6a6a", corpo: "#8f1f2c" },
-    rainha: { nome: "Rainha das Cobras", chapeu: "tiara", cabeca: "#ffd23a", corpo: "#b5791a" },
+    mestre: { nome: "Mestre da Faixa", golpes: 2, chapeu: "faixa", cabeca: "#ff6a6a", corpo: "#8f1f2c" },
+    rainha: { nome: "Rainha das Cobras", golpes: 3, chapeu: "tiara", cabeca: "#ffd23a", corpo: "#b5791a" },
 };
 
 const ANDARES_DA_ESCALADA = [
