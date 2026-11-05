@@ -42,6 +42,10 @@ function atualizarTutorial() {
     }
 
     const humano = jogadores.find((jogador) => !jogador.bot);
+    if (!humano) { // saiu da partida e os bots seguem (3 ou 4 jogadores)
+        if (!dica.hidden) dica.hidden = true;
+        return;
+    }
     if (tutorial.jogador !== humano) marcarInicioDoPasso(humano); // partida nova (jogou de novo)
 
     const situacao = {
