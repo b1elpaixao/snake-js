@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0e1712" />
-    <title>Snake</title>
+    <title>Snake Brawl</title>
     <meta name="description" content="Jogo da cobrinha (Snake) feito em JavaScript puro - power-ups, modo 2 jogadores, obstáculos e efeitos sonoros." />
 
-    <meta property="og:title" content="Snake" />
+    <meta property="og:title" content="Snake Brawl" />
     <meta property="og:description" content="Jogo de cobrinha feito em JavaScript puro, com power-ups e modo 2 jogadores." />
     <meta property="og:type" content="website" />
 
@@ -18,69 +18,14 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600&display=swap" />
 
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <header class="topo">
-        <div class="marca">
-            <img class="logo" src="icone-192.png" alt="" width="40" height="40" />
-            <span class="marca-nome">SNAKE</span>
-        </div>
-
-        <div class="barra-acoes">
-            <button id="botaoInstalar" class="botao-contorno" type="button" hidden>⬇ Instalar</button>
-            <label class="botao-contorno">
-                <input type="checkbox" id="modoSemParedes" /> Sem paredes
-            </label>
-            <button id="botaoMusica" class="botao-contorno">🎵 Música</button>
-            <button id="botaoMudo" class="botao-contorno">🔊 Efeitos</button>
-            <button id="botaoPausa" class="botao-destaque">Pausar</button>
-        </div>
-    </header>
+    <div hidden><button id="botaoPausa" type="button">Pausar</button></div>
 
     <main class="layout">
-        <aside class="painel painel-controles">
-            <div class="cartao">
-                <p class="rotulo">Controles</p>
-
-                <div class="controle">
-                    <p class="controle-nome"><span class="ponto ponto-1"></span>Jogador 1</p>
-                    <div class="teclas" data-jogador="0"></div>
-                </div>
-
-                <div class="controle">
-                    <p class="controle-nome"><span class="ponto ponto-2"></span>Jogador 2</p>
-                    <div class="teclas" data-jogador="1"></div>
-                </div>
-
-                <div class="controle">
-                    <p class="controle-nome"><span class="ponto ponto-3"></span>Jogador 3</p>
-                    <div class="teclas" data-jogador="2"></div>
-                </div>
-
-                <div class="controle">
-                    <p class="controle-nome"><span class="ponto ponto-4"></span>Jogador 4</p>
-                    <div class="teclas" data-jogador="3"></div>
-                </div>
-
-                <p class="dica-teclas">
-                    <span id="dicaTeclas">Clique numa tecla pra trocar</span>
-                    <button id="botaoTeclasPadrao" class="botao-link" type="button">Restaurar padrão</button>
-                </p>
-
-                <p id="avisoControle" class="aviso-controle" role="status" hidden></p>
-
-                <div class="controle-pausa">
-                    Pausar <kbd class="tecla-larga">ESPAÇO</kbd> <kbd>ESC</kbd>
-                </div>
-                <div class="controle-pausa so-fora-da-plataforma">
-                    Tela cheia <kbd>F</kbd>
-                </div>
-            </div>
-        </aside>
-
         <section class="jogo">
             <div class="barra-placar">
                 <div class="placares">
@@ -185,20 +130,54 @@
                 <p id="anuncioLeitor" class="so-leitor" aria-live="polite"></p>
 
                 <div id="telaInicial" class="overlay overlay-menu">
-                    <div class="menu-cabecalho">
-                    <div>
-                         <p class="rotulo">Novo jogo</p>
-                         <h2 class="so-fora-da-plataforma">Quem vai jogar?</h2>
-                         <h2 class="so-na-plataforma">Snake Brawl</h2>
+                    <canvas id="canvasVitrine" aria-hidden="true"></canvas>
+                    <div class="menu-centro">
+                        <h1 class="titulo-jogo"><span>Snake</span> <span>Brawl</span></h1>
+                        <button id="botaoJogar1" class="botao-principal botao-jogar" type="button">Jogar</button>
+                        <div class="menu-opcoes menu-opcoes-duas">
+                        <div class="menu-dificuldade">
+                            <label for="seletorModo">Modo</label>
+                            <select id="seletorModo">
+                                <option value="normal" selected>Normal</option>
+                                <option value="clássico">clássico (sem pedras)</option>
+                                <option value="rato">Rato (caçada)</option>
+                                <option value="tempo">Contra o tempo (2 min)</option>
+                                <option value="arena">Arena (zona que fecha)</option>
+                                <option value="chefao">Chefão (os olhos que emergem)</option>
+                                <option value="fases">Fases(mapas)</option>
+                                <option value="desafio">Desafio do dia</option>
+                            </select>
+                        </div>
+                        <div class="menu-dificuldade">
+                            <label for="seletorDificuldade">Dificuldade</label>
+                            <select id="seletorDificuldade">
+                                <option value="facil">Fácil</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="dificil">Difícil</option>
+                        </select>
                     </div>
-                    <div class="menu-links">
-                        <button id="botaoIdioma" class="botao-link" type="button">English</button>
-                        <button id="botaoCriarFase" class="botao-link" type="button">Criar fase</button>
-                        <button id="botaoLoja" class="botao-link" type="button">Loja</button>
-                        <button id="botaoComoJogar" class="botao-link" type="button">Como jogar</button>
+                        </div>
+                        <div class="botoes-secundarios">
+                            <button id="botaoAbrirFesta" class="botao-secundario" type="button">Com amigos</button>
+                            <button id="botaoJogarBot" class="botao-secundario" type="button">Contra o bot</button>
+                        </div>
+                        <nav class="menu-links">
+                            <button id="botaoLoja" class="botao-link" type="button">Loja <span id="saldoMoedas">🪙 0</span></button>
+                            <button id="botaoAbrirProgresso" class="botao-link" type="button">Progresso</button>
+                            <button id="botaoAbrirAjustes" class="botao-link" type="button">Ajustes</button>
+                            <button id="botaoComoJogar" class="botao-link" type="button">Como jogar</button>
+                            <button id="botaoCriarFase" class="botao-link" type="button">Criar fase</button>
+                            <button id="botaoIdioma" class="botao-link" type="button">English</button>
+                        </nav>
                     </div>
-                    </div>
-                    <div class="menu-nomes">
+
+                    <div id="painelFesta" class="painel-festa" role="dialog" aria-labelledby="tituloFesta" hidden>
+                        <div class="painel-festa-caixa">
+                            <div class="como-jogar-topo">
+                                <h2 id="tituloFesta">Quem vai jogar?</h2>
+                                <button id="botaoFecharFesta" class="botao-secundario" type="button">Voltar</button>
+                            </div>
+                            <div class="menu-nomes">
                         <label class="campo campo-1">
                             Jogador 1 · <span id="resumoTeclas1">setas</span>
                             <input type="text" id="inputNomeJogador1" placeholder="Jogador 1" maxlength="12" />
@@ -225,30 +204,8 @@
                             </span>
                         </label>
                     </div>
-
-                    <div class="menu-opcoes">
-                        <div class="menu-dificuldade">
-                            <label for="seletorModo">Modo</label>
-                            <select id="seletorModo">
-                                <option value="normal" selected>Normal</option>
-                                <option value="clássico">clássico (sem pedras)</option>
-                                <option value="rato">Rato (caçada)</option>
-                                <option value="tempo">Contra o tempo (2 min)</option>
-                                <option value="arena">Arena (zona que fecha)</option>
-                                <option value="chefao">Chefão (os olhos que emergem)</option>
-                                <option value="fases">Fases(mapas)</option>
-                                <option value="desafio">Desafio do dia</option>
-                            </select>
-                        </div>
-                        <div class="menu-dificuldade">
-                            <label for="seletorDificuldade">Dificuldade</label>
-                            <select id="seletorDificuldade">
-                                <option value="facil">Fácil</option>
-                                <option value="normal" selected>Normal</option>
-                                <option value="dificil">Difícil</option>
-                        </select>
-                    </div>
-                        <div class="menu-dificuldade">
+                            <div class="menu-opcoes menu-opcoes-duas">
+                            <div class="menu-dificuldade">
                             <label for="seletorQuantidade">Jogadores</label>
                             <select id="seletorQuantidade">
                                 <option value="2" selected>2</option>
@@ -256,7 +213,7 @@
                                 <option value="4">4</option>
                             </select>
                         </div>
-                        <div class="menu-dificuldade">
+                            <div class="menu-dificuldade">
                             <label for="seletorNivelBot">Nível do bot</label>
                             <select id="seletorNivelBot">
                                 <option value="facil">Fácil</option>
@@ -264,14 +221,11 @@
                                 <option value="dificil">Difícil</option>
                             </select>
                         </div>
-                </div>
-
-                    <div class="menu-botoes">
-                        <button id="botaoJogar1" class="botao-principal">1 Jogador</button>
-                        <div class="botoes-secundarios">
-                            <button id="botaoJogar2" class="botao-secundario">2 Jogadores</button>
-                            <button id="botaoJogarJuntos" class="botao-secundario">2 Juntos</button>
-                            <button id="botaoJogarBot" class="botao-secundario">Contra o bot</button>
+                            </div>
+                            <div class="botoes-secundarios">
+                                <button id="botaoJogar2" class="botao-principal" type="button">2 Jogadores</button>
+                                <button id="botaoJogarJuntos" class="botao-secundario" type="button">2 Juntos</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -294,6 +248,7 @@
                     <p class="rotulo">Jogo parado</p>
                     <p id="tituloPausa" class="resultado">Pausado</p>
                     <button id="botaoContinuar" class="botao-principal" type="button">Continuar</button>
+                    <button id="botaoAjustesPausa" class="botao-secundario" type="button">Ajustes</button>
                     <button id="botaoReiniciarPausa" class="botao-secundario" type="button">Reiniciar</button>
                     <button id="botaoMenuPausa" class="botao-secundario" type="button">Voltar ao menu</button>
                     <p class="dica">Espaço ou Esc continua · a partida é perdida se reiniciar ou sair</p>
@@ -414,24 +369,76 @@
             </div>
         </section>
 
-        <aside class="painel">
-            <div class="cartao">
+        <aside class="painel" id="gaveta">
+            <div class="gaveta-topo">
+                <h2 id="tituloGaveta"></h2>
+                <button id="botaoFecharGaveta" class="botao-secundario" type="button">Voltar</button>
+            </div>
+
+            <div class="cartao" data-secao="ajustes">
+                <p class="rotulo">Partida</p>
+                <label class="opcao-acessibilidade">
+                    <input type="checkbox" id="modoSemParedes" />
+                    <span><b>Sem paredes</b>A cobra atravessa a borda e sai do outro lado</span>
+                </label>
+                <div class="botoes-ajustes">
+                    <button id="botaoMusica" class="botao-secundario" type="button">🎵 Música</button>
+                    <button id="botaoMudo" class="botao-secundario" type="button">🔊 Efeitos</button>
+                    <button id="botaoInstalar" class="botao-secundario" type="button" hidden>⬇ Instalar</button>
+                </div>
+            </div>
+
+            <div class="cartao painel-controles" data-secao="ajustes">
+                <p class="rotulo">Controles</p>
+
+                <div class="controle">
+                    <p class="controle-nome"><span class="ponto ponto-1"></span>Jogador 1</p>
+                    <div class="teclas" data-jogador="0"></div>
+                </div>
+
+                <div class="controle">
+                    <p class="controle-nome"><span class="ponto ponto-2"></span>Jogador 2</p>
+                    <div class="teclas" data-jogador="1"></div>
+                </div>
+
+                <div class="controle">
+                    <p class="controle-nome"><span class="ponto ponto-3"></span>Jogador 3</p>
+                    <div class="teclas" data-jogador="2"></div>
+                </div>
+
+                <div class="controle">
+                    <p class="controle-nome"><span class="ponto ponto-4"></span>Jogador 4</p>
+                    <div class="teclas" data-jogador="3"></div>
+                </div>
+
+                <p class="dica-teclas">
+                    <span id="dicaTeclas">Clique numa tecla pra trocar</span>
+                    <button id="botaoTeclasPadrao" class="botao-link" type="button">Restaurar padrão</button>
+                </p>
+
+                <p id="avisoControle" class="aviso-controle" role="status" hidden></p>
+
+                <div class="controle-pausa">
+                    Pausar <kbd class="tecla-larga">ESPAÇO</kbd> <kbd>ESC</kbd>
+                </div>
+                <div class="controle-pausa so-fora-da-plataforma">
+                    Tela cheia <kbd>F</kbd>
+                </div>
+            </div>
+
+            <div class="cartao" data-secao="progresso">
                 <p class="rotulo">Missões de hoje <span id="sequenciaMissoes"></span></p>
                 <ul id="listaMissoes" class="lista-missoes"></ul>
             </div>
 
-            <div class="cartao">
-                <p class="rotulo">Loja · <span id="saldoMoedas">🪙 0</span></p>
-                <p class="dica-loja">Chapéus, comidas, padrões, rastros, tabuleiros e efeitos pra sua cobra. Ganhe moedas jogando e cumprindo as missões.</p>
-                <button id="botaoAbrirLoja" class="botao-secundario" type="button">Abrir loja</button>
-            </div>
+            <div hidden><button id="botaoAbrirLoja" type="button"></button><span id="saldoLojaAntigo"></span></div>
 
-            <div class="cartao recordes">
+            <div class="cartao recordes" data-secao="progresso">
                 <p class="rotulo">Top 5 recordes · <span id="modoRecordes"></span></p>
                 <ol id="listaRecordes"></ol>
             </div>
 
-            <div class="cartao estatisticas">
+            <div class="cartao estatisticas" data-secao="progresso">
                 <p class="rotulo">Estatisticas</p>
                 <dl class="lista-estatisticas">
                     <div><dt>Partidas</dt><dd id="estatPartidas">0</dd></div>
@@ -446,7 +453,7 @@
                 <button id="botaoZerarEstatisticas" class="botao-link" type="button">Apagar estatíticas</button>
             </div>
 
-            <div class="cartao">
+            <div class="cartao" data-secao="progresso">
                 <div class="historico-topo">
                     <p class="rotulo">Histórico</p>
                     <select id="filtroHistorico" aria-label="Modo mostrado no gráfico">
@@ -457,18 +464,18 @@
                 <p id="resumoHistorico" class="resumo-historico"></p>
             </div>
 
-            <div class="cartao">
+            <div class="cartao" data-secao="progresso">
                 <p class="rotulo">Conquistas · <span id="contadorConquistas">0/0</span></p>
                 <ul id="listaConquistas" class="lista-conquistas"></ul>
             </div>
 
-            <div class="cartao">
+            <div class="cartao" data-secao="ajustes">
                 <p class="rotulo">Cor da sua cobra</p>
                 <div id="coresDaCobra" class="cores-da-cobra" role="group" aria-label="Cor da cobra do Jogador 1"></div>
                 <p id="nomeCorDaCobra" class="nome-cor-da-cobra"></p>
             </div>
 
-            <div class="cartao">
+            <div class="cartao" data-secao="ajustes">
                 <p class="rotulo">Tema do tabuleiro</p>
                 <div id="temasDoTabuleiro" class="cores-da-cobra" role="group" aria-label="Tema do tabuleiro"></div>
                 <p id="nomeTemaDoTabuleiro" class="nome-cor-da-cobra"></p>
@@ -478,7 +485,7 @@
                 </label>
             </div>
 
-            <div class="cartao">
+            <div class="cartao" data-secao="ajustes">
                 <p class="rotulo">Som</p>
                 <label class="volume-som"><span>Música</span><input type="range" id="volumeMusica" min="0" max="100" step="5" value="50" /><output id="valorVolumeMusica">50%</output></label>
                 <label class="volume-som"><span>Efeitos</span><input type="range" id="volumeEfeitos" min="0" max="100" step="5" value="50" /><output id="valorVolumeEfeitos">50%</output></label>
@@ -490,7 +497,7 @@
                 <p class="dica-acessibilidade">50% é o volume normal; dá pra subir até o dobro. No Chefão toca sempre a Abismo.</p>
             </div>
 
-            <div class="cartao">
+            <div class="cartao" data-secao="ajustes">
                 <p class="rotulo">Acessibilidade</p>
                 <label class="opcao-acessibilidade">
                     <input type="checkbox" id="opcaoAltoContraste" />
@@ -503,7 +510,7 @@
                 <p class="dica-acessibilidade">Com leitor de tela, o jogo fala os pontos, os power-ups, a pausa e o fim da partida.</p>
                 </div>
 
-                <div class="cartao">
+                <div class="cartao" data-secao="ajustes">
                 <p class="rotulo">Itens no mapa</p>
                 <ul class="itens">
                     <li><span class="item-icone" data-powerup="invencibilidade"></span><div><b>Invencível</b><span>Atravessa corpos e pedras por 5 s</span></div></li>
@@ -542,6 +549,7 @@
     <script src="enfeites.js"></script>
     <script src="loja.js"></script>
     <script src="salvos.js"></script>
+    <script src="vitrine.js"></script>
     <script src="plataforma.js"></script> <!-- ele carrega o script.js -->
 </body>
 </html>

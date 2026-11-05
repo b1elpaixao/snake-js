@@ -6,12 +6,8 @@ Testes: abrir `testes.html` no navegador; tem que dar todos passando (391 na úl
 
 ## Como eu gosto de trabalhar
 
-- **Não edite os arquivos do projeto.** Me dê o código para eu colar, mostrando só o que mudou
-  (estilo diff, com o número aproximado da linha e onde colar). Exceção: quando eu disser
-  explicitamente "pode aplicar você mesmo" (por exemplo, quando eu estiver no celular).
-- Teste antes de me entregar: monte numa cópia fora do projeto, rode os testes e simule o jogo.
-- Depois que eu colar, eu peço "verifique se tem algum erro": compare meus arquivos com a versão
-  testada, linha por linha, e aponte cada diferença com o trecho certo.
+- **Pode editar os arquivos do projeto direto** (combinado em 05/11/2026).
+- Teste antes de aplicar: monte numa cópia fora do projeto, rode os testes e simule o jogo.
 - **Depois de cada melhoria conferida, faça o commit e o push sozinho** (sem esperar eu pedir).
   Termine a mensagem do commit com a linha de coautoria do Claude.
 - Me responda em português, de forma direta.
@@ -38,6 +34,7 @@ Arquivos JS carregados nesta ordem pelo `index.html` (scripts comuns, sem módul
 15. `enfeites.js` - desenho dos itens da loja: chapéus, comidas, padrões do corpo, rastros e efeitos (partículas), tabuleiros com enfeites, as prévias e o estilo "aura" (`desenharSombraViva`: chefão e skin Espectro; sem `ctx.filter`, rascunho nem `createPattern` — travavam: a aura são camadas transparentes e o granulado são pontinhos num Path2D)
 16. `loja.js` - moedas (`snakeCarteira`: moedas, comprados, equipados), tela da loja com abas, desenho dos chapéus e das comidas
 17. `salvos.js` - tudo que é guardado no navegador: `lerDoArmazenamento`/`salvarNoArmazenamento`, recordes, estatísticas, conquistas, teclas e preferências
+17b. `vitrine.js` - as cobras com chapéu passeando atrás do menu (sorteio próprio, não mexe nas partidas)
 18. `plataforma.js` - CrazyGames: SDK, anúncio no fim da partida (`pedirAnuncioDoIntervalo`), saves na conta (`sdkDaPlataforma.data`), classe `na-plataforma` no `<html>`. É a última tag do `index.html`: espera o SDK e só depois carrega o `script.js`. Testar com `?useLocalSdk=true` em http://127.0.0.1
 19. `script.js` - configuração, estado, inicialização e tudo que roda ao abrir a página (sempre por último; carregado pelo `plataforma.js`)
 
@@ -87,4 +84,10 @@ Ficaram de fora (o projeto fechou aqui): 11 replay e GIF · 12 nível e XP.
 
 Lá o jogo se chama **Snake Brawl** ("Snake Showdown" já estava em uso); o site continua Snake. O nome aparece no menu só na plataforma (`.so-na-plataforma`). O zip pro envio fica em `marketing/crazygames/jogo_para_enviar.zip`, versionado pra baixar pelo celular: gerar de novo se o código mudar.
 
-Inglês (`idiomas.js`: quem não usa português vê em inglês; botão no menu troca). **Texto novo pra pessoa ler: passar por `tr()` e pôr no `TRADUCOES`.** Na plataforma (`.na-plataforma` no fim do `style.css`): janela deitada com tabuleiro à esquerda e painel rolando à direita; o menu tem que caber em 800x450 sem rolar. Sem tela cheia, compartilhar, instalar e copiar link. `confirm()` trocado por `pedirConfirmacao` (dentro de iframe o do navegador pode não funcionar).
+Inglês (`idiomas.js`: quem não usa português vê em inglês; botão no menu troca). **Texto novo pra pessoa ler: passar por `tr()` e pôr no `TRADUCOES`.** O menu tem que caber em 800x450 sem rolar. Na plataforma (`.na-plataforma`): sem tela cheia, compartilhar, instalar e copiar link. `confirm()` trocado por `pedirConfirmacao` (dentro de iframe o do navegador pode não funcionar).
+
+## Tela (desde 05/11/2026)
+
+O tabuleiro ocupa a janela (`--proporcao`, no fim do `style.css`). Menu inicial: Jogar, Modo, Dificuldade, Com amigos (`painelFesta`) e Contra o bot; Progresso e Ajustes abrem na gaveta (`body[data-gaveta]`, `abrirGaveta`, cada cartão com `data-secao`).
+
+Versão do itch.io: https://b1elpaixao.itch.io/snake-brawl (zip em `marketing/itch/`, gerado de uma cópia sem SDK e sem service worker).

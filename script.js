@@ -1552,6 +1552,7 @@ function aplicarTamanhoDoTabuleiro() {
     LARGURA_TABULEIRO = COLUNAS * TAMANHO_CELULA;
     ALTURA_TABULEIRO = LINHAS * TAMANHO_CELULA;
     canvas.style.aspectRatio = `${COLUNAS} / ${LINHAS}`;
+    document.documentElement.style.setProperty("--proporcao", COLUNAS / LINHAS);
     ajustarResolucaoCanvas();
 }
 
@@ -1579,6 +1580,7 @@ function comecarJogo(quantidade, comBot = false, juntos = false, modo = seletorM
     document.querySelector(".placares").classList.toggle("placares-muitos", quantidadeJogadoresAtual > 2);
     noMenu = false;
     telaInicial.hidden= true;
+    painelFesta.hidden = true;
     aplicarTamanhoDoTabuleiro();
     reiniciar();
     prepararTutorial();
@@ -1647,6 +1649,43 @@ if (window.matchMedia("(pointer: coarse)").matches) seletorQuantidade.parentElem
 mostrarQuantidadeEscolhida();
 botaoJogarBot.addEventListener("click", () => comecarJogo(1, true));
 document.getElementById("botaoJogarJuntos").addEventListener("click", () => comecarJogo(2, false, true));
+
+// ==========================================
+// Menus fora do jogo: "Com amigos", Progresso e Ajustes
+// ==========================================
+const painelFesta = document.getElementById("painelFesta");
+
+function abrirGaveta(secao) {
+    document.body.dataset.gaveta = secao;
+    document.getElementById("tituloGaveta").textContent = tr(secao === "progresso" ? "Progresso" : "Ajustes");
+    document.getElementById("gaveta").scrollTop = 0;
+    document.getElementById("botaoFecharGaveta").focus({ preventScroll: true });
+}
+
+function fecharGaveta() {
+    delete document.body.dataset.gaveta;
+}
+
+document.getElementById("botaoAbrirFesta").addEventListener("click", () => { painelFesta.hidden = false; });
+document.getElementById("botaoFecharFesta").addEventListener("click", () => { painelFesta.hidden = true; });
+document.getElementById("botaoAbrirProgresso").addEventListener("click", () => abrirGaveta("progresso"));
+document.getElementById("botaoAbrirAjustes").addEventListener("click", () => abrirGaveta("ajustes"));
+document.getElementById("botaoAjustesPausa").addEventListener("click", () => abrirGaveta("ajustes"));
+document.getElementById("botaoFecharGaveta").addEventListener("click", fecharGaveta);
+
+// com a gaveta aberta, as teclas não mexem no jogo; Esc fecha (trocar tecla continua funcionando)
+window.addEventListener("keydown", (evento) => {
+    if (teclaSendoTrocada !== null) return;
+    if (document.body.dataset.gaveta) {
+        evento.stopPropagation();
+        if (evento.key === "Escape") fecharGaveta();
+    } else if (!painelFesta.hidden && evento.key === "Escape") {
+        evento.stopPropagation();
+        painelFesta.hidden = true;
+    }
+}, true);
+
+iniciarVitrine();
 
 // ==========================================
 // Instalar como app (PWA)

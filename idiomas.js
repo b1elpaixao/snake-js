@@ -46,6 +46,12 @@ const TRADUCOES = {
     // ---------- menu ----------
     "Novo jogo": "New game",
     "Quem vai jogar?": "Who's playing?",
+    "Jogar": "Play",
+    "Com amigos": "With friends",
+    "Progresso": "Progress",
+    "Ajustes": "Settings",
+    "Partida": "Game",
+    "A cobra atravessa a borda e sai do outro lado": "The snake goes through the border and comes out on the other side",
     "Snake Brawl": "Snake Brawl",
     "Criar fase": "Create level",
     "Loja": "Shop",
@@ -206,7 +212,6 @@ const TRADUCOES = {
     // ---------- avisos, editor e toque ----------
     "Pular": "Skip",
     "Clique ou arraste nas casas para pôr e tirar paredes. A faixa clara é a saída das cobras.": "Click or drag on the squares to add and remove walls. The light strip is where the snakes start.",
-    "Jogar": "Play",
     "Copiar link": "Copy link",
     "✓ Link copiado!": "✓ Link copied!",
     "Limpar": "Clear",

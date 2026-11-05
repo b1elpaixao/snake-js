@@ -1919,222 +1919,375 @@ html:not(.na-plataforma) .so-na-plataforma {
     display: none;
 }
 
-@media (min-aspect-ratio: 5/4) {
-    .na-plataforma {
-        --altura-placar: 58px;
-        --altura-topo: 44px;
-        --lado: min(100vh - var(--altura-placar), 100vw - 300px);
+/* ==========================================
+   Tela do jogo: o tabuleiro ocupa a janela (site, itch.io e CrazyGames).
+   O menu e a loja cobrem a janela toda; Progresso e Ajustes abrem na "gaveta".
+   ========================================== */
+:root {
+    --altura-placar: 56px;
+    --proporcao: 1;
+    --fonte-titulo: "Bangers", Impact, sans-serif;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #0b1219;
+}
+
+.layout {
+    display: block;
+}
+
+.jogo {
+    position: fixed;
+    inset: 0;
+    width: auto;
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 40%, #16261f, #0b1219 75%);
+    border: none;
+    border-radius: 0;
+    overflow: hidden;
+}
+
+.jogo:has(.barra-editor:not([hidden])) {
+    --altura-placar: 190px;
+}
+
+.barra-placar,
+.canvas-wrapper {
+    width: min(100vw, calc((100vh - var(--altura-placar)) * var(--proporcao)));
+    width: min(100vw, calc((100dvh - var(--altura-placar)) * var(--proporcao)));
+}
+
+.barra-placar {
+    flex: none;
+    min-height: 0;
+    height: var(--altura-placar);
+    padding: 4px 10px;
+    gap: 2px 10px;
+    font-size: 14px;
+    overflow: hidden;
+    flex-wrap: nowrap;
+}
+
+.placares {
+    min-width: 0;
+    gap: 2px 10px;
+}
+
+.jogo:has(.barra-editor:not([hidden])) .barra-placar {
+    height: 56px;
+}
+
+.canvas-wrapper {
+    flex: none;
+    position: relative;
+    margin: 0;
+    border-radius: 6px;
+}
+
+.botao-pausa-toque {
+    display: inline-flex !important;
+}
+
+/* ---------- menu inicial ---------- */
+.overlay-menu,
+#telaComoJogar,
+#telaLoja,
+#telaConfirmar {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+}
+
+.overlay-menu {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    background: #0b1219;
+    backdrop-filter: none;
+    overflow: hidden auto;
+}
+
+#canvasVitrine {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.menu-centro {
+    position: relative;
+    width: min(420px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(8px, 2vh, 14px);
+    padding: clamp(10px, 2.4vh, 20px) clamp(14px, 3vw, 24px);
+    background: rgba(11, 18, 25, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+}
+
+.titulo-jogo {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 0.28em;
+    font-family: var(--fonte-titulo);
+    font-size: clamp(44px, min(11vw, 13vh), 76px);
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    line-height: 1;
+    text-transform: uppercase;
+    transform: rotate(-2deg);
+}
+
+.titulo-jogo span:first-child {
+    color: #ffffff;
+    text-shadow: 3px 3px 0 #05070c;
+}
+
+.titulo-jogo span:last-child {
+    color: var(--ouro);
+    text-shadow: 3px 3px 0 #05070c;
+}
+
+.botao-jogar {
+    width: 100%;
+    height: clamp(46px, 9vh, 60px);
+    min-height: 0;
+    font-family: var(--fonte-titulo);
+    font-size: clamp(24px, 5vh, 32px);
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.menu-opcoes-duas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 10px;
+}
+
+.menu-centro .menu-dificuldade label {
+    font-size: 12px;
+}
+
+.menu-centro .menu-dificuldade select,
+.painel-festa .menu-dificuldade select {
+    height: 38px;
+    padding: 0 8px;
+    font-size: 14px;
+}
+
+.menu-centro .botoes-secundarios {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.menu-centro .botao-secundario {
+    min-height: 38px;
+    height: auto;
+    padding: 6px 8px;
+    font-size: 14px;
+}
+
+.menu-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 14px;
+}
+
+.menu-links .botao-link {
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+/* ---------- com amigos ---------- */
+.painel-festa {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 8, 12, 0.72);
+    overflow: auto;
+}
+
+.painel-festa-caixa {
+    width: min(560px, 100%);
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    background: var(--painel);
+    border: 1px solid var(--borda-forte);
+    border-radius: 14px;
+    overflow: auto;
+}
+
+.painel-festa .como-jogar-topo {
+    margin: 0;
+}
+
+.painel-festa h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.painel-festa .botoes-secundarios {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.painel-festa .campo {
+    display: block;
+    font-size: 12px;
+}
+
+.painel-festa .campo input {
+    display: block;
+    height: 34px;
+    padding: 0 8px;
+    font-size: 14px;
+}
+
+.painel-festa .campo-linha input {
+    min-width: 0;
+}
+
+.painel-festa .botao-vaga {
+    height: 34px;
+    padding: 0 6px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* ---------- loja, como jogar e pergunta ---------- */
+#telaComoJogar,
+#telaLoja {
+    padding: 16px max(16px, calc(50vw - 340px));
+    background: #0e1712;
+    backdrop-filter: none;
+}
+
+#telaConfirmar {
+    z-index: 30;
+}
+
+/* ---------- gaveta: Progresso e Ajustes ---------- */
+.painel {
+    display: none;
+}
+
+body[data-gaveta] .painel {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    width: auto;
+    padding: 0 max(12px, calc(50vw - 560px)) 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+    align-items: start;
+    gap: 12px;
+    background: #0e1712;
+    overflow-y: auto;
+}
+
+body[data-gaveta="progresso"] .painel > [data-secao]:not([data-secao="progresso"]),
+body[data-gaveta="ajustes"] .painel > [data-secao]:not([data-secao="ajustes"]) {
+    display: none;
+}
+
+.gaveta-topo {
+    grid-column: 1 / -1;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 12px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #0e1712;
+}
+
+.gaveta-topo h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.botoes-ajustes {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.botoes-ajustes .botao-secundario {
+    flex: 1 1 110px;
+    width: auto;
+}
+
+/* o editor de fases fica embaixo do tabuleiro */
+.barra-editor {
+    flex: none;
+    width: min(100vw, 720px);
+    padding: 8px 12px;
+}
+
+.barra-editor p {
+    margin: 0 0 6px;
+    font-size: 13px;
+}
+
+/* tela baixa (800x450): o menu aperta sem rolar */
+@media (max-height: 520px) {
+    .titulo-jogo {
+        font-size: 40px;
     }
 
-    .na-plataforma body {
-        height: 100vh;
-        min-height: 0;
-        padding: 0;
-        overflow: hidden;
-    }
-
-    .na-plataforma .topo {
-        position: fixed;
-        top: 0;
-        left: var(--lado);
-        right: 0;
-        height: var(--altura-topo);
-        max-width: none;
-        margin: 0;
-        padding: 0 12px;
-        flex-wrap: nowrap;
-        justify-content: flex-end;
-    }
-
-    .na-plataforma .marca {
-        display: none;
-    }
-
-    .na-plataforma .barra-acoes {
-        flex-wrap: nowrap;
+    .menu-centro {
         gap: 6px;
+        padding: 8px 14px;
     }
 
-    .na-plataforma .barra-acoes .botao-contorno,
-    .na-plataforma .barra-acoes .botao-destaque {
-        height: 32px;
-        padding: 0 10px;
-        font-size: 12px;
-        white-space: nowrap;
+    .botao-jogar {
+        height: 42px;
+        font-size: 22px;
     }
 
-    .na-plataforma .layout {
-        position: fixed;
-        top: var(--altura-topo);
-        left: var(--lado);
-        right: 0;
-        bottom: 0;
-        padding: 0 12px 12px;
-        display: flex;
-        flex-direction: column;
-        flex-wrap: nowrap;
-        align-items: stretch;
-        justify-content: flex-start;
-        gap: 12px;
-        overflow-y: auto;
-    }
-
-    .na-plataforma .jogo {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: var(--lado);
-        max-width: none;
-        height: 100vh;
-        border: none;
-        border-radius: 0;
-        z-index: 2;
-    }
-
-    .na-plataforma .painel {
-        width: auto;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-        align-items: start;
-        gap: 12px;
-    }
-
-    .na-plataforma .painel-controles {
-        order: 1;
-    }
-
-    .na-plataforma .cartao {
-        padding: 14px;
-    }
-
-    .na-plataforma .barra-placar {
-        height: var(--altura-placar);
-        min-height: 0;
-        padding: 4px 10px;
-        gap: 2px 10px;
-        font-size: 13px;
-        overflow: hidden;
-    }
-
-    .na-plataforma .placares {
-        gap: 2px 10px;
-    }
-
-    .na-plataforma .canvas-wrapper {
-        margin: 0;
-    }
-
-    /* o menu tem que caber inteiro em cima do tabuleiro, sem rolar */
-    .na-plataforma .overlay {
-        padding: 12px 14px;
-    }
-
-    .na-plataforma .overlay-menu {
-        gap: 8px;
-    }
-
-    .na-plataforma .overlay {
-        overflow-x: hidden;
-    }
-
-    .na-plataforma .menu-cabecalho {
-        margin: 0;
-        flex-wrap: wrap;
-        align-items: baseline;
-        gap: 2px 10px;
-    }
-
-    .na-plataforma .menu-links {
-        flex-wrap: wrap;
-        gap: 2px 10px;
-    }
-
-    .na-plataforma .menu-links .botao-link {
-        font-size: 12px;
-    }
-
-    /* o rótulo na mesma linha das teclas: o menu com 4 nomes também tem que caber */
-    .na-plataforma .campo {
-        display: block;
-    }
-
-    .na-plataforma .campo input {
-        display: block;
-    }
-
-    .na-plataforma .campo-linha input {
-        min-width: 0;
-    }
-
-    .na-plataforma .menu-cabecalho .rotulo {
-        display: none;
-    }
-
-    .na-plataforma .menu-cabecalho h2 {
-        margin: 0;
-        font-size: 20px;
-    }
-
-    .na-plataforma .menu-nomes,
-    .na-plataforma .menu-opcoes {
-        gap: 6px 8px;
-    }
-
-    .na-plataforma .campo,
-    .na-plataforma .menu-dificuldade label {
-        gap: 2px;
-        font-size: 12px;
-    }
-
-    .na-plataforma .campo input,
-    .na-plataforma .menu-dificuldade select {
+    .menu-centro .menu-dificuldade select {
         height: 30px;
-        padding: 0 8px;
         font-size: 13px;
     }
 
-    .na-plataforma .botao-vaga {
-        height: 30px;
-        padding: 0 6px;
-        font-size: 11px;
-    }
-
-    .na-plataforma .menu-botoes {
-        gap: 6px;
-        margin: 0;
-    }
-
-    .na-plataforma .botao-principal {
-        height: 40px;
-        min-height: 0;
-        padding: 0 12px;
-        font-size: 15px;
-    }
-
-    .na-plataforma .botao-secundario {
-        height: 34px;
-        min-height: 0;
-        padding: 0 8px;
+    .menu-centro .botao-secundario {
+        min-height: 30px;
+        padding: 3px 8px;
         font-size: 13px;
-    }
-
-    .na-plataforma .overlay-game-over {
-        gap: 6px;
-    }
-
-    .na-plataforma .overlay-game-over .resultado {
-        font-size: 26px;
-    }
-
-    /* a barra do editor vai pro lado do tabuleiro, por cima do painel */
-    .na-plataforma .barra-editor {
-        position: fixed;
-        top: 0;
-        left: var(--lado);
-        right: 0;
-        bottom: 0;
-        z-index: 5;
-        padding: 16px;
-        background: var(--fundo);
     }
 }
