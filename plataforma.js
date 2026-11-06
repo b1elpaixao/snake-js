@@ -18,13 +18,14 @@ let jogandoNaPlataforma = false;
 // Portais menores: a versão de cada um põe window.PORTAL_DO_JOGO = { nome, id } no index.html
 // (o id vem do painel do portal). Os dois usam o mesmo jeito: SDK_GAME_PAUSE = anúncio começou, SDK_GAME_START = acabou
 const SDKS_DOS_PORTAIS = {
-    gamemonetize: { endereco: "https://api.gamemonetize.com/sdk.js", opcoes: "SDK_OPTIONS", anuncio: () => window.sdk.showBanner() },
+    gamemonetize: { endereco: "https://api.gamemonetize.com/sdk.js", opcoes: "SDK_OPTIONS", anuncio: () => window.sdk.showBanner(), camada: "imaContainer" },
     gamedistribution: { endereco: "https://html5.api.gamedistribution.com/main.min.js", opcoes: "GD_OPTIONS", anuncio: () => window.gdsdk.showAd() },
 };
 const portalDoJogo = SDKS_DOS_PORTAIS[window.PORTAL_DO_JOGO?.nome] ? window.PORTAL_DO_JOGO : null;
-const INTERVALO_ENTRE_ANUNCIOS_DO_PORTAL_MS = 120000; // lá quem controla somos nós: no máximo 1 a cada 2 min
+const INTERVALO_ENTRE_ANUNCIOS_DO_PORTAL_MS = 120000; // lá quem controla somos nós: no máximo 1 a cada 2 min (o primeiro já no fim da 1ª partida: a revisão do portal precisa ver um anúncio)
 let ultimoAnuncioDoPortal = -Infinity;
 let segurancaDoPortal = null;
+let vigiaDaCamada = null;
 
 // dentro de um iframe também tenta: se não for a plataforma, o SDK responde "disabled" e o jogo abre normal
 function jogoEstaNumaPlataforma() {
@@ -108,12 +109,34 @@ function abrirNoPortal() {
     carregarOJogo(); // não espera o SDK: se ele não carregar, o jogo abre igual
 }
 
+// no site do GameMonetize os avisos de pausa nem sempre chegam: a camada do anúncio aparecendo e sumindo também vale
+function vigiarCamadaDoAnuncio(id) {
+    clearInterval(vigiaDaCamada);
+    let viu = false;
+    const desistirEm = performance.now() + 10000; // o anúncio nem apareceu: para de olhar
+    vigiaDaCamada = setInterval(() => {
+        const camada = document.getElementById(id);
+        const aparecendo = Boolean(camada) && getComputedStyle(camada).visibility !== "hidden" && camada.offsetWidth > 0;
+        if (aparecendo && !viu) {
+            viu = true;
+            if (!anuncioAberto) anuncioDoPortalComecou();
+        } else if (!aparecendo && viu) {
+            clearInterval(vigiaDaCamada);
+            if (anuncioAberto) anuncioDoPortalAcabou();
+        } else if (!viu && performance.now() > desistirEm) {
+            clearInterval(vigiaDaCamada);
+        }
+    }, 250);
+}
+
 function pedirAnuncioDoPortal() {
     const agora = performance.now();
-    if (agora < TEMPO_ANTES_DO_PRIMEIRO_ANUNCIO_MS || agora - ultimoAnuncioDoPortal < INTERVALO_ENTRE_ANUNCIOS_DO_PORTAL_MS) return;
+    if (agora - ultimoAnuncioDoPortal < INTERVALO_ENTRE_ANUNCIOS_DO_PORTAL_MS) return;
     ultimoAnuncioDoPortal = agora;
     try {
-        SDKS_DOS_PORTAIS[portalDoJogo.nome].anuncio(); // sem anúncio pra mostrar, o SDK não avisa nada e o jogo segue
+        const portal = SDKS_DOS_PORTAIS[portalDoJogo.nome];
+        portal.anuncio(); // sem anúncio pra mostrar, o SDK não avisa nada e o jogo segue
+        if (portal.camada) vigiarCamadaDoAnuncio(portal.camada);
     } catch {
         anuncioDoPortalAcabou();
     }
