@@ -16,8 +16,30 @@ let anuncioTocando = false;    // o anúncio começou de verdade: o som do jogo 
 let jogandoNaPlataforma = false;
 
 // Portais menores: a versão de cada um põe window.PORTAL_DO_JOGO = { nome, id } no index.html
-// (o id vem do painel do portal). Os dois usam o mesmo jeito: SDK_GAME_PAUSE = anúncio começou, SDK_GAME_START = acabou
+// (o id vem do painel do portal; o Y8 também tem app). GameMonetize e GameDistribution usam o mesmo jeito:
+// SDK_GAME_PAUSE = anúncio começou, SDK_GAME_START = acabou. O Y8 avisa no próprio pedido do anúncio
+let sdkDoY8 = null;
 const SDKS_DOS_PORTAIS = {
+    y8: {
+        endereco: "https://cdn.y8.com/minimal-sdk/2-0/y8.min.js",
+        iniciar: () => {
+            window.addEventListener("y8sdk.ready", () => {
+                sdkDoY8 = window.y8.sdk();
+                sdkDoY8.init({ appId: portalDoJogo.app, autoLogin: true }, { gameId: portalDoJogo.id, preloadAdBreaks: "on", sound: "on" });
+            }, { once: true });
+        },
+        depoisDeCarregar: () => window.y8?.emitReadyEvent?.(), // o SDK carregou antes de ouvir o "pronto"
+        anuncio: () => {
+            if (!sdkDoY8) return;
+            sdkDoY8.showAd({
+                type: "next",
+                name: "fim-da-partida",
+                beforeAd: anuncioDoPortalComecou,
+                afterAd: anuncioDoPortalAcabou,
+                adBreakDone: () => { if (anuncioAberto) anuncioDoPortalAcabou(); },
+            }).catch(() => { if (anuncioAberto) anuncioDoPortalAcabou(); });
+        },
+    },
     gamemonetize: { endereco: "https://api.gamemonetize.com/sdk.js", opcoes: "SDK_OPTIONS", anuncio: () => window.sdk.showBanner(), camada: "imaContainer" },
     gamedistribution: { endereco: "https://html5.api.gamedistribution.com/main.min.js", opcoes: "GD_OPTIONS", anuncio: () => window.gdsdk.showAd() },
 };
@@ -95,7 +117,8 @@ function abrirNoPortal() {
     const portal = SDKS_DOS_PORTAIS[portalDoJogo.nome];
     document.documentElement.classList.add("na-plataforma"); // sem links pra fora, compartilhar e instalar
     document.title = "Snake Brawl";
-    window[portal.opcoes] = {
+    if (portal.iniciar) portal.iniciar();
+    else window[portal.opcoes] = {
         gameId: portalDoJogo.id,
         onEvent: (evento) => {
             if (evento.name === "SDK_GAME_PAUSE") anuncioDoPortalComecou();
@@ -105,6 +128,7 @@ function abrirNoPortal() {
     const arquivo = document.createElement("script");
     arquivo.src = portal.endereco;
     arquivo.async = true;
+    if (portal.depoisDeCarregar) arquivo.onload = portal.depoisDeCarregar;
     document.head.appendChild(arquivo);
     carregarOJogo(); // não espera o SDK: se ele não carregar, o jogo abre igual
 }
