@@ -33,7 +33,7 @@ function medirVolta() {
 }
 
 function ligarContagem() {
-    if (!location.protocol.startsWith("http") || sdkDaPlataforma) return;
+    if (!location.protocol.startsWith("http") || sdkDaPlataforma || portalDoJogo) return; // os portais não deixam rastreador de fora
     contagemLigada = true;
     window.goatcounter = { allow_frame: true }; // no itch, o jogo roda dentro de um iframe
     const arquivo = document.createElement("script");

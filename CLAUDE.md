@@ -95,4 +95,6 @@ Inglês (`idiomas.js`: quem não usa português vê em inglês; botão no menu t
 
 O tabuleiro ocupa a janela (`--proporcao`, no fim do `style.css`). Menu inicial (`vitrine.js`: fundo, cobras e `CARTOES_DE_MODO`): Jogar (vai pra Escalada), cartões de modo, Com amigos (`painelFesta`, onde fica o `seletorModo`), Contra 3 bots (sempre Normal), Missões (botão com 0/3), Mais modos (`painelModos`, `MAIS_MODOS`) e Dificuldade; Missões, Progresso e Ajustes abrem na gaveta (`body[data-gaveta]`, `abrirGaveta`, cada cartão com `data-secao`).
 
+Portais menores (GameMonetize, GameDistribution): `plataforma.js` liga o SDK quando o index.html da cópia tem `window.PORTAL_DO_JOGO = { nome, id }` (o id vem do painel do portal); anúncio no fim da partida, no máximo 1 a cada 2 min; sem GoatCounter nem service worker. Zips em `marketing/portais/`.
+
 Versão do itch.io: https://b1elpaixao.itch.io/snake-brawl (zip em `marketing/itch/`, gerado de uma cópia sem SDK e sem service worker).

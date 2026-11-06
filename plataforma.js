@@ -15,6 +15,17 @@ let anuncioAberto = false;     // pedindo ou mostrando anúncio: "Jogar de novo"
 let anuncioTocando = false;    // o anúncio começou de verdade: o som do jogo cala
 let jogandoNaPlataforma = false;
 
+// Portais menores: a versão de cada um põe window.PORTAL_DO_JOGO = { nome, id } no index.html
+// (o id vem do painel do portal). Os dois usam o mesmo jeito: SDK_GAME_PAUSE = anúncio começou, SDK_GAME_START = acabou
+const SDKS_DOS_PORTAIS = {
+    gamemonetize: { endereco: "https://api.gamemonetize.com/sdk.js", opcoes: "SDK_OPTIONS", anuncio: () => window.sdk.showBanner() },
+    gamedistribution: { endereco: "https://html5.api.gamedistribution.com/main.min.js", opcoes: "GD_OPTIONS", anuncio: () => window.gdsdk.showAd() },
+};
+const portalDoJogo = SDKS_DOS_PORTAIS[window.PORTAL_DO_JOGO?.nome] ? window.PORTAL_DO_JOGO : null;
+const INTERVALO_ENTRE_ANUNCIOS_DO_PORTAL_MS = 120000; // lá quem controla somos nós: no máximo 1 a cada 2 min
+let ultimoAnuncioDoPortal = -Infinity;
+let segurancaDoPortal = null;
+
 // dentro de um iframe também tenta: se não for a plataforma, o SDK responde "disabled" e o jogo abre normal
 function jogoEstaNumaPlataforma() {
     return window.self !== window.top || /(^|\.)crazygames\./.test(location.hostname) || new URLSearchParams(location.search).has("useLocalSdk");
@@ -61,6 +72,53 @@ async function abrirNaPlataforma() {
     carregarOJogo();
 }
 
+function anuncioDoPortalComecou() {
+    anuncioAberto = true;
+    anuncioTocando = true;
+    document.getElementById("telaGameOver").inert = true;
+    clearTimeout(segurancaDoPortal);
+    segurancaDoPortal = setTimeout(anuncioDoPortalAcabou, 90000); // se o SDK nunca avisar o fim, o jogo não fica preso
+    try { aplicarVolumes(); } catch { /* o jogo ainda está abrindo */ }
+}
+
+function anuncioDoPortalAcabou() {
+    clearTimeout(segurancaDoPortal);
+    anuncioAberto = false;
+    anuncioTocando = false;
+    document.getElementById("telaGameOver").inert = false;
+    try { aplicarVolumes(); } catch { /* o jogo ainda está abrindo */ }
+}
+
+// sem conta nem saves no portal: o jogo guarda no navegador, como no site
+function abrirNoPortal() {
+    const portal = SDKS_DOS_PORTAIS[portalDoJogo.nome];
+    document.documentElement.classList.add("na-plataforma"); // sem links pra fora, compartilhar e instalar
+    document.title = "Snake Brawl";
+    window[portal.opcoes] = {
+        gameId: portalDoJogo.id,
+        onEvent: (evento) => {
+            if (evento.name === "SDK_GAME_PAUSE") anuncioDoPortalComecou();
+            else if (evento.name === "SDK_GAME_START") anuncioDoPortalAcabou();
+        },
+    };
+    const arquivo = document.createElement("script");
+    arquivo.src = portal.endereco;
+    arquivo.async = true;
+    document.head.appendChild(arquivo);
+    carregarOJogo(); // não espera o SDK: se ele não carregar, o jogo abre igual
+}
+
+function pedirAnuncioDoPortal() {
+    const agora = performance.now();
+    if (agora < TEMPO_ANTES_DO_PRIMEIRO_ANUNCIO_MS || agora - ultimoAnuncioDoPortal < INTERVALO_ENTRE_ANUNCIOS_DO_PORTAL_MS) return;
+    ultimoAnuncioDoPortal = agora;
+    try {
+        SDKS_DOS_PORTAIS[portalDoJogo.nome].anuncio(); // sem anúncio pra mostrar, o SDK não avisa nada e o jogo segue
+    } catch {
+        anuncioDoPortalAcabou();
+    }
+}
+
 // o site da plataforma mandou calar, ou tem anúncio tocando (ganha dos botões do jogo)
 function plataformaCalaOSom() {
     return anuncioTocando || Boolean(sdkDaPlataforma && sdkDaPlataforma.game.settings.muteAudio);
@@ -76,6 +134,7 @@ function avisarPlataformaSeEstaJogando(jogando) {
 
 // no fim da partida. A plataforma controla o intervalo entre anúncios (e recusa se for cedo demais)
 function pedirAnuncioDoIntervalo() {
+    if (portalDoJogo) { pedirAnuncioDoPortal(); return; }
     if (!sdkDaPlataforma || performance.now() < TEMPO_ANTES_DO_PRIMEIRO_ANUNCIO_MS) return;
 
     avisarPlataformaSeEstaJogando(false);
@@ -107,5 +166,6 @@ function pedirAnuncioDoIntervalo() {
     }
 }
 
-if (jogoEstaNumaPlataforma()) abrirNaPlataforma();
+if (portalDoJogo) abrirNoPortal();
+else if (jogoEstaNumaPlataforma()) abrirNaPlataforma();
 else carregarOJogo();

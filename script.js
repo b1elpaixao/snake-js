@@ -1727,7 +1727,7 @@ const botaoInstalar = document.getElementById("botaoInstalar");
 let pedidoDeInstalacao = null; // o navegador entrega quando o jogo pode ser instalado
 
 // só funciona em http(s) (GitHub Pages, localhost); abrindo o arquivo direto do computador não faz nada
-if ("serviceWorker" in navigator && location.protocol.startsWith("http") && !sdkDaPlataforma) {
+if ("serviceWorker" in navigator && location.protocol.startsWith("http") && !sdkDaPlataforma && !portalDoJogo) {
     navigator.serviceWorker.register("sw.js").catch(() => {});
 }
 
